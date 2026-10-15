@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book fotograf | Fotostallen</title>
+<meta name="robots" content="noindex">
+<script>
+  // Innebygd i fotostallen.no (iframe) eller med ?embed: skjul egen topp.
+  if (window.self !== window.top || /[?&]embed/.test(location.search)) document.documentElement.classList.add("embedded");
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #dc384c;
+    --red-dark: #b82a3c;
+    --ink: #2b2d38;
+    --muted: #6f717c;
+    --line: #ebe7e3;
+    --bg: #ffffff;
+    --cream: #f4efeb;
+    --card: #ffffff;
+    --soft: #f6f4f2;
+    --pink: #fbe0e4;
+    --sand: #f1e6c9;
+    --blue: #d9e1f7;
+    --sage: #d5e2d6;
+    --radius: 18px;
+    --shadow: 0 1px 2px rgba(30,20,10,.04), 0 8px 24px rgba(30,20,10,.06);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+
+  /* Topp */
+  header.top {
+    position: absolute; inset: 0 0 auto 0; z-index: 5;
+  }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+  .logo img { height: 34px; width: auto; }
+  .top-cta {
+    display: inline-flex; align-items: center; gap: 10px; padding: 8px 8px 8px 18px;
+    border-radius: 999px; background: var(--red); color: #fff; text-decoration: none;
+    font-weight: 600; font-size: 14px; transition: background .2s;
+  }
+  .top-cta:hover { background: var(--red-dark); }
+  .top-cta span.ic { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.2); display: grid; place-items: center; }
+
+  /* Hero */
+  .hero {
+    position: relative; overflow: hidden; background: var(--cream);
+    padding: 150px 0 140px; text-align: center;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 5.4vw, 60px); line-height: 1.08; letter-spacing: -.025em;
+    margin: 0 auto 18px; max-width: 760px; font-weight: 700;
+  }
+  .hero h1 em { font-style: normal; color: var(--red); }
+  .hero p.lead { color: var(--muted); max-width: 520px; margin: 0 auto 32px; font-size: 17px; }
+  .hero-search {
+    display: flex; gap: 8px; align-items: center; background: #fff; border-radius: 16px;
+    padding: 8px; max-width: 560px; margin: 0 auto 20px; box-shadow: var(--shadow);
+  }
+  .hero-search input {
+    flex: 1; min-width: 0; border: 0; outline: 0; padding: 12px 12px; font: inherit; font-size: 15px; background: transparent;
+  }
+  .hero-search input[type=date] { flex: 0 0 auto; background: var(--soft); border-radius: 10px; color: var(--muted); }
+  .hero-search button {
+    flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--red); color: #fff;
+    display: grid; place-items: center;
+  }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .chip {
+    font-size: 13px; padding: 5px 12px; border-radius: 999px; background: rgba(0,0,0,.05); color: var(--muted); border: 0;
+  }
+  .hero .wrap, .how .step { position: relative; z-index: 1; }
+  .shape { position: absolute; opacity: .55; pointer-events: none; }
+  .shape.s1 { left: 6%; top: 34%; width: 40px; height: 40px; background: #ead9d0; border-radius: 10px; transform: rotate(45deg); }
+  .shape.s2 { left: 11%; top: 58%; width: 56px; height: 56px; background: #ead9d0; border-radius: 12px; transform: rotate(30deg); }
+  .shape.s3 { right: 9%; top: 40%; width: 0; height: 0; border-left: 42px solid transparent; border-right: 42px solid transparent; border-bottom: 72px solid #ead9d0; }
+  .shape.s4 { right: 3%; top: 64%; width: 34px; height: 34px; background: #ead9d0; border-radius: 50%; }
+
+  /* Tjenester */
+  .services { position: relative; margin-top: -70px; z-index: 2; }
+  .services::before {
+    content: ""; position: absolute; inset: 70px 0 0 0; background: var(--bg); border-radius: 40px 40px 0 0; z-index: -1;
+  }
+  .svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .svc {
+    text-align: left; border: 2px solid transparent; border-radius: var(--radius); padding: 22px; min-height: 190px;
+    display: flex; flex-direction: column; transition: transform .2s, border-color .2s;
+  }
+  .svc:hover { transform: translateY(-3px); }
+  .svc.on { border-color: var(--ink); }
+  .svc:nth-child(1) { background: var(--pink); }
+  .svc:nth-child(2) { background: var(--sand); }
+  .svc:nth-child(3) { background: var(--blue); }
+  .svc:nth-child(4) { background: var(--sage); }
+  .svc .ico { width: 40px; height: 40px; border-radius: 50%; background: #fff; display: grid; place-items: center; margin-bottom: 18px; }
+  .svc h3 { margin: 0 0 6px; font-size: 19px; letter-spacing: -.01em; }
+  .svc p { margin: 0; font-size: 14px; color: #555865; }
+  .svc .foot { margin-top: auto; padding-top: 18px; display: flex; justify-content: space-between; align-items: center; }
+  .svc .tag { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.6); }
+  .svc .arrow { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.6); display: grid; place-items: center; transition: background .2s; }
+  .svc.on .arrow { background: var(--ink); color: #fff; }
+
+  /* Seksjoner */
+  section.block { padding: 90px 0 0; }
+  .sec-head { text-align: center; margin-bottom: 36px; }
+  .sec-head h2 { font-size: clamp(28px, 3.6vw, 40px); letter-spacing: -.02em; margin: 0 0 6px; font-weight: 700; }
+  .sec-head p { margin: 0; color: var(--muted); }
+
+  /* Fotografer */
+  .carousel { position: relative; }
+  .track {
+    display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 3*20px) / 4); gap: 20px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 6px 2px 14px;
+  }
+  .track::-webkit-scrollbar { display: none; }
+  .pcard {
+    scroll-snap-align: start; background: var(--soft); border-radius: var(--radius); overflow: hidden;
+    display: flex; flex-direction: column; border: 2px solid transparent; transition: border-color .2s, transform .2s;
+  }
+  .pcard:hover { transform: translateY(-3px); }
+  .pcard.on { border-color: var(--red); }
+  .pcard .top {
+    background: #fff; border-radius: var(--radius); padding: 18px 18px 20px; text-align: center; box-shadow: 0 1px 0 var(--line);
+    flex: 1; display: flex; flex-direction: column; position: relative;
+  }
+  .pcard .badge {
+    position: absolute; left: 14px; top: 14px; font-size: 12px; font-weight: 600; color: var(--muted);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .pcard .badge i { width: 8px; height: 8px; border-radius: 50%; background: #3fb46b; display: inline-block; }
+  .pcard .ok { position: absolute; right: 14px; top: 14px; color: var(--red); opacity: 0; transition: opacity .2s; }
+  .pcard.on .ok { opacity: 1; }
+  .avatar {
+    width: 112px; height: 112px; border-radius: 50%; margin: 18px auto 14px; overflow: hidden; background: #f0e2db;
+    border: 4px solid #f6ece7;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar.any { display: grid; place-items: center; background: var(--pink); }
+  .pcard h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+  .pcard .role { font-size: 13px; color: var(--muted); margin: 2px 0 14px; }
+  .pcard .tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: auto; }
+  .pcard .tags span { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--soft); color: #555865; }
+  .pcard .bottom { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 12px 18px; gap: 10px; }
+  .pcard .bottom .link { font-size: 13px; font-weight: 600; color: var(--muted); background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+  .pick {
+    display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; background: var(--red); color: #fff;
+    font-weight: 600; font-size: 14px; padding: 8px 8px 8px 16px; transition: background .2s;
+  }
+  .pick:hover { background: var(--red-dark); }
+  .pick .ic { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,.22); display: grid; place-items: center; }
+  .pcard.on .pick { background: var(--ink); }
+  .nav-btn {
+    position: absolute; top: 45%; width: 42px; height: 42px; border-radius: 50%; border: 0; background: #fff; box-shadow: var(--shadow);
+    display: grid; place-items: center; z-index: 2;
+  }
+  .nav-btn.prev { left: -20px; }
+  .nav-btn.next { right: -20px; }
+  .nav-btn[disabled] { opacity: 0; pointer-events: none; }
+
+  /* Slik fungerer det */
+  .how {
+    position: relative; overflow: hidden; background: var(--cream); border-radius: 24px; padding: 54px 30px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; text-align: center;
+  }
+  .how .step .ico {
+    width: 56px; height: 56px; border-radius: 16px; background: #fff; display: grid; place-items: center; margin: 0 auto 14px; color: var(--red);
+  }
+  .how .num { font-size: 13px; font-weight: 600; color: var(--muted); display: inline-block; padding-bottom: 6px; border-bottom: 2px solid #fff; margin-bottom: 12px; }
+  .how h3 { margin: 0 0 6px; font-size: 19px; }
+  .how p { margin: 0 auto; color: var(--muted); font-size: 14px; max-width: 280px; }
+
+  /* Skjema */
+  .form-shell {
+    display: grid; grid-template-columns: 340px 1fr; gap: 28px; align-items: start;
+  }
+  .summary {
+    position: sticky; top: 20px; background: var(--soft); border-radius: 24px; padding: 24px;
+  }
+  .summary h4 { margin: 0 0 14px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .sum-photog { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 16px; padding: 14px; }
+  .sum-photog .avatar { width: 56px; height: 56px; margin: 0; border-width: 3px; flex: 0 0 auto; }
+  .sum-photog strong { display: block; font-size: 16px; }
+  .sum-photog small { color: var(--muted); font-size: 13px; }
+  .sum-photog button { margin-left: auto; background: none; border: 0; font-size: 13px; font-weight: 600; color: var(--red); padding: 4px; }
+  .sum-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+  .sum-list li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; background: #fff; border-radius: 12px; }
+  .sum-list li span:first-child { color: var(--muted); }
+  .sum-list li span:last-child { font-weight: 600; text-align: right; }
+  .sum-note { font-size: 13px; color: var(--muted); margin: 16px 0 0; }
+
+  form.booking { background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 32px; }
+  fieldset { border: 0; margin: 0 0 30px; padding: 0; }
+  legend { font-weight: 700; font-size: 18px; margin-bottom: 14px; padding: 0; display: flex; align-items: center; gap: 10px; }
+  legend .n { width: 26px; height: 26px; border-radius: 50%; background: var(--red); color: #fff; font-size: 13px; display: grid; place-items: center; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+  label.lbl { font-size: 14px; font-weight: 600; }
+  label.lbl .opt { font-weight: 400; color: var(--muted); }
+  .field input, .field textarea {
+    font: inherit; font-size: 15px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--soft);
+    outline: 0; transition: border-color .2s, background .2s; width: 100%;
+  }
+  .field textarea { min-height: 92px; resize: vertical; }
+  .field input:focus, .field textarea:focus { border-color: var(--ink); background: #fff; }
+  .field input.err, .field textarea.err { border-color: var(--red); background: #fff6f7; }
+  .prod-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .prod input { position: absolute; opacity: 0; pointer-events: none; }
+  .prod span {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--soft); font-size: 14px; font-weight: 500; cursor: pointer; transition: all .15s; height: 100%;
+  }
+  .prod span::before {
+    content: ""; width: 18px; height: 18px; border-radius: 6px; border: 2px solid #c9c5c1; flex: 0 0 auto; background: #fff;
+    transition: all .15s;
+  }
+  .prod input:checked + span { border-color: var(--ink); background: #fff; }
+  .prod input:checked + span::before {
+    border-color: var(--red); background: var(--red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center/12px no-repeat;
+  }
+  .prod input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .seg { display: inline-flex; background: var(--soft); border-radius: 12px; padding: 4px; border: 1px solid var(--line); }
+  .seg input { position: absolute; opacity: 0; }
+  .seg label { padding: 8px 22px; border-radius: 9px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--muted); }
+  .seg input:checked + label { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .submit-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 24px; }
+  .submit-row p { margin: 0; font-size: 13px; color: var(--muted); max-width: 360px; }
+  .submit {
+    display: inline-flex; align-items: center; gap: 12px; border: 0; border-radius: 999px; background: var(--red); color: #fff;
+    font-weight: 700; font-size: 16px; padding: 10px 10px 10px 24px; transition: background .2s;
+  }
+  .submit:hover { background: var(--red-dark); }
+  .submit .ic { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.22); display: grid; place-items: center; }
+  .submit[disabled] { opacity: .6; cursor: wait; }
+  .form-error { color: var(--red); font-size: 14px; font-weight: 600; margin: 0 0 16px; display: none; }
+
+  .done { text-align: center; padding: 60px 24px; display: none; }
+  .done .ico { width: 72px; height: 72px; border-radius: 50%; background: var(--sage); margin: 0 auto 18px; display: grid; place-items: center; }
+  .done h3 { font-size: 26px; margin: 0 0 8px; }
+  .done p { color: var(--muted); margin: 0 auto 22px; max-width: 420px; }
+
+  /* Modal */
+  dialog {
+    border: 0; border-radius: 24px; padding: 0; max-width: 720px; width: calc(100% - 32px); color: var(--ink);
+    box-shadow: 0 30px 80px rgba(0,0,0,.25);
+  }
+  dialog::backdrop { background: rgba(30,25,25,.5); }
+  .modal { display: grid; grid-template-columns: 1fr 1fr; }
+  .modal .work { background: #eee center/cover; min-height: 420px; }
+  .modal .info { padding: 28px; display: flex; flex-direction: column; }
+  .modal .info .avatar { width: 72px; height: 72px; margin: 0 0 12px; border-width: 3px; }
+  .modal h3 { margin: 0; font-size: 22px; }
+  .modal .role { color: var(--muted); font-size: 14px; margin: 2px 0 14px; }
+  .modal p.bio { font-size: 14px; color: #4a4c57; margin: 0 0 20px; }
+  .modal .close { position: absolute; right: 14px; top: 14px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255,255,255,.9); display: grid; place-items: center; }
+  .modal .pick { align-self: flex-start; margin-top: auto; }
+
+  footer { padding: 70px 0 40px; text-align: center; color: var(--muted); font-size: 14px; }
+  footer a { color: var(--ink); font-weight: 600; text-decoration: none; }
+
+  .embedded header.top { display: none; }
+  .embedded .hero { padding-top: 80px; }
+  .embedded .hero, .embedded .how { border-radius: 24px; }
+  .embedded footer { padding: 50px 0 20px; }
+
+  @media (max-width: 960px) {
+    .svc-grid { grid-template-columns: repeat(2, 1fr); }
+    .track { grid-auto-columns: calc((100% - 2*20px) / 3); }
+    .form-shell { grid-template-columns: 1fr; }
+    .summary { position: static; }
+  }
+  @media (max-width: 720px) {
+    .track { grid-auto-columns: 72%; }
+    .nav-btn { display: none; }
+    .how { grid-template-columns: 1fr; padding: 40px 20px; }
+    .grid2, .prod-grid { grid-template-columns: 1fr; }
+    form.booking { padding: 22px 18px; }
+    .modal { grid-template-columns: 1fr; }
+    .modal .work { min-height: 220px; }
+    .hero { padding: 120px 0 120px; }
+    .hero-search input[type=date] { display: none; }
+    .top-cta .txt { display: none; }
+    .top-cta { padding: 8px; }
+  }
+  @media (max-width: 420px) {
+    .svc-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .svc { padding: 16px; min-height: 170px; }
+    .svc p { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="https://fotostallen.no" aria-label="Fotostallen forside">
+      <img src="https://impro.usercontent.one/appid/oneComWsb/domain/fotostallen.no/media/fotostallen.no/onewebmedia/fs_logo%2Btext_black_rgb.png" alt="Fotostallen">
+    </a>
+    <a class="top-cta" href="#bestill"><span class="txt">Bestill fotografering</span><span class="ic">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div><div class="shape s4"></div>
+  <div class="wrap">
+    <h1>Book fotograf til <em>neste boligsalg</em></h1>
+    <p class="lead">Velg fotografen du ønsker, eller la oss sende første ledige. Vi bekrefter tidspunkt så raskt vi kan.</p>
+    <form class="hero-search" id="heroForm">
+      <input type="text" id="heroAddr" placeholder="Adresse for fotografering" aria-label="Adresse for fotografering">
+      <input type="date" id="heroDate" aria-label="Ønsket dato">
+      <button type="submit" aria-label="Gå til bestilling">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </form>
+    <div class="chips">
+      <span class="chip">Boligfoto</span><span class="chip">Kveldsbilder</span><span class="chip">Drone</span><span class="chip">Film</span><span class="chip">Interiør</span>
+    </div>
+  </div>
+</section>
+
+<section class="services">
+  <div class="wrap">
+    <div class="svc-grid" id="svcGrid"></div>
+  </div>
+</section>
+
+<section class="block" id="fotografer">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Våre fotografer</h2>
+      <p>Velg hvem du vil ha med på oppdraget.</p>
+    </div>
+    <div class="carousel">
+      <button class="nav-btn prev" aria-label="Forrige" data-dir="-1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      </button>
+      <div class="track" id="track"></div>
+      <button class="nav-btn next" aria-label="Neste" data-dir="1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Slik fungerer det</h2>
+      <p>Tre steg til ferdige bilder.</p>
+    </div>
+    <div class="how">
+      <div class="shape s1" style="left:2%;top:20%"></div><div class="shape s4" style="right:4%;top:15%;width:60px;height:60px"></div>
+      <div class="step">
+        <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+        <div class="num">01</div>
+        <h3>Velg fotograf</h3>
+        <p>Velg en av oss, eller første ledige hvis det haster.</p>
+      </div>
+      <div class="step">
+        <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 10h18M8 2v4M16 2v4"/></svg></div>
+        <div class="num">02</div>
+        <h3>Send bestilling</h3>
+        <p>Adresse, dato og hvilke bilder du trenger. Vi bekrefter tidspunkt.</p>
+      </div>
+      <div class="step">
+        <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+        <div class="num">03</div>
+        <h3>Få bildene</h3>
+        <p>Vi fotograferer, redigerer og leverer ferdige bilder til deg.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="bestill">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Bestill fotografering</h2>
+      <p>Fyll ut skjemaet, så tar vi kontakt.</p>
+    </div>
+    <div class="form-shell">
+      <aside class="summary">
+        <h4>Din bestilling</h4>
+        <div class="sum-photog">
+          <div class="avatar" id="sumAvatar"></div>
+          <div><strong id="sumName"></strong><small id="sumRole"></small></div>
+          <button type="button" id="sumChange">Bytt</button>
+        </div>
+        <ul class="sum-list">
+          <li><span>Dato</span><span id="sumDate">Ikke valgt</span></li>
+          <li><span>Produkter</span><span id="sumProd">Ingen valgt</span></li>
+        </ul>
+        <p class="sum-note">Spørsmål? Send oss en e-post på <a href="mailto:kontakt@fotostallen.no">kontakt@fotostallen.no</a>.</p>
+      </aside>
+
+      <div>
+        <form class="booking" id="booking" novalidate>
+          <p class="form-error" id="formError">Fyll ut feltene som er markert.</p>
+
+          <fieldset>
+            <legend><span class="n">1</span>Megler</legend>
+            <div class="grid2">
+              <div class="field"><label class="lbl" for="f_megler">Navn og telefon</label><input id="f_megler" name="megler" required autocomplete="name"></div>
+              <div class="field"><label class="lbl" for="f_kontor">Meglerkontor</label><input id="f_kontor" name="kontor" required autocomplete="organization"></div>
+              <div class="field full"><label class="lbl" for="f_epost">E-post</label><input id="f_epost" name="epost" type="email" required autocomplete="email"></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="n">2</span>Boligen</legend>
+            <div class="grid2">
+              <div class="field full"><label class="lbl" for="f_adresse">Adresse for fotografering</label><input id="f_adresse" name="adresse" required autocomplete="street-address"></div>
+              <div class="field"><label class="lbl" for="f_kvm">Størrelse i kvm</label><input id="f_kvm" name="kvm" inputmode="numeric" required></div>
+              <div class="field"><label class="lbl" for="f_dato">Ønsket dato</label><input id="f_dato" name="dato" type="date" required></div>
+              <div class="field full"><label class="lbl" for="f_ankomst">Ankomst og etasje</label><input id="f_ankomst" name="ankomst" placeholder="F.eks. kode 1234, 3. etasje, heis" required></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="n">3</span>Ønskede fotoprodukter</legend>
+            <div class="prod-grid" id="prodGrid"></div>
+          </fieldset>
+
+          <fieldset>
+            <legend><span class="n">4</span>Faktura og annet</legend>
+            <div class="grid2">
+              <div class="field full"><label class="lbl" for="f_faktura">Fakturainfo <span class="opt">(navn, adresse, telefon, e-post)</span></label><textarea id="f_faktura" name="faktura" required></textarea></div>
+              <div class="field full">
+                <span class="lbl" style="font-weight:600;font-size:14px">Ønsker dere samarbeidspost på Instagram?</span>
+                <div class="seg">
+                  <input type="radio" name="insta" id="insta_ja" value="Ja"><label for="insta_ja">Ja</label>
+                  <input type="radio" name="insta" id="insta_nei" value="Nei" checked><label for="insta_nei">Nei</label>
+                </div>
+              </div>
+              <div class="field full"><label class="lbl" for="f_mer">Noe mer? <span class="opt">(valgfritt)</span></label><textarea id="f_mer" name="mer"></textarea></div>
+            </div>
+          </fieldset>
+
+          <div class="submit-row">
+            <p>Bestillingen er ikke bindende før vi har bekreftet tidspunkt.</p>
+            <button class="submit" type="submit" id="submitBtn">Send bestilling<span class="ic">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg></span></button>
+          </div>
+        </form>
+
+        <div class="booking done" id="done" style="border:1px solid var(--line);border-radius:24px">
+          <div class="ico"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2f7a46" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+          <h3>Takk for bestillingen!</h3>
+          <p id="doneText">Vi har mottatt bestillingen og tar kontakt for å bekrefte tidspunkt.</p>
+          <button class="pick" type="button" id="again">Ny bestilling<span class="ic">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Fotostallen &middot; <a href="mailto:kontakt@fotostallen.no">kontakt@fotostallen.no</a> &middot; <a href="https://instagram.com/fotostallen">Instagram</a>
+  </div>
+</footer>
+
+<dialog id="modal">
+  <div class="modal" style="position:relative">
+    <div class="work" id="mWork"></div>
+    <div class="info">
+      <div class="avatar" id="mAvatar"></div>
+      <h3 id="mName"></h3>
+      <div class="role" id="mRole"></div>
+      <p class="bio" id="mBio"></p>
+      <div class="tags" id="mTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px"></div>
+      <button class="pick" type="button" id="mPick">Velg fotograf<span class="ic">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
+    </div>
+    <button class="close" type="button" id="mClose" aria-label="Lukk">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+</dialog>
+
+<script>
+/* ---------- Innstillinger ---------- */
+
+// Bestillingene sendes til det eksisterende Google-skjemaet, så svarene havner samme sted som før.
+const GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSdH0Cmhauu0wQHyAV4LupJrnoTAbjFvFmzLdDFVaqqunsRGJA/formResponse";
+const ENTRY = {
+  megler: "entry.2021653666",
+  kontor: "entry.1861348169",
+  epost: "entry.1105479251",
+  adresse: "entry.1349272750",
+  faktura: "entry.693534386",
+  kvm: "entry.1846519442",
+  ankomst: "entry.1534032754",
+  fotograf: "entry.125327204",
+  dato: "entry.1742537926",
+  produkter: "entry.417181532",
+  insta: "entry.101327038",
+  mer: "entry.1019956651",
+};
+
+const IMG = "https://impro.usercontent.one/appid/oneComWsb/domain/fotostallen.no/media/fotostallen.no/onewebmedia/";
+
+// formOption = nøyaktig tekst på valget i Google-skjemaet. null = finnes ikke der ennå
+// (da sendes "Første ledig" og ønsket fotograf skrives i "Noe mer?").
+const PHOTOGRAPHERS = [
+  {
+    id: "forste", name: "Første ledige", role: "Raskest mulig", formOption: "Første ledig",
+    tags: ["Raskest levering"], any: true,
+  },
+  {
+    id: "fredrik", name: "Fredrik Andersen", role: "Boligfoto og portrett", formOption: "Fredrik Andresen",
+    img: IMG + "fredrik%20andersen%20portrett.jpg", work: IMG + "fredrik%20andersen%20portef%C3%B8ljeeksempel.jpg",
+    tags: ["Bolig", "Portrett"],
+    bio: "Fredrik har et blikk for det vakre i hverdagen. Han jobber primært med boligfoto og brenner i tillegg for portrett. Med utdannelse i film og TV har han et bevisst forhold til lys, komposisjon og stemning.",
+  },
+  {
+    id: "glenn", name: "Glenn Pettersen", role: "Film og video", formOption: "Glenn Pettersen",
+    img: IMG + "Image%202%20(5).jpg", work: IMG + "GP_DO2_2W7A3253.jpg",
+    tags: ["Film", "Reklame", "Bolig"],
+    bio: "Glenn er kollektivets filmfotograf. Han lager alt fra stemningsfulle Instagram-videoer til større reklamefilmer, med oppdrag for blant annet Devold, Janus og flere eiendomsmeglere.",
+  },
+  {
+    id: "lars", name: "Lars Petter Skillestad", role: "Interiør og bolig", formOption: "Lars-Petter Skillestad",
+    img: IMG + "Image%202%20(8).jpg", work: IMG + "6L9A2189.jpg",
+    tags: ["Interiør", "Bolig", "Produkt", "Film"],
+    bio: "Lars Petter tar bilder av interiørprosjekter, portretter, produkter og bolig for salg. Han jobber med både stills og film, og har et blikk for romfølelse, detaljer og stemning.",
+  },
+  {
+    id: "kevin", name: "Kevin Fauske", role: "Interiør, analog og digital", formOption: "Kevin Fauske",
+    img: IMG + "Kevin,%20Kristine%20Elvemo_2.jpg", work: IMG + "R1-09413-0006.jpg",
+    tags: ["Interiør", "Analog"],
+    bio: "Kevin er den kreative altmuligmannen i kollektivet, med inspirasjon fra både analoge og digitale kameraer. Han jobber mest med interiørarkitekter og fanger både detaljer og helhet.",
+  },
+  {
+    id: "scott", name: "Scott Kvitberg", role: "Interiør og bolig", formOption: "Scott Kvitberg",
+    img: IMG + "Image%202.jpg", work: IMG + "01-8.jpg",
+    tags: ["Interiør", "Bolig", "Portrett", "Film"],
+    bio: "Scott tar bilder av interiørprosjekter, portretter, produkter og bolig for salg. Han jobber med både stills og film, og har et blikk for romfølelse, detaljer og stemning.",
+  },
+  {
+    id: "helene", name: "Helene Stenseth", role: "Interiør og bolig", formOption: null,
+    img: IMG + "Image%202%20(4).jpg", work: IMG + "Image%202%20(4).jpg",
+    tags: ["Interiør", "Bolig", "Portrett"],
+    bio: "Helene tar bilder av interiørprosjekter, portretter, produkter og bolig for salg, og har et blikk for romfølelse, detaljer og stemning.",
+  },
+  {
+    id: "kristine", name: "Kristine Elvemo", role: "Interiør og bolig", formOption: "Kristine Elvsmo",
+    img: IMG + "Kristine,%20Kevin%20Fauske.jpg", work: IMG + "6L9A6327.jpg",
+    tags: ["Interiør", "Bolig", "Portrett"],
+    bio: "Kristine tar bilder av interiørprosjekter, portretter, produkter og bolig for salg, og har et blikk for romfølelse, detaljer og stemning.",
+  },
+];
+
+// value = nøyaktig tekst på avkrysningsvalget i Google-skjemaet.
+const PRODUCTS = [
+  { value: "Dagbilder helbolig", label: "Dagbilder, hel bolig", svc: "dag" },
+  { value: "Dagbilder <10bilder", label: "Dagbilder, under 10 bilder", svc: "dag" },
+  { value: "Kveld helbolig", label: "Kveldsbilder, hel bolig", svc: "kveld" },
+  { value: "Kveld <10bilder", label: "Kveldsbilder, under 10 bilder", svc: "kveld" },
+  { value: "Drone", label: "Drone", svc: "drone" },
+  { value: "Video (1min)", label: "Video (1 min)", svc: "video" },
+];
+
+const SERVICES = [
+  { id: "dag", title: "Dagbilder", text: "Lyse, rene bilder av hele boligen eller utvalgte rom.", product: "Dagbilder helbolig",
+    icon: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
+  { id: "kveld", title: "Kveldsbilder", text: "Stemning i skumringen, med lys i vinduene.", product: "Kveld helbolig",
+    icon: '<path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/>' },
+  { id: "drone", title: "Drone", text: "Oversikt over tomt, nabolag og utsikt fra lufta.", product: "Drone",
+    icon: '<circle cx="5" cy="5" r="2.5"/><circle cx="19" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/><path d="M7 7l2 2M17 7l-2 2M7 17l2-2M17 17l-2-2"/>' },
+  { id: "video", title: "Video", text: "Kort film på ett minutt, klar for annonse og sosiale medier.", product: "Video (1min)",
+    icon: '<rect x="2" y="6" width="14" height="12" rx="2.5"/><path d="M16 10l6-3v10l-6-3z"/>' },
+];
+
+/* ---------- Oppsett ---------- */
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const arrow = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const anyIcon = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc384c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>';
+let selected = "forste";
+
+function avatarHTML(p) {
+  return p.any ? anyIcon : `<img src="${p.img}" alt="${esc(p.name)}" loading="lazy">`;
+}
+
+// Tjenestekort
+$("#svcGrid").innerHTML = SERVICES.map(s => `
+  <button type="button" class="svc" data-svc="${s.id}" aria-pressed="false">
+    <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc384c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${s.icon}</svg></span>
+    <h3>${s.title}</h3>
+    <p>${s.text}</p>
+    <span class="foot"><span class="tag">${PRODUCTS.filter(p => p.svc === s.id).length > 1 ? "Hel bolig / utvalg" : "Tillegg"}</span><span class="arrow">${arrow}</span></span>
+  </button>`).join("");
+
+// Fotografkort
+$("#track").innerHTML = PHOTOGRAPHERS.map(p => `
+  <article class="pcard" data-id="${p.id}">
+    <div class="top">
+      ${p.any ? '<span class="badge"><i></i>Anbefalt ved hastverk</span>' : ""}
+      <svg class="ok" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.2l-4-4 1.4-1.4 2.6 2.6 5.6-5.6 1.4 1.4z"/></svg>
+      <div class="avatar${p.any ? " any" : ""}">${avatarHTML(p)}</div>
+      <h3>${esc(p.name)}</h3>
+      <div class="role">${esc(p.role)}</div>
+      <div class="tags">${p.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>
+    </div>
+    <div class="bottom">
+      ${p.any ? '<span style="font-size:13px;color:var(--muted)">Vi fordeler</span>' : `<button type="button" class="link" data-more="${p.id}">Les mer</button>`}
+      <button type="button" class="pick" data-pick="${p.id}"><span class="lbl">Velg</span><span class="ic">${arrow}</span></button>
+    </div>
+  </article>`).join("");
+
+// Produkter
+$("#prodGrid").innerHTML = PRODUCTS.map((p, i) => `
+  <label class="prod"><input type="checkbox" name="produkter" value="${esc(p.value)}" id="prod${i}"><span>${esc(p.label)}</span></label>`).join("");
+
+/* ---------- Valg av fotograf ---------- */
+
+function selectPhotographer(id, scroll) {
+  selected = id;
+  const p = PHOTOGRAPHERS.find(x => x.id === id);
+  document.querySelectorAll(".pcard").forEach(c => {
+    const on = c.dataset.id === id;
+    c.classList.toggle("on", on);
+    $(".pick .lbl", c).textContent = on ? "Valgt" : "Velg";
+  });
+  const av = $("#sumAvatar");
+  av.className = "avatar" + (p.any ? " any" : "");
+  av.innerHTML = p.any ? anyIcon.replace('width="40" height="40"', 'width="24" height="24"') : avatarHTML(p);
+  $("#sumName").textContent = p.name;
+  $("#sumRole").textContent = p.role;
+  if (scroll) $("#bestill").scrollIntoView({ behavior: "smooth" });
+}
+
+document.addEventListener("click", e => {
+  const pick = e.target.closest("[data-pick]");
+  if (pick) return selectPhotographer(pick.dataset.pick, true);
+  const more = e.target.closest("[data-more]");
+  if (more) return openModal(more.dataset.more);
+});
+
+$("#sumChange").addEventListener("click", () => $("#fotografer").scrollIntoView({ behavior: "smooth" }));
+
+// Karusell-piler
+const track = $("#track");
+function updateNav() {
+  $(".nav-btn.prev").disabled = track.scrollLeft < 10;
+  $(".nav-btn.next").disabled = track.scrollLeft + track.clientWidth > track.scrollWidth - 10;
+}
+document.querySelectorAll(".nav-btn").forEach(b => b.addEventListener("click", () => {
+  track.scrollBy({ left: Number(b.dataset.dir) * track.clientWidth * 0.75, behavior: "smooth" });
+}));
+track.addEventListener("scroll", updateNav, { passive: true });
+window.addEventListener("resize", updateNav);
+
+/* ---------- Modal ---------- */
+
+const modal = $("#modal");
+let modalId = null;
+function openModal(id) {
+  const p = PHOTOGRAPHERS.find(x => x.id === id);
+  modalId = id;
+  $("#mWork").style.backgroundImage = `url("${p.work}")`;
+  $("#mAvatar").innerHTML = avatarHTML(p);
+  $("#mName").textContent = p.name;
+  $("#mRole").textContent = p.role;
+  $("#mBio").textContent = p.bio;
+  $("#mTags").innerHTML = p.tags.map(t => `<span style="font-size:12px;padding:3px 9px;border-radius:999px;background:var(--soft)">${esc(t)}</span>`).join("");
+  modal.showModal();
+}
+$("#mClose").addEventListener("click", () => modal.close());
+modal.addEventListener("click", e => { if (e.target === modal) modal.close(); });
+$("#mPick").addEventListener("click", () => { modal.close(); selectPhotographer(modalId, true); });
+
+/* ---------- Produkter og oppsummering ---------- */
+
+const prodBoxes = () => [...document.querySelectorAll('input[name="produkter"]')];
+
+function syncProducts() {
+  const chosen = prodBoxes().filter(b => b.checked);
+  $("#sumProd").textContent = chosen.length
+    ? chosen.map(b => PRODUCTS.find(p => p.value === b.value).label).join(", ")
+    : "Ingen valgt";
+  document.querySelectorAll(".svc").forEach(card => {
+    const on = chosen.some(b => PRODUCTS.find(p => p.value === b.value).svc === card.dataset.svc);
+    card.classList.toggle("on", on);
+    card.setAttribute("aria-pressed", on);
+  });
+}
+$("#prodGrid").addEventListener("change", syncProducts);
+
+document.querySelectorAll(".svc").forEach(card => card.addEventListener("click", () => {
+  const s = SERVICES.find(x => x.id === card.dataset.svc);
+  const related = prodBoxes().filter(b => PRODUCTS.find(p => p.value === b.value).svc === s.id);
+  const anyOn = related.some(b => b.checked);
+  related.forEach(b => b.checked = false);
+  if (!anyOn) prodBoxes().find(b => b.value === s.product).checked = true;
+  syncProducts();
+}));
+
+function fmtDate(v) {
+  if (!v) return "Ikke valgt";
+  const d = new Date(v + "T12:00");
+  return d.toLocaleDateString("nb-NO", { weekday: "short", day: "numeric", month: "long" });
+}
+$("#f_dato").addEventListener("change", e => { $("#sumDate").textContent = fmtDate(e.target.value); });
+$("#f_dato").min = new Date().toISOString().slice(0, 10);
+$("#heroDate").min = $("#f_dato").min;
+
+$("#heroForm").addEventListener("submit", e => {
+  e.preventDefault();
+  if ($("#heroAddr").value) $("#f_adresse").value = $("#heroAddr").value;
+  if ($("#heroDate").value) { $("#f_dato").value = $("#heroDate").value; $("#sumDate").textContent = fmtDate($("#heroDate").value); }
+  $("#fotografer").scrollIntoView({ behavior: "smooth" });
+});
+
+/* ---------- Innsending ---------- */
+
+const form = $("#booking");
+
+function validate() {
+  let ok = true;
+  form.querySelectorAll("[required]").forEach(el => {
+    const bad = !el.value.trim() || (el.type === "email" && !/^\S+@\S+\.\S+$/.test(el.value));
+    el.classList.toggle("err", bad);
+    if (bad) ok = false;
+  });
+  return ok;
+}
+form.addEventListener("input", e => { if (e.target.classList.contains("err")) e.target.classList.remove("err"); });
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!validate()) {
+    $("#formError").style.display = "block";
+    form.querySelector(".err").focus();
+    return;
+  }
+  $("#formError").style.display = "none";
+
+  const p = PHOTOGRAPHERS.find(x => x.id === selected);
+  const v = id => $("#" + id).value.trim();
+  const data = new URLSearchParams();
+  data.append(ENTRY.megler, v("f_megler"));
+  data.append(ENTRY.kontor, v("f_kontor"));
+  data.append(ENTRY.epost, v("f_epost"));
+  data.append(ENTRY.adresse, v("f_adresse"));
+  data.append(ENTRY.faktura, v("f_faktura"));
+  data.append(ENTRY.kvm, v("f_kvm"));
+  data.append(ENTRY.ankomst, v("f_ankomst"));
+  data.append(ENTRY.fotograf, p.formOption || "Første ledig");
+  const [y, m, d] = v("f_dato").split("-");
+  data.append(ENTRY.dato + "_year", y);
+  data.append(ENTRY.dato + "_month", String(Number(m)));
+  data.append(ENTRY.dato + "_day", String(Number(d)));
+  prodBoxes().filter(b => b.checked).forEach(b => data.append(ENTRY.produkter, b.value));
+  data.append(ENTRY.insta, form.insta.value);
+  const extra = p.formOption ? v("f_mer") : `Ønsket fotograf: ${p.name}\n${v("f_mer")}`.trim();
+  data.append(ENTRY.mer, extra);
+
+  const btn = $("#submitBtn");
+  btn.disabled = true;
+  try {
+    // Google svarer uten CORS-headere, så vi kan ikke lese svaret, men innsendingen går gjennom.
+    await fetch(GOOGLE_FORM, { method: "POST", mode: "no-cors", body: data });
+    form.style.display = "none";
+    $("#doneText").textContent = p.any
+      ? "Vi har mottatt bestillingen og sender første ledige fotograf. Vi tar kontakt for å bekrefte tidspunkt."
+      : `Vi har mottatt bestillingen og gir beskjed til ${p.name.split(" ")[0]}. Vi tar kontakt for å bekrefte tidspunkt.`;
+    $("#done").style.display = "block";
+    $("#done").scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (err) {
+    $("#formError").textContent = "Noe gikk galt. Prøv igjen, eller send oss en e-post på kontakt@fotostallen.no.";
+    $("#formError").style.display = "block";
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$("#again").addEventListener("click", () => {
+  form.reset();
+  syncProducts();
+  $("#sumDate").textContent = "Ikke valgt";
+  $("#done").style.display = "none";
+  form.style.display = "block";
+  selectPhotographer("forste");
+  $("#fotografer").scrollIntoView({ behavior: "smooth" });
+});
+
+selectPhotographer("forste");
+syncProducts();
+updateNav();
+
+/* ---------- Innebygging ---------- */
+
+// Forteller foreldresiden hvor høy siden er, så iframen kan vokse uten egen rullefelt.
+if (window.self !== window.top) {
+  let last = 0;
+  const report = () => {
+    const h = Math.ceil(document.documentElement.scrollHeight);
+    if (h !== last) { last = h; parent.postMessage({ type: "fotostallen-booking-height", height: h }, "*"); }
+  };
+  new ResizeObserver(report).observe(document.body);
+  window.addEventListener("load", report);
+}
+</script>
+</body>
+</html>
