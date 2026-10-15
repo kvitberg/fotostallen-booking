@@ -813,7 +813,7 @@ updateNav();
 if (window.self !== window.top) {
   let last = 0;
   const report = () => {
-    const h = Math.ceil(document.documentElement.scrollHeight);
+    const h = Math.ceil(document.body.getBoundingClientRect().height);
     if (h !== last) { last = h; parent.postMessage({ type: "fotostallen-booking-height", height: h }, "*"); }
   };
   new ResizeObserver(report).observe(document.body);
