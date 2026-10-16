@@ -21,8 +21,11 @@
 
 const CONFIG = {
   TZ: "Europe/Oslo",
-  SLOT_STARTS: [8, 10, 12, 14, 16],
-  SLOT_HOURS: 2,
+  // Oppdragets varighet i minutter (standard 1,5 t). Endres her og i index.html (DURATION_MIN).
+  DURATION_MIN: 90,
+  // Starttider på dagtid. Kveldsfoto får i tillegg én luke per dag som starter litt før solnedgang.
+  DAY_SLOTS: ["08:00", "09:30", "11:00", "12:30", "14:00", "15:30"],
+  EVENING: { LAT: 59.91, LON: 10.75, BEFORE_SUNSET_MIN: 30 },
   WORKDAYS: [1, 2, 3, 4, 5], // 0 = søndag
   MIN_LEAD_HOURS: 3,
   MAX_RANGE_DAYS: 62,
@@ -45,6 +48,10 @@ const CONFIG = {
     kristine: "Kristine Foto",
     henrik: "Henrik Foto",
   },
+  // Tildeles aldri automatisk som «første ledige» (Glenn bor i Ålesund), men kan velges direkte.
+  AUTO_ASSIGN_EXCLUDE: ["glenn"],
+  // Bekreftelse til kunden sendes fra denne adressen når den er lagt inn som alias i Gmail.
+  CONFIRM_FROM: "booking@fotostallen.no",
 };
 const ANY = "forste"; // «Første ledige»
 
@@ -87,7 +94,7 @@ function book(b) {
   try {
     const id = b.photographer;
     if (id !== ANY && !CONFIG.PHOTOGRAPHERS[id]) return json({ ok: false, error: "unknown_photographer" });
-    if (!isDate(b.date) || CONFIG.SLOT_STARTS.map(slotKey).indexOf(b.time) < 0) return json({ ok: false, error: "bad_slot" });
+    if (!isDate(b.date) || slotsOfDay(ymd(b.date)).indexOf(b.time) < 0) return json({ ok: false, error: "bad_slot" });
     if (!clean(b.address, 200) || !clean(b.navn, 200)) return json({ ok: false, error: "missing_fields" });
 
     lock.waitLock(20000);
@@ -97,17 +104,20 @@ function book(b) {
     const free = computeSlots(id, b.date, b.date, readStore(), queue, Date.now())[b.date] || [];
     if (free.indexOf(b.time) < 0) return json({ ok: false, error: "taken" });
 
-    queue.push({
-      id: Utilities.getUuid(), created: Date.now(), photographer: id, date: b.date, time: b.time,
+    const q = {
+      id: Utilities.getUuid(), created: Date.now(), photographer: id, date: b.date, time: b.time, duration: CONFIG.DURATION_MIN,
+      services: clean(b.services, 300),
       navn: clean(b.navn, 200), telefon: clean(b.telefon, 40), epost: clean(b.epost, 200),
       oppdrag: clean(b.oppdrag, 60), faktura: clean(b.faktura, 500),
       address: clean(b.address, 200), kvm: clean(b.kvm, 40), ankomst: clean(b.ankomst, 300),
       products: Array.isArray(b.products) ? b.products.slice(0, 10).map(x => clean(x, 60)) : [],
       note: clean(b.note, 1000),
-    });
+    };
+    queue.push(q);
     writeQueue(queue);
     countBooking();
-    return json({ ok: true });
+    const ref = bookingRef(q.id);
+    return json({ ok: true, ref, emailed: sendConfirmation(q, ref) });
   } catch (err) {
     console.error(err);
     return json({ ok: false, error: "server" });
@@ -120,8 +130,8 @@ function book(b) {
 function sync(b) {
   const d = b.data;
   if (d) {
-    if (!isDate(d.start) || typeof d.free !== "object") return json({ ok: false, error: "bad_data" });
-    PropertiesService.getScriptProperties().setProperty("STORE", JSON.stringify({ updated: Date.now(), start: d.start, free: d.free }));
+    if (d.v !== 2 || !isDate(d.start) || typeof d.free !== "object") return json({ ok: false, error: "bad_data" });
+    PropertiesService.getScriptProperties().setProperty("STORE", JSON.stringify({ v: 2, updated: Date.now(), start: d.start, free: d.free }));
   }
   return json({ ok: true, queue: readQueue() });
 }
@@ -154,17 +164,29 @@ function writeQueue(q) {
 
 /* ---------- Ledige luker (ren JavaScript, testes med node) ---------- */
 
+/** Starttidene en dag: dagluker + kveldsluken (rundt solnedgang), sortert og uten duplikater. */
+function slotsOfDay(d) {
+  const keys = CONFIG.DAY_SLOTS.slice();
+  const ev = eveningKey(d);
+  if (ev && keys.indexOf(ev) < 0) keys.push(ev);
+  return keys.sort();
+}
+
+const keyMin = key => Number(key.slice(0, 2)) * 60 + Number(key.slice(3, 5));
+const minKey = m => `${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`;
+const slotStart = (d, key) => zonedToUtc(d, Math.floor(keyMin(key) / 60), keyMin(key) % 60, CONFIG.TZ);
+
 /**
- * Masker: for hver fotograf (og «forste») en streng med ett tegn per dag fra store.start.
- * Tegnet er et base-32-siffer der bit i = 1 betyr at luke SLOT_STARTS[i] er ledig i kalenderen.
- * Uten data (ikke synket ennå, eller dato utenfor vinduet) regnes luken som ledig.
+ * Masker (v2): for hver fotograf to heks-tegn per dag fra store.start. Bit i = 1 betyr at
+ * slotsOfDay(dag)[i] er ledig i kalenderen. Uten data (ikke synket, gammelt format eller dato
+ * utenfor vinduet) regnes luken som ledig.
  */
 function maskFree(store, pid, date, i) {
-  if (!store || !store.free || typeof store.free[pid] !== "string") return true;
+  if (!store || store.v !== 2 || !store.free || typeof store.free[pid] !== "string") return true;
   const idx = daysBetween(store.start, date);
-  const ch = store.free[pid][idx];
-  if (idx < 0 || ch === undefined) return true;
-  return ((parseInt(ch, 32) >> i) & 1) === 1;
+  const hex = store.free[pid].substr(idx * 2, 2);
+  if (idx < 0 || hex.length < 2) return true;
+  return ((parseInt(hex, 16) >> i) & 1) === 1;
 }
 
 /**
@@ -182,9 +204,8 @@ function computeSlots(id, from, to, store, queue, nowMs) {
     const date = fmtYmd(d);
     if (CONFIG.WORKDAYS.indexOf(weekdayOf(d)) < 0) continue;
     const free = [];
-    CONFIG.SLOT_STARTS.forEach((h, i) => {
-      const key = slotKey(h);
-      if (zonedToUtc(d, h, 0, CONFIG.TZ) < earliest) return;
+    slotsOfDay(d).forEach((key, i) => {
+      if (slotStart(d, key) < earliest) return;
       const ok = id === ANY
         ? personFree(ANY, date, i, key) && people.some(pid => personFree(pid, date, i, key))
         : personFree(id, date, i, key);
@@ -195,7 +216,7 @@ function computeSlots(id, from, to, store, queue, nowMs) {
   return out;
 }
 
-/** Brukes av synkjobben: lager masker fra opptatte perioder per fotograf. */
+/** Brukes av synkjobben: lager masker (v2) fra opptatte perioder per fotograf. */
 function buildMasks(busyById, start, days) {
   const free = {};
   Object.keys(busyById).forEach(pid => {
@@ -203,15 +224,46 @@ function buildMasks(busyById, start, days) {
     for (let n = 0; n < days; n++) {
       const d = addDays(ymd(start), n);
       let bits = 0;
-      CONFIG.SLOT_STARTS.forEach((h, i) => {
-        const s = zonedToUtc(d, h, 0, CONFIG.TZ);
-        if (!overlaps(busyById[pid], s, s + CONFIG.SLOT_HOURS * 3600e3)) bits |= 1 << i;
+      slotsOfDay(d).forEach((key, i) => {
+        const s = slotStart(d, key);
+        if (!overlaps(busyById[pid], s, s + CONFIG.DURATION_MIN * 60e3)) bits |= 1 << i;
       });
-      str += bits.toString(32);
+      str += pad2(bits.toString(16));
     }
     free[pid] = str;
   });
   return free;
+}
+
+/**
+ * Solnedgang (UTC-ms) for en dato, etter NOAAs forenklede algoritme. Nøyaktig nok (± et par minutter)
+ * til å legge kveldsluken. Gir null ved midnattssol.
+ */
+function sunsetUtc(d) {
+  const rad = Math.PI / 180;
+  const N = Math.round((Date.UTC(d.y, d.m - 1, d.d) - Date.UTC(d.y, 0, 0)) / 86400e3);
+  const lngHour = CONFIG.EVENING.LON / 15;
+  const t = N + (18 - lngHour) / 24;
+  const M = 0.9856 * t - 3.289;
+  const L = (M + 1.916 * Math.sin(M * rad) + 0.020 * Math.sin(2 * M * rad) + 282.634 + 360) % 360;
+  let RA = (Math.atan(0.91764 * Math.tan(L * rad)) / rad + 360) % 360;
+  RA = (RA + Math.floor(L / 90) * 90 - Math.floor(RA / 90) * 90) / 15;
+  const sinDec = 0.39782 * Math.sin(L * rad);
+  const cosDec = Math.cos(Math.asin(sinDec));
+  const cosH = (Math.cos(90.833 * rad) - sinDec * Math.sin(CONFIG.EVENING.LAT * rad)) / (cosDec * Math.cos(CONFIG.EVENING.LAT * rad));
+  if (cosH < -1 || cosH > 1) return null;
+  const H = Math.acos(cosH) / rad / 15;
+  const UT = ((H + RA - 0.06571 * t - 6.622 - lngHour) % 24 + 24) % 24;
+  return Date.UTC(d.y, d.m - 1, d.d) + UT * 3600e3;
+}
+
+/** Kveldsluken: starter BEFORE_SUNSET_MIN før solnedgang, rundet ned til nærmeste kvarter (lokal tid). */
+function eveningKey(d) {
+  const ss = sunsetUtc(d);
+  if (ss === null) return null;
+  const s = ss - CONFIG.EVENING.BEFORE_SUNSET_MIN * 60e3;
+  const localMin = Math.floor(((s + tzOffsetMs(s, CONFIG.TZ)) % 86400e3) / 60e3);
+  return minKey(Math.floor(localMin / 15) * 15);
 }
 
 function overlaps(list, s, e) {
@@ -227,8 +279,8 @@ function overlaps(list, s, e) {
  * feiltolkes.
  */
 function bookingIcs(q, nowMs, assigned) {
-  const start = zonedToUtc(ymd(q.date), Number(q.time.slice(0, 2)), 0, CONFIG.TZ);
-  const end = start + CONFIG.SLOT_HOURS * 3600e3;
+  const start = slotStart(ymd(q.date), q.time);
+  const end = start + (q.duration || CONFIG.DURATION_MIN) * 60e3;
   const who = CONFIG.PHOTOGRAPHERS[assigned] || assigned;
   const desc = [
     "Bestilt via fotostallen.no – tidspunktet må bekreftes med kunden.",
@@ -242,7 +294,7 @@ function bookingIcs(q, nowMs, assigned) {
     `Adresse: ${q.address}`,
     q.kvm ? `Størrelse: ${q.kvm} kvm` : null,
     q.ankomst ? `Ankomst: ${q.ankomst}` : null,
-    `Produkter: ${(q.products || []).join(", ") || "–"}`,
+    q.services ? `Tjenester: ${q.services}` : `Produkter: ${(q.products || []).join(", ") || "–"}`,
     q.note ? `Notat: ${q.note}` : null,
   ].filter(x => x !== null).join("\n");
   const lines = [
@@ -266,11 +318,54 @@ function bookingTitle(q) {
   return ["Nettbooking fotografering", safe(q.navn), safe(q.address)].filter(Boolean).join(" – ");
 }
 
-/** Brukes av synkjobben: første fotograf (i CONFIG-rekkefølge) som er ledig hele luken. */
+/** Brukes av synkjobben når en booking står som «første ledige»: første ledige fotograf som kan tildeles automatisk. */
 function pickFree(busyById, q) {
-  const s = zonedToUtc(ymd(q.date), Number(q.time.slice(0, 2)), 0, CONFIG.TZ);
-  const e = s + CONFIG.SLOT_HOURS * 3600e3;
-  return Object.keys(CONFIG.PHOTOGRAPHERS).find(pid => busyById[pid] && !overlaps(busyById[pid], s, e)) || null;
+  const s = slotStart(ymd(q.date), q.time);
+  const e = s + (q.duration || CONFIG.DURATION_MIN) * 60e3;
+  return Object.keys(CONFIG.PHOTOGRAPHERS)
+    .filter(pid => CONFIG.AUTO_ASSIGN_EXCLUDE.indexOf(pid) < 0)
+    .find(pid => busyById[pid] && !overlaps(busyById[pid], s, e)) || null;
+}
+
+/** Kort referanse kunden kan oppgi, f.eks. «FS-9225D5A2». */
+function bookingRef(id) {
+  return "FS-" + String(id).replace(/-/g, "").slice(0, 8).toUpperCase();
+}
+
+/**
+ * Sender bekreftelse til kunden fra CONFIRM_FROM, med kopi til samme adresse. Gjør ingenting før
+ * adressen er lagt inn som «Send e-post som»-alias i Gmail, så det aldri sendes fra en privat adresse.
+ */
+function sendConfirmation(q, ref) {
+  try {
+    if (!/^\S+@\S+\.\S+$/.test(q.epost)) return false;
+    const from = CONFIG.CONFIRM_FROM;
+    if (GmailApp.getAliases().indexOf(from) < 0) return false;
+    const d = ymd(q.date);
+    const end = minKey(keyMin(q.time) + (q.duration || CONFIG.DURATION_MIN));
+    const dato = `${["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"][weekdayOf(d)]} ${d.d}.${d.m}.${d.y}`;
+    const who = q.photographer === ANY ? "Første ledige fotograf" : CONFIG.PHOTOGRAPHERS[q.photographer];
+    const body = [
+      `Hei ${q.navn.split(" ")[0]},`,
+      "",
+      "Takk for bestillingen! Vi har satt av tiden, og bekrefter så snart vi kan.",
+      "",
+      `Tjenester: ${q.services || (q.products || []).join(", ")}`,
+      `Tid: ${dato} kl. ${q.time}–${end}`,
+      `Adresse: ${q.address}`,
+      `Fotograf: ${who}`,
+      `Referanse: ${ref}`,
+      "",
+      "Må du endre noe, er det bare å svare på denne e-posten.",
+      "",
+      "Hilsen Fotostallen",
+    ].join("\n");
+    GmailApp.sendEmail(q.epost, `Bestilling mottatt – ${dato} kl. ${q.time} (${ref})`, body, { from, name: "Fotostallen", replyTo: from, bcc: from });
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
 }
 
 function icsText(s) {
@@ -436,7 +531,6 @@ function expandEvent(ev, fromMs, toMs) {
 function ymd(s) { return { y: +s.slice(0, 4), m: +s.slice(5, 7), d: +s.slice(8, 10) }; }
 function fmtYmd(d) { return `${d.y}-${pad2(d.m)}-${pad2(d.d)}`; }
 function pad2(n) { return String(n).padStart(2, "0"); }
-function slotKey(h) { return `${pad2(h)}:00`; }
 function isDate(s) { return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s); }
 function cmpYmd(a, b) { return Date.UTC(a.y, a.m - 1, a.d) - Date.UTC(b.y, b.m - 1, b.d); }
 function weekdayOf(d) { return new Date(Date.UTC(d.y, d.m - 1, d.d)).getUTCDay(); }
@@ -520,4 +614,4 @@ function json(obj) {
 }
 
 // Gjør funksjonene tilgjengelige for testene i node (ignoreres i Apps Script).
-if (typeof module !== "undefined") module.exports = { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, zonedToUtc, fmtYmd, addDays, ymd, CONFIG, ANY };
+if (typeof module !== "undefined") module.exports = { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, slotsOfDay, eveningKey, sunsetUtc, slotStart, bookingRef, zonedToUtc, fmtYmd, addDays, ymd, CONFIG, ANY };

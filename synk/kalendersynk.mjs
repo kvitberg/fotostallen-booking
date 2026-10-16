@@ -22,7 +22,7 @@ const DRY = process.argv.includes("--dry");
 // Samme kode som Apps Script-en kjører: ICS-tolking, masker og bookingfil.
 const mod = { exports: {} };
 new Function("module", readFileSync(join(here, "..", "apps-script", "Code.gs"), "utf8"))(mod);
-const { busyFromIcs, buildMasks, bookingIcs, pickFree, computeSlots, zonedToUtc, ymd, addDays, fmtYmd, CONFIG, ANY } = mod.exports;
+const { busyFromIcs, buildMasks, bookingIcs, pickFree, computeSlots, slotStart, zonedToUtc, ymd, addDays, fmtYmd, CONFIG, ANY } = mod.exports;
 
 function readEnv(path) {
   if (!existsSync(path)) return {};
@@ -112,8 +112,8 @@ if (!DRY) {
     // 412 = finnes allerede (lagt inn ved en tidligere kjøring som ikke rakk å kvittere).
     if (res.ok || res.status === 412) {
       done.push(q.id);
-      const s = zonedToUtc(ymd(q.date), Number(q.time.slice(0, 2)), 0, CONFIG.TZ);
-      (busy[target] = busy[target] || []).push({ start: s, end: s + CONFIG.SLOT_HOURS * 3600e3 });
+      const s = slotStart(ymd(q.date), q.time);
+      (busy[target] = busy[target] || []).push({ start: s, end: s + (q.duration || CONFIG.DURATION_MIN) * 60e3 });
       log(`Booking ${q.date} kl. ${q.time} lagt i «${cals[target].displayName}».`);
     } else {
       log(`Kunne ikke legge inn booking ${q.id} (${q.date} ${q.time}): iCloud svarte ${res.status}. Prøver igjen neste gang.`);
@@ -126,8 +126,8 @@ const free = buildMasks(busy, start, days);
 
 if (DRY) {
   const to = fmtYmd(addDays(ymd(start), 13));
-  const store = { start, free };
-  log(`Tørrkjøring, ingenting sendt. Ledige luker neste 14 dager (av ${10 * CONFIG.SLOT_STARTS.length} mulige på hverdager):`);
+  const store = { v: 2, start, free };
+  log(`Tørrkjøring, ingenting sendt. Ledige luker neste 14 dager (dag- og kveldsluker på hverdager):`);
   for (const pid of Object.keys(CONFIG.PHOTOGRAPHERS).concat([ANY])) {
     const slots = computeSlots(pid, start, to, store, [], Date.now());
     const n = Object.values(slots).reduce((a, s) => a + s.length, 0);
@@ -136,6 +136,6 @@ if (DRY) {
     log(`  ${label.padEnd(24)} ${String(n).padStart(3)} ledige   (${periods})`);
   }
 } else {
-  await post({ action: "sync", data: { start, free } });
+  await post({ action: "sync", data: { v: 2, start, free } });
   log(`Synket ledighet for ${Object.keys(busy).length} fotografer (${days} dager).`);
 }

@@ -3,1007 +3,939 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Book fotograf | Fotostallen</title>
+<title>Bestill fotografering | Fotostallen</title>
 <meta name="robots" content="noindex">
 <script>
-  // Innebygd i fotostallen.no (iframe) eller med ?embed: skjul egen topp.
+  // Innebygd i fotostallen.no (iframe) eller med ?embed.
   if (window.self !== window.top || /[?&]embed/.test(location.search)) document.documentElement.classList.add("embedded");
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #e8e7e4;
-    --card: #f2f1ee;
-    --ink: #121212;
-    --muted: #8b8a86;
-    --line: rgba(18,18,18,.12);
-    --dot: #c9c8c4;
-    --accent: #dc384c;
+    --bg: #f6f4ef;
+    --surface: #fffdf9;
+    --ink: #1f1e1c;
+    --muted: #7a776f;
+    --faint: #b3afa6;
+    --line: #e3dfd6;
+    --fill: #ebe7df;
+    --accent: #9c4a3d;
+    --accent-ink: #fff;
+    --accent-soft: #f3e7e3;
+    --radius: 8px;
     --sans: "Inter Tight", system-ui, -apple-system, sans-serif;
-    --cond: "Barlow Condensed", "Arial Narrow", sans-serif;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: var(--sans); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
-  }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
   img { display: block; max-width: 100%; }
   a { color: inherit; }
-  button { font: inherit; color: inherit; cursor: pointer; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
-  .card { background: var(--card); border-radius: 30px; }
+  [hidden] { display: none !important; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 20px 48px; }
 
-  /* Fellesdeler */
-  .pills { display: flex; align-items: center; gap: 8px; }
-  .pill {
-    display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 20px; border-radius: 999px;
-    border: 1px solid rgba(18,18,18,.18); background: transparent; font-size: 14px; font-weight: 500; text-decoration: none; white-space: nowrap;
+  /* Topp */
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+  .brand { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  h1 { font-size: 26px; font-weight: 600; letter-spacing: -.02em; line-height: 1.15; margin: 0; }
+  .stepper { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+  .stepper li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--faint); padding: 6px 10px 6px 6px; border-radius: 999px; }
+  .stepper li .n { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+  .stepper li.done { color: var(--muted); cursor: pointer; }
+  .stepper li.done .n { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .stepper li.cur { color: var(--ink); font-weight: 500; }
+  .stepper li.cur .n { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+  /* Oppsett */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; align-items: start; }
+  h2 { font-size: 18px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 18px; }
+  .group { margin-bottom: 26px; }
+  .glabel { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .glabel span { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .hint { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+
+  /* Hovedtjeneste */
+  .rows { border-top: 1px solid var(--line); }
+  .row { display: flex; align-items: center; gap: 14px; padding: 13px 4px; border-bottom: 1px solid var(--line); cursor: pointer; position: relative; }
+  .row input { position: absolute; opacity: 0; pointer-events: none; }
+  .row .dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--faint); flex: 0 0 auto; transition: all .15s; }
+  .row .t { font-weight: 500; }
+  .row .d { font-size: 13px; color: var(--muted); margin-left: auto; text-align: right; }
+  .row:hover .dot { border-color: var(--ink); }
+  .row:has(input:checked) .dot { border: 5px solid var(--accent); }
+  .row:has(input:checked) .t { color: var(--accent); }
+  .row:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* Valgknapper */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip span { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 14px; cursor: pointer; transition: all .15s; }
+  .chip span:hover { border-color: var(--ink); }
+  .chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .chip.check span::before { content: "+"; font-size: 16px; line-height: 1; color: var(--muted); }
+  .chip.check input:checked + span::before { content: "✓"; font-size: 12px; color: #fff; }
+  .chip input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* Felt */
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; position: relative; }
+  .field label { font-size: 13px; font-weight: 500; }
+  .field label .o { font-weight: 400; color: var(--muted); }
+  .field input, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); outline: 0; transition: border-color .15s; }
+  .field textarea { min-height: 76px; resize: vertical; }
+  .field input:focus, .field textarea:focus { border-color: var(--ink); }
+  .field input.err, .field textarea.err { border-color: var(--accent); background: var(--accent-soft); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .grid2 .full { grid-column: 1 / -1; }
+  details.more { border-top: 1px solid var(--line); }
+  details.more.last { border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+  details.more summary { list-style: none; cursor: pointer; padding: 12px 2px; font-size: 14px; font-weight: 500; display: flex; justify-content: space-between; }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more summary::after { content: "+"; color: var(--muted); font-weight: 400; font-size: 18px; line-height: 1; }
+  details.more[open] summary::after { content: "–"; }
+  details.more .inner { padding: 2px 0 6px; }
+  .remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin: 4px 0 20px; cursor: pointer; }
+  .remember input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+  /* Adresseforslag */
+  .suggest { position: absolute; top: 100%; left: 0; right: 0; z-index: 5; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(31,30,28,.08); }
+  .suggest li { padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .suggest li small { color: var(--muted); margin-left: 6px; }
+  .suggest li.act, .suggest li:hover { background: var(--fill); }
+
+  /* Kalender */
+  .cal { max-width: 320px; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .cal-head strong { font-weight: 600; text-transform: capitalize; }
+  .cal-head button { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); display: grid; place-items: center; }
+  .cal-head button:hover { border-color: var(--ink); }
+  .cal-head button[disabled] { opacity: .3; pointer-events: none; }
+  .wk, .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .wk span { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0; }
+  .day { aspect-ratio: 1; border: 0; border-radius: 50%; background: var(--fill); font-size: 13px; padding: 0; transition: background .12s; font-variant-numeric: tabular-nums; }
+  .day:hover { background: #ddd8ce; }
+  .day.past { background: var(--ink); color: rgba(255,255,255,.35); pointer-events: none; }
+  .day.full { background: transparent; color: var(--faint); text-decoration: line-through; pointer-events: none; }
+  .day.today { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .day.sel { background: var(--accent); color: #fff; }
+  .day.blank { background: transparent; pointer-events: none; }
+  .day:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .days.loading .day:not(.past):not(.blank) { animation: pulse 1s ease-in-out infinite alternate; }
+  @keyframes pulse { to { opacity: .4; } }
+  .notice { font-size: 13px; padding: 10px 12px; border-radius: var(--radius); background: var(--accent-soft); color: #6f3328; margin: 0 0 14px; }
+
+  .times { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+  .time { height: 40px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .time:hover { border-color: var(--ink); }
+  .time.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .time[disabled] { color: var(--faint); text-decoration: line-through; background: transparent; pointer-events: none; }
+
+  /* Fotograf */
+  .ph-current { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .ph-current .who { flex: 1; min-width: 0; }
+  .ph-current strong { font-weight: 500; display: block; }
+  .ph-current small { color: var(--muted); font-size: 13px; }
+  .linkbtn { background: none; border: 0; padding: 4px; font-size: 13px; font-weight: 500; color: var(--accent); }
+  .av { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--fill); flex: 0 0 auto; display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .av img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
+  .av.any { background: var(--ink); color: #fff; }
+  .ph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
+  .ph { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); text-align: left; }
+  .ph:hover { border-color: var(--ink); }
+  .ph .nm { font-size: 14px; font-weight: 500; line-height: 1.2; }
+  .ph .st { font-size: 12px; color: var(--muted); }
+  .ph.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .ph.busy { opacity: .45; pointer-events: none; }
+
+  /* Knapper */
+  .actions { display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+  .btn { height: 44px; padding: 0 22px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); font-weight: 500; }
+  .btn:hover { border-color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #87392e; }
+  .btn[disabled] { opacity: .6; cursor: wait; }
+  .err-msg { color: var(--accent); font-size: 14px; font-weight: 500; margin: 0 0 12px; }
+
+  /* Oppsummering */
+  .summary { position: sticky; top: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 6px; }
+  .summary h3 { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .sum-list { margin: 0; }
+  .sum-list div { display: grid; grid-template-columns: 82px 1fr; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .sum-list div:last-child { border-bottom: 0; }
+  .sum-list dt { color: var(--muted); font-size: 13px; }
+  .sum-list dd { margin: 0; font-weight: 500; }
+  .sum-list dd.empty { color: var(--faint); font-weight: 400; }
+  .summary details { display: none; }
+  .review { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 16px; margin-bottom: 18px; }
+
+  /* Kvittering */
+  .receipt .ok { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; margin-bottom: 16px; }
+  .receipt h2 { font-size: 24px; margin-bottom: 8px; }
+  .receipt p { color: var(--muted); margin: 0 0 18px; max-width: 520px; }
+  .receipt .ref { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  footer a { color: var(--ink); text-decoration: none; }
+
+  .embedded .wrap { padding-top: 16px; }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; gap: 0; }
+    .summary { position: static; order: -1; margin-bottom: 22px; padding: 0; }
+    .summary h3, .summary .desk { display: none; }
+    .summary details { display: block; }
+    .summary details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; list-style: none; padding: 12px 16px; cursor: pointer; font-size: 14px; }
+    .summary details summary::-webkit-details-marker { display: none; }
+    .summary details summary b { font-weight: 600; }
+    .summary details summary span { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: right; }
+    .summary details summary::after { content: "+"; color: var(--muted); font-size: 18px; line-height: 1; }
+    .summary details[open] summary::after { content: "–"; }
+    .summary details .sum-list { padding: 0 16px 6px; }
   }
-  .pill.on { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .round {
-    width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(18,18,18,.08);
-    border: 0; text-decoration: none; margin-left: auto; flex: 0 0 auto;
-  }
-  .label { font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-  .cond { font-family: var(--cond); font-weight: 700; text-transform: uppercase; letter-spacing: .005em; line-height: .95; }
-  .big { font-weight: 500; letter-spacing: -.055em; line-height: .84; }
-
-
-  /* Hero */
-  .hero { padding: 16px 0 0; }
-  .hero .card { padding: 26px 30px 30px; }
-  .hero .weekday { margin: 38px 0 12px; font-size: 17px; color: #3d3d3b; }
-  .hero-date { display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: center; }
-  .hero-date .big { font-size: clamp(88px, 15vw, 196px); }
-  .facts { border-left: 1px solid var(--line); padding-left: 26px; display: grid; gap: 22px; max-width: 340px; }
-  .facts strong { display: block; font-size: 21px; font-weight: 500; letter-spacing: -.01em; line-height: 1.15; }
-  .facts span { font-size: 13.5px; color: var(--muted); }
-  .steps { margin-top: 34px; background: #fff; border-radius: 22px; padding: 18px 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .steps div { display: flex; gap: 12px; align-items: baseline; }
-  .steps b { font-size: 13px; font-weight: 600; color: var(--accent); }
-  .steps span { font-size: 14.5px; font-weight: 500; }
-
-  /* Seksjoner */
-  section.block { padding-top: 64px; }
-  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 6px 16px; }
-  .sec-head h2 { margin: 0; font-size: clamp(34px, 5vw, 52px); }
-  .sec-head p { margin: 0; color: var(--muted); font-size: 14px; text-align: right; }
-
-  /* Tjenester: fargekort */
-  .svc-stack { display: grid; gap: 6px; }
-  .svc {
-    --c: #ccc; --tx: #333;
-    background: var(--c); color: var(--tx); border-radius: 26px; padding: 20px 22px 22px;
-    display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 1.25fr); gap: 20px; align-items: stretch;
-  }
-  .svc .name small { display: block; font-size: 14px; font-weight: 500; opacity: .85; margin-bottom: 8px; }
-  .svc .name .big { font-size: clamp(46px, 6vw, 72px); display: block; }
-  .svc .name p { margin: 12px 0 0; font-size: 13.5px; opacity: .8; max-width: 300px; }
-  .slots { display: flex; gap: 0; }
-  .slot { flex: 1; border-left: 1px solid var(--line); padding: 0 0 0 10px; display: flex; flex-direction: column; justify-content: space-between; min-height: 120px; }
-  .slot .t { font-size: 12.5px; font-weight: 500; }
-  .opt { position: relative; align-self: flex-start; }
-  .opt input { position: absolute; opacity: 0; pointer-events: none; }
-  .opt span {
-    display: inline-flex; align-items: center; gap: 6px; height: 34px; min-width: 34px; padding: 0 9px; border-radius: 999px;
-    border: 1px solid rgba(18,18,18,.18); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s;
-  }
-  .opt span::before { content: "+"; font-size: 18px; line-height: 1; font-weight: 400; width: 14px; text-align: center; }
-  .opt span em { font-style: normal; display: none; }
-  .opt input:checked + span { background: var(--accent); color: #fff; border-color: var(--accent); padding: 0 14px 0 10px; }
-  .opt input:checked + span::before { content: "✓"; font-size: 13px; }
-  .opt input:checked + span em { display: inline; }
-  .opt input:focus-visible + span { outline: 2px solid var(--tx); outline-offset: 2px; }
-
-  /* Fotografer + dato */
-
-  .people { padding: 22px 24px 10px; }
-  .people .head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-bottom: 14px; }
-  .people-note { margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; background: #fff; font-size: 13.5px; }
-  .row .busy-tag { display: none; font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); flex: 0 0 auto; }
-  .row.busy .busy-tag { display: inline; }
-  .assigned-tag { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); flex: 0 0 auto; }
-  .assigned-tag:empty { display: none; }
-  .row.busy .row-btn .cond { color: #c4c3bf; }
-  .row.busy .thumb { opacity: .45; }
-  .row.busy .choose { background: rgba(18,18,18,.08); color: var(--muted); pointer-events: none; }
-  .row.busy .choose .ic { display: none; }
-  .row { border-top: 1px solid var(--line); }
-  .row-btn {
-    width: 100%; display: flex; align-items: center; gap: 14px; background: none; border: 0; padding: 20px 0; text-align: left;
-  }
-  .row-btn .cond { font-size: clamp(30px, 3.8vw, 42px); flex: 1; min-width: 0; color: #2a2a29; transition: color .2s; }
-  .row:not(.open):not(.sel) .row-btn:hover .cond { color: var(--muted); }
-  .row .box {
-    width: 20px; height: 20px; border-radius: 4px; background: var(--accent); flex: 0 0 auto; display: none; place-items: center;
-  }
-  .row.sel .box { display: grid; }
-  .row-btn .thumb { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; background: var(--dot); flex: 0 0 auto; }
-  .row-btn .thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; filter: grayscale(1); transition: filter .3s; }
-  .row.open .thumb img, .row.sel .thumb img { filter: none; }
-  .row-btn .thumb.any { background: var(--ink); display: grid; place-items: center; }
-  .ini { width: 100%; height: 100%; display: grid; place-items: center; font-size: 14px; font-weight: 600; letter-spacing: .02em; color: #fff; background: #9a9995; }
-  .row.sel .thumb.any { background: var(--accent); }
-  .row-btn .chev { width: 20px; flex: 0 0 auto; opacity: .5; transition: transform .25s; }
-  .row.open .chev { transform: rotate(45deg); }
-  .panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
-  .row.open .panel { grid-template-rows: 1fr; }
-  .panel > div { overflow: hidden; }
-  .panel .inner { display: grid; grid-template-columns: 120px 1fr; gap: 18px; padding: 2px 0 24px; }
-  .panel .inner.noimg { grid-template-columns: 1fr; }
-  .panel .portrait { border-radius: 16px; aspect-ratio: 3 / 4; object-fit: cover; object-position: center 25%; width: 100%; }
-  .panel .role { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-  .panel p { margin: 0 0 12px; font-size: 14.5px; color: #3d3d3b; }
-  .panel .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-  .panel .tags span { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(18,18,18,.18); }
-  .panel .work { grid-column: 1 / -1; position: relative; }
-  .panel .work img { width: 100%; height: 190px; object-fit: cover; border-radius: 16px; }
-  .panel .work small { position: absolute; left: 12px; bottom: 10px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
-  .choose {
-    display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 6px 0 16px; border-radius: 999px; border: 0;
-    background: var(--ink); color: #fff; font-size: 14px; font-weight: 600;
-  }
-  .choose .ic { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.18); color: #fff; display: grid; place-items: center; }
-  .row.sel .choose { background: var(--accent); }
-
-  .cal {
-    padding: 24px 28px 28px; outline: 2px solid transparent; outline-offset: 3px; transition: outline-color .2s;
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); grid-template-areas: "info dots" "times dots"; column-gap: 48px; align-content: start;
-  }
-  .cal-info { grid-area: info; }
-  .cal-dots { grid-area: dots; align-self: start; }
-  .cal .times { grid-area: times; align-self: end; }
-  .cal.err { outline-color: var(--accent); }
-  .cal .nav { display: flex; align-items: center; justify-content: space-between; }
-  .cal .nav .m { font-size: 22px; font-weight: 500; letter-spacing: .02em; color: #b5b4b0; text-transform: uppercase; min-width: 52px; }
-  .cal .nav .m.cur { color: var(--ink); text-align: center; }
-  .cal .nav .m:last-child { text-align: right; }
-  .cal .nav button { background: none; border: 0; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
-  .cal .nav button:hover { background: rgba(18,18,18,.06); color: var(--ink); }
-  .cal .nav button[disabled] { opacity: .25; pointer-events: none; }
-  .cal .day { font-size: clamp(110px, 12vw, 150px); font-weight: 700; letter-spacing: -.06em; line-height: .8; margin: 28px 0 12px -4px; }
-  .cal .day.none { color: var(--dot); }
-  .cal .meta { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 26px; }
-  .cal .meta .mon { font-size: 26px; font-weight: 700; letter-spacing: .01em; text-transform: uppercase; line-height: 1; }
-  .cal .meta .yr { font-size: 26px; color: var(--muted); line-height: 1.1; }
-  .cal .meta .wd { font-size: 26px; color: var(--muted); }
-  .cal .hint { font-size: 13px; color: var(--muted); margin: -14px 0 18px; min-height: 1.5em; }
-  .wk, .dots { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .wk span { text-align: center; font-size: 11px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
-  .wk span.today { color: var(--accent); }
-  .dot {
-    aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; background: var(--dot); font-size: 11px; color: rgba(18,18,18,.45);
-    display: grid; place-items: center; transition: transform .12s, background .15s;
-  }
-  .dot:hover { transform: scale(1.08); background: #b4b3af; color: var(--ink); }
-  .dot.past { background: var(--ink); color: rgba(255,255,255,.3); pointer-events: none; }
-  .dot.today { background: transparent; box-shadow: inset 0 0 0 2px var(--accent); color: var(--accent); }
-  .dot.sel { background: var(--accent); color: #fff; box-shadow: none; }
-  .dot.blank { background: transparent; box-shadow: inset 0 0 0 1px rgba(18,18,18,.12); pointer-events: none; }
-  .dot:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-  .dot.full { background: rgba(18,18,18,.05); color: #bdbcb8; text-decoration: line-through; pointer-events: none; }
-  .dots.loading .dot:not(.past):not(.blank) { animation: pulse 1.1s ease-in-out infinite alternate; }
-  @keyframes pulse { to { opacity: .45; } }
-  .times { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
-  .times[hidden] { display: none; }
-  .times .label { display: block; margin-bottom: 12px; }
-  .time-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-  .tslot {
-    height: 44px; border-radius: 999px; border: 1px solid rgba(18,18,18,.18); background: transparent; font-size: 14px; font-weight: 500;
-    font-variant-numeric: tabular-nums; transition: all .15s; padding: 0;
-  }
-  .tslot:hover { border-color: var(--ink); }
-  .tslot.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .tslot[disabled] { color: #b5b4b0; text-decoration: line-through; border-color: transparent; background: rgba(18,18,18,.04); pointer-events: none; }
-  .times .none { font-size: 13.5px; color: var(--muted); margin: 0; }
-
-  /* Bestilling */
-  .order-grid { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; align-items: start; }
-  .summary { padding: 22px 24px 24px; position: sticky; top: 16px; }
-  .summary .wd { margin: 30px 0 8px; font-size: 16px; color: #3d3d3b; }
-  .sum-main { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; }
-  .sum-main .big { font-size: 76px; }
-  .sum-main .big.none { color: var(--dot); }
-  .sum-facts { border-left: 1px solid var(--line); padding-left: 16px; display: grid; gap: 16px; min-width: 0; }
-  .sum-facts strong { display: block; font-size: 16px; font-weight: 600; line-height: 1.2; }
-  .sum-facts span { font-size: 12.5px; color: var(--muted); }
-  .sum-person { display: flex; align-items: center; gap: 10px; margin-top: 26px; padding: 12px; background: #fff; border-radius: 18px; }
-  .sum-person .av { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; background: var(--dot); }
-  .sum-person .av img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
-  .sum-person .av.any { background: var(--accent); display: grid; place-items: center; }
-  .sum-person strong { display: block; font-size: 15px; font-weight: 600; line-height: 1.2; }
-  .sum-person small { font-size: 12.5px; color: var(--muted); }
-  .sum-person a { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; }
-  .sum-note { font-size: 12.5px; color: var(--muted); margin: 16px 4px 0; }
-
-  form.booking, .done { padding: 26px 28px 28px; }
-  .group { margin-bottom: 30px; }
-  .group h3 { margin: 0 0 6px; font-size: 26px; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
-  .field { display: flex; flex-direction: column; padding-top: 16px; }
-  .field.full { grid-column: 1 / -1; }
-  .field label, .field .lab { font-size: 11.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-  .field label .o { text-transform: none; letter-spacing: 0; }
-  .field input, .field textarea {
-    font: inherit; font-size: 19px; font-weight: 500; letter-spacing: -.01em; padding: 8px 0 10px; border: 0; border-bottom: 1px solid var(--line);
-    background: transparent; outline: 0; width: 100%; color: var(--ink); border-radius: 0; transition: border-color .2s;
-  }
-  .field textarea { min-height: 76px; resize: vertical; font-size: 17px; }
-  .field input::placeholder, .field textarea::placeholder { color: #bdbcb8; font-weight: 400; }
-  .field input:focus, .field textarea:focus { border-bottom-color: var(--ink); }
-  .field input.err, .field textarea.err { border-bottom-color: var(--accent); }
-  .field:has(.err) label { color: var(--accent); }
-  .yn { display: flex; gap: 8px; margin-top: 10px; position: relative; }
-  .yn input { position: absolute; opacity: 0; left: 0; top: 0; width: 1px; height: 1px; }
-  .yn label { display: inline-flex; align-items: center; height: 40px; padding: 0 22px; border-radius: 999px; border: 1px solid rgba(18,18,18,.18); font-size: 14px; font-weight: 500; cursor: pointer; text-transform: none; letter-spacing: 0; color: var(--ink); }
-  .yn input:checked + label { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .yn input:focus-visible + label { outline: 2px solid var(--ink); outline-offset: 2px; }
-  .form-error { color: var(--accent); font-size: 14px; font-weight: 600; margin: 0 0 6px; display: none; }
-  .submit {
-    width: 100%; height: 64px; border: 0; border-radius: 999px; background: var(--ink); color: #fff; display: flex; align-items: center;
-    justify-content: space-between; padding: 0 8px 0 28px; font-size: 18px; font-weight: 500; transition: background .2s;
-  }
-  .submit:hover { background: #000; }
-  .submit .ic { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; }
-  .submit[disabled] { opacity: .6; cursor: wait; }
-  .fine { font-size: 12.5px; color: var(--muted); text-align: center; margin: 12px 0 0; }
-
-  .done { display: none; }
-  .done .big { font-size: clamp(90px, 12vw, 150px); margin: 30px 0 18px; }
-  .done p { font-size: 17px; max-width: 440px; margin: 0 0 26px; color: #3d3d3b; }
-
-  footer { padding: 60px 0 30px; }
-  footer .wrap { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-  footer .cond { font-size: 28px; }
-  footer span { font-size: 13px; color: var(--muted); }
-  footer a { color: var(--ink); text-decoration: none; font-weight: 500; }
-
-
-  @media (max-width: 960px) {
-    .order-grid { grid-template-columns: 1fr; }
-    .summary { position: static; }
-    .cal { grid-template-columns: 1fr; grid-template-areas: "info" "dots" "times"; }
-  }
-  @media (max-width: 720px) {
-    .wrap { padding: 0 12px; }
-    .hero .card { padding: 20px 20px 22px; }
-    .hero .weekday { margin-top: 30px; }
-    .hero-date { grid-template-columns: 1fr; gap: 26px; }
-    .facts { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 20px; grid-template-columns: 1fr 1fr; gap: 16px; max-width: none; }
-    .facts div:first-child { grid-column: 1 / -1; }
-    .steps { grid-template-columns: 1fr; gap: 10px; }
-    .pill { padding: 0 16px; }
-    .pills .pill:nth-child(3) { display: none; }
-    section.block { padding-top: 48px; }
-    .sec-head p { display: none; }
-    .svc { grid-template-columns: 1fr; gap: 14px; padding: 18px 18px 18px; }
-    .svc .name p { display: none; }
-    .slot { min-height: 82px; }
-    .people { padding: 18px 18px 6px; }
-    .panel .inner { grid-template-columns: 96px 1fr; gap: 14px; }
-    .panel .work img { height: 160px; }
-    .cal { padding: 20px 18px 22px; }
-    .time-row { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 560px) {
+    .wrap { padding: 20px 16px 36px; }
+    .head { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .stepper li { padding-right: 6px; }
+    .stepper li .lbl { display: none; }
+    .stepper li.cur .lbl { display: inline; }
     .grid2 { grid-template-columns: 1fr; }
-    form.booking, .done { padding: 22px 20px 24px; }
-    .summary { padding: 20px; }
+    .row .d { display: none; }
   }
 </style>
 </head>
 <body>
+<main class="wrap">
+  <header class="head">
+    <div>
+      <div class="brand">Fotostallen</div>
+      <h1>Bestill fotografering</h1>
+    </div>
+    <ol class="stepper" id="stepper">
+      <li data-step="1"><span class="n">1</span><span class="lbl">Tjenester</span></li>
+      <li data-step="2"><span class="n">2</span><span class="lbl">Tid og sted</span></li>
+      <li data-step="3"><span class="n">3</span><span class="lbl">Kontakt</span></li>
+    </ol>
+  </header>
 
-<section class="hero">
-  <div class="wrap">
-    <div class="card">
-      <nav class="pills" aria-label="Snarveier">
-        <a class="pill on" href="#dato">Booking</a>
-        <a class="pill" href="#tjenester">Tjenester</a>
-        <a class="pill" href="#fotografer">Fotografer</a>
-        <a class="round" href="#bestill" aria-label="Gå til bestilling">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        </a>
-      </nav>
-      <div class="weekday" id="heroWeekday"></div>
-      <div class="hero-date">
-        <div class="big" id="heroDate"></div>
-        <div class="facts">
-          <div><strong>Book fotograf</strong><span>Bolig, interiør, portrett og mer</span></div>
-          <div><strong id="factCount"></strong><span>Velg selv, eller første ledige</span></div>
-          <div><strong>4 tjenester</strong><span>Dag, kveld, drone og video</span></div>
+  <div class="layout">
+    <section>
+      <form id="booking" novalidate>
+        <!-- Steg 1 -->
+        <div class="step" data-step="1">
+          <h2>Velg tjenester</h2>
+          <div class="group">
+            <div class="glabel">Hovedtjeneste</div>
+            <div class="rows" id="mainOpts"></div>
+          </div>
+          <div class="group" id="scopeGroup" hidden>
+            <div class="glabel">Omfang</div>
+            <div class="chips" id="scopeOpts"></div>
+          </div>
+          <div class="group">
+            <div class="glabel">Tillegg <span>(valgfritt)</span></div>
+            <div class="chips" id="addonOpts"></div>
+          </div>
+          <p class="err-msg" id="err1" hidden></p>
+          <div class="actions"><button type="button" class="btn primary" data-go="2">Neste: Tid og sted</button></div>
         </div>
-      </div>
-      <div class="steps">
-        <div><b>01</b><span>Velg dato og tid</span></div>
-        <div><b>02</b><span>Velg tjenester</span></div>
-        <div><b>03</b><span>Velg fotograf og send</span></div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<section class="block" id="dato">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2 class="cond">Dato og tid</h2>
-      <p>Når skal vi komme?</p>
-    </div>
-    <div class="card cal" id="calCard">
-      <div class="cal-info">
-        <div class="nav">
-          <span class="m" id="mPrev"></span>
-          <button type="button" id="calPrev" aria-label="Forrige måned">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-          </button>
-          <span class="m cur" id="mCur"></span>
-          <button type="button" id="calNext" aria-label="Neste måned">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          </button>
-          <span class="m" id="mNext"></span>
-        </div>
-        <div class="day none" id="calDay">00</div>
-        <div class="meta">
-          <div><div class="mon" id="calMon"></div><div class="yr" id="calYr"></div></div>
-          <div class="wd" id="calWd"></div>
-        </div>
-        <p class="hint" id="calHint"></p>
-      </div>
-      <div class="cal-dots">
-        <div class="wk" id="calWk"></div>
-        <div class="dots" id="calDots" role="grid" aria-label="Velg dato"></div>
-      </div>
-      <div class="times" id="times" hidden>
-        <span class="label">Tidspunkt</span>
-        <div class="time-row" id="timeRow"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="block" id="tjenester">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2 class="cond">Tjenester</h2>
-      <p>Trykk + på det du vil ha med</p>
-    </div>
-    <div class="svc-stack" id="svcStack"></div>
-  </div>
-</section>
-
-<section class="block" id="fotografer">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2 class="cond">Fotograf</h2>
-      <p>Grå = opptatt på valgt tid</p>
-    </div>
-    <div class="card people">
-      <div class="head"><span class="label" id="peopleHint">Velg dato og tid først for å se hvem som er ledig</span><span class="label" id="peopleCount"></span></div>
-      <p class="people-note" id="peopleNote" hidden></p>
-      <div id="rows"></div>
-    </div>
-  </div>
-</section>
-
-<section class="block" id="bestill">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2 class="cond">Bestilling</h2>
-      <p>Fyll ut, så tar vi kontakt</p>
-    </div>
-    <div class="order-grid">
-      <aside>
-        <div class="card summary">
-          <div class="pills"><span class="pill on">Din bestilling</span></div>
-          <div class="wd" id="sumWd">Dato ikke valgt</div>
-          <div class="sum-main">
-            <div class="big none" id="sumBig">00.00<br>&mdash;</div>
-            <div class="sum-facts">
-              <div><strong id="sumProd">Ingen valgt</strong><span>Produkter</span></div>
-              <div><strong id="sumAddr">&mdash;</strong><span>Adresse</span></div>
+        <!-- Steg 2 -->
+        <div class="step" data-step="2" hidden>
+          <h2>Tid og sted</h2>
+          <div class="group">
+            <div class="field">
+              <label for="f_adresse">Adresse for fotografering</label>
+              <input id="f_adresse" autocomplete="off" placeholder="Gate og nummer, sted" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
+              <ul class="suggest" id="suggest" role="listbox" hidden></ul>
             </div>
           </div>
-          <div class="sum-person">
-            <div class="av" id="sumAvatar"></div>
-            <div><strong id="sumName"></strong><small id="sumRole"></small></div>
-            <a href="#fotografer">Bytt</a>
-          </div>
-        </div>
-        <p class="sum-note">Spørsmål? <a href="mailto:kontakt@fotostallen.no">kontakt@fotostallen.no</a></p>
-      </aside>
-
-      <div>
-        <form class="card booking" id="booking" novalidate>
-          <p class="form-error" id="formError">Fyll ut feltene som er markert.</p>
-
           <div class="group">
-            <h3 class="cond">Kunde</h3>
-            <div class="grid2">
-              <div class="field"><label for="f_navn">Fullt navn</label><input id="f_navn" name="navn" required autocomplete="name"></div>
-              <div class="field"><label for="f_tlf">Telefon</label><input id="f_tlf" name="tlf" type="tel" required autocomplete="tel"></div>
-              <div class="field"><label for="f_epost">E-post</label><input id="f_epost" name="epost" type="email" required autocomplete="email"></div>
-              <div class="field"><label for="f_oppdrag">Oppdragsnummer <span class="o">(valgfritt)</span></label><input id="f_oppdrag" name="oppdrag"></div>
-              <div class="field full"><label for="f_faktura">Hvor skal fakturaen? <span class="o">(firma eller navn, adresse eller e-post for faktura)</span></label><textarea id="f_faktura" name="faktura" required></textarea></div>
-            </div>
-          </div>
-
-          <div class="group">
-            <h3 class="cond">Stedet</h3>
-            <div class="grid2">
-              <div class="field full"><label for="f_adresse">Adresse for fotografering</label><input id="f_adresse" name="adresse" required autocomplete="street-address"></div>
-              <div class="field"><label for="f_kvm">Størrelse i kvm <span class="o">(valgfritt)</span></label><input id="f_kvm" name="kvm" inputmode="numeric"></div>
-              <div class="field"><label for="f_ankomst">Ankomst og etasje <span class="o">(valgfritt)</span></label><input id="f_ankomst" name="ankomst" placeholder="Kode, etasje, heis"></div>
-              <input type="hidden" id="f_dato" name="dato"><input type="hidden" id="f_tid" name="tid">
-            </div>
-          </div>
-
-          <div class="group">
-            <h3 class="cond">Annet</h3>
-            <div class="grid2">
-              <div class="field full">
-                <span class="lab">Samarbeidspost på Instagram?</span>
-                <div class="yn">
-                  <input type="radio" name="insta" id="insta_ja" value="Ja"><label for="insta_ja">Ja</label>
-                  <input type="radio" name="insta" id="insta_nei" value="Nei" checked><label for="insta_nei">Nei</label>
-                </div>
+            <div class="glabel">Dato</div>
+            <p class="notice" id="availNotice" hidden></p>
+            <div class="cal">
+              <div class="cal-head">
+                <button type="button" id="calPrev" aria-label="Forrige måned"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+                <strong id="calMonth"></strong>
+                <button type="button" id="calNext" aria-label="Neste måned"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
               </div>
-              <div class="field full"><label for="f_mer">Noe mer? <span class="o">(valgfritt)</span></label><textarea id="f_mer" name="mer"></textarea></div>
+              <div class="wk"><span>M</span><span>T</span><span>O</span><span>T</span><span>F</span><span>L</span><span>S</span></div>
+              <div class="days" id="calDays" role="grid" aria-label="Velg dato"></div>
             </div>
           </div>
-
-          <button class="submit" type="submit" id="submitBtn">Send bestilling<span class="ic">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
-          <p class="fine">Bestillingen er ikke bindende før vi har bekreftet tidspunkt.</p>
-        </form>
-
-        <div class="card done" id="done">
-          <div class="pills"><span class="pill on">Mottatt</span></div>
-          <div class="big">Takk.</div>
-          <p id="doneText">Vi har mottatt bestillingen og tar kontakt for å bekrefte tidspunkt.</p>
-          <button class="pill" type="button" id="again">Ny bestilling</button>
+          <div class="group" id="timeGroup" hidden>
+            <div class="glabel" id="timeLabel">Tidspunkt</div>
+            <div class="times" id="timeOpts"></div>
+            <p class="hint" id="timeHint"></p>
+          </div>
+          <div class="group">
+            <div class="glabel">Fotograf</div>
+            <div class="ph-current">
+              <div class="av any" id="phAv"></div>
+              <div class="who"><strong id="phName">Første ledige fotograf</strong><small id="phNote">Vi velger en ledig fotograf for deg</small></div>
+              <button type="button" class="linkbtn" id="phToggle" aria-expanded="false">Velg selv</button>
+            </div>
+            <div class="ph-grid" id="phGrid" hidden></div>
+          </div>
+          <p class="err-msg" id="err2" hidden></p>
+          <div class="actions">
+            <button type="button" class="btn" data-go="1">Tilbake</button>
+            <button type="button" class="btn primary" data-go="3">Neste: Kontakt</button>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<footer>
-  <div class="wrap">
-    <span class="cond">Fotostallen</span>
-    <span><a href="mailto:kontakt@fotostallen.no">kontakt@fotostallen.no</a> &middot; <a href="https://instagram.com/fotostallen">Instagram</a></span>
+        <!-- Steg 3 -->
+        <div class="step" data-step="3" hidden>
+          <h2>Kontakt og bekreftelse</h2>
+          <div class="grid2">
+            <div class="field full"><label for="f_navn">Fullt navn</label><input id="f_navn" autocomplete="name" required></div>
+            <div class="field"><label for="f_tlf">Telefon</label><input id="f_tlf" type="tel" autocomplete="tel" required></div>
+            <div class="field"><label for="f_epost">E-post</label><input id="f_epost" type="email" autocomplete="email" required></div>
+          </div>
+          <details class="more" id="moreFaktura">
+            <summary>Faktura og oppdragsnummer</summary>
+            <div class="inner">
+              <div class="field"><label for="f_faktura">Hvor skal fakturaen? <span class="o">(firma eller navn, adresse eller e-post)</span></label><textarea id="f_faktura"></textarea></div>
+              <div class="field"><label for="f_oppdrag">Oppdragsnummer <span class="o">(valgfritt)</span></label><input id="f_oppdrag"></div>
+            </div>
+          </details>
+          <details class="more last">
+            <summary>Detaljer om eiendommen</summary>
+            <div class="inner grid2">
+              <div class="field"><label for="f_kvm">Størrelse <span class="o">(kvm)</span></label><input id="f_kvm" inputmode="numeric"></div>
+              <div class="field"><label for="f_ankomst">Ankomst og etasje</label><input id="f_ankomst" placeholder="Kode, etasje, heis"></div>
+            </div>
+          </details>
+          <div class="field"><label for="f_mer">Kommentar <span class="o">(valgfritt)</span></label><textarea id="f_mer" placeholder="Spesielle ønsker, kontaktperson på stedet …"></textarea></div>
+          <label class="remember"><input type="checkbox" id="f_husk"> Husk kontaktopplysningene mine på denne enheten</label>
+
+          <div class="glabel">Oppsummering</div>
+          <div class="review"><dl class="sum-list" data-sum></dl></div>
+          <p class="err-msg" id="err3" hidden></p>
+          <div class="actions">
+            <button type="button" class="btn" data-go="2">Tilbake</button>
+            <button type="submit" class="btn primary" id="submitBtn">Send bestilling</button>
+          </div>
+          <p class="hint">Bestillingen er ikke bindende før vi har bekreftet tidspunktet.</p>
+        </div>
+      </form>
+
+      <!-- Kvittering -->
+      <div class="receipt" id="receipt" hidden>
+        <div class="ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+        <h2 id="rcTitle">Takk, bestillingen er mottatt</h2>
+        <p id="rcText"></p>
+        <div class="review"><dl class="sum-list" id="rcSum"></dl></div>
+        <button type="button" class="btn" id="again">Ny bestilling</button>
+      </div>
+    </section>
+
+    <aside class="summary" aria-label="Din bestilling">
+      <h3>Din bestilling</h3>
+      <dl class="sum-list desk" data-sum></dl>
+      <details id="sumDetails">
+        <summary><b>Din bestilling</b><span id="sumShort">Ingen valg ennå</span></summary>
+        <dl class="sum-list" data-sum></dl>
+      </details>
+    </aside>
   </div>
-</footer>
+
+  <footer>
+    <span>Spørsmål? <a href="mailto:kontakt@fotostallen.no">kontakt@fotostallen.no</a></span>
+    <span>Fotostallen</span>
+  </footer>
+</main>
 
 <script>
 /* ---------- Innstillinger ---------- */
 
-// Bestillingene sendes til det eksisterende Google-skjemaet, så svarene havner samme sted som før.
+// Ledige tider og bookinger går via Apps Script-en (se OPPSETT.md). Bestillingen sendes også til
+// det eksisterende Google-skjemaet, så svarene havner samme sted som før.
+const AVAILABILITY_URL = "https://script.google.com/macros/s/AKfycbz658un01tmfXgolFZIZm63V0tFDNqSNW23FtAszJo_gN4U_DvrUXPUSpjlRO8czIoZ/exec";
 const GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSdH0Cmhauu0wQHyAV4LupJrnoTAbjFvFmzLdDFVaqqunsRGJA/formResponse";
 const ENTRY = {
-  megler: "entry.2021653666",
-  kontor: "entry.1861348169",
-  epost: "entry.1105479251",
-  adresse: "entry.1349272750",
-  faktura: "entry.693534386",
-  kvm: "entry.1846519442",
-  ankomst: "entry.1534032754",
-  fotograf: "entry.125327204",
-  dato: "entry.1742537926",
-  produkter: "entry.417181532",
-  insta: "entry.101327038",
-  mer: "entry.1019956651",
+  megler: "entry.2021653666", kontor: "entry.1861348169", epost: "entry.1105479251", adresse: "entry.1349272750",
+  faktura: "entry.693534386", kvm: "entry.1846519442", ankomst: "entry.1534032754", fotograf: "entry.125327204",
+  dato: "entry.1742537926", produkter: "entry.417181532", insta: "entry.101327038", mer: "entry.1019956651",
 };
 
-// Adressen til Apps Script-en som leser fotografenes iCloud-kalendere (se OPPSETT.md).
-// Svarer ikke skriptet, vises alle luker på hverdager som ledige.
-const AVAILABILITY_URL = "https://script.google.com/macros/s/AKfycbz658un01tmfXgolFZIZm63V0tFDNqSNW23FtAszJo_gN4U_DvrUXPUSpjlRO8czIoZ/exec";
-
-// Tidsluker: starttidspunkt, varighet i timer, hvilke ukedager (0 = søndag) og minste varsel.
-const SLOT_STARTS = [8, 10, 12, 14, 16];
-const SLOT_HOURS = 2;
+// Må stemme med CONFIG i apps-script/Code.gs.
+const DURATION_MIN = 90;
+const DAY_SLOTS = ["08:00", "09:30", "11:00", "12:30", "14:00", "15:30"];
+const EVENING = { LAT: 59.91, LON: 10.75, BEFORE_SUNSET_MIN: 30 };
 const WORKDAYS = [1, 2, 3, 4, 5];
 const MIN_LEAD_HOURS = 3;
+const AUTO_ASSIGN_EXCLUDE = ["glenn"]; // Glenn bor i Ålesund: kan velges, men tildeles ikke automatisk
+const STALE_MIN = 30; // eldre kalenderdata enn dette regnes som ubekreftet
 
 const IMG = "https://impro.usercontent.one/appid/oneComWsb/domain/fotostallen.no/media/fotostallen.no/onewebmedia/";
-
-// formOption = nøyaktig tekst på valget i Google-skjemaet. null = finnes ikke der ennå
-// (da sendes "Første ledig" og ønsket fotograf skrives i "Noe mer?").
-// Eksempelbilde i profilen: legg til work: IMG + "filnavn.jpg" på fotografen.
+// formOption = nøyaktig tekst på valget i Google-skjemaet. skills: "film" = kan ta video.
+// face = hvor ansiktet er i bildet (x/y i %) og hvor mye avataren zoomer inn.
 const PHOTOGRAPHERS = [
-  {
-    id: "forste", name: "Første ledige", role: "Raskest mulig", formOption: "Første ledig", any: true,
-    bio: "Haster det? Da sender vi den av oss som har tid først. Du får beskjed om hvem når vi bekrefter tidspunkt.",
-  },
-  {
-    id: "glenn", name: "Glenn Pettersen", role: "Film og video", formOption: "Glenn Pettersen",
-    img: IMG + "Image%202%20(5).jpg",
-    tags: ["Film", "Reklame", "Bolig"],
-    bio: "Glenn er kollektivets filmfotograf. Han lager alt fra stemningsfulle Instagram-videoer til større reklamefilmer, med oppdrag for blant annet Devold, Janus og flere eiendomsmeglere.",
-  },
-  {
-    id: "lars", name: "Lars Petter Skillestad", role: "Interiør og bolig", formOption: "Lars-Petter Skillestad",
-    img: IMG + "Image%202%20(8).jpg",
-    tags: ["Interiør", "Bolig", "Produkt", "Film"],
-    bio: "Lars Petter tar bilder av interiørprosjekter, portretter, produkter og bolig for salg. Han jobber med både stills og film, og har et blikk for romfølelse, detaljer og stemning.",
-  },
-  {
-    id: "kevin", name: "Kevin Fauske", role: "Interiør, analog og digital", formOption: "Kevin Fauske",
-    img: IMG + "Kevin,%20Kristine%20Elvemo_2.jpg",
-    tags: ["Interiør", "Analog"],
-    bio: "Kevin er den kreative altmuligmannen i kollektivet, med inspirasjon fra både analoge og digitale kameraer. Han jobber mest med interiørarkitekter og fanger både detaljer og helhet.",
-  },
-  {
-    id: "scott", name: "Scott Kvitberg", role: "Interiør og bolig", formOption: "Scott Kvitberg",
-    img: IMG + "Image%202.jpg",
-    tags: ["Interiør", "Bolig", "Portrett", "Film"],
-    bio: "Scott tar bilder av interiørprosjekter, portretter, produkter og bolig for salg. Han jobber med både stills og film, og har et blikk for romfølelse, detaljer og stemning.",
-  },
-  {
-    id: "kristine", name: "Kristine Elvemo", role: "Interiør og bolig", formOption: "Kristine Elvsmo",
-    img: IMG + "Kristine,%20Kevin%20Fauske.jpg",
-    tags: ["Interiør", "Bolig", "Portrett"],
-    bio: "Kristine tar bilder av interiørprosjekter, portretter, produkter og bolig for salg, og har et blikk for romfølelse, detaljer og stemning.",
-  },
-  {
-    // Mangler portrett og beskrivelse: send bilde og tekst, så legges de inn (img, bio, tags).
-    id: "henrik", name: "Henrik Eriksen", role: "Fotograf", formOption: "Henrik Eriksen",
-  },
+  { id: "glenn", name: "Glenn Pettersen", role: "Film og video", formOption: "Glenn Pettersen", img: IMG + "Image%202%20(5).jpg", skills: ["film"] },
+  { id: "lars", name: "Lars Petter Skillestad", role: "Interiør og bolig", formOption: "Lars-Petter Skillestad", img: IMG + "Image%202%20(8).jpg", skills: ["film"] },
+  { id: "kevin", name: "Kevin Fauske", role: "Interiør", formOption: "Kevin Fauske", img: IMG + "Kevin,%20Kristine%20Elvemo_2.jpg", face: [61, 22, 2.6], skills: [] },
+  { id: "scott", name: "Scott Kvitberg", role: "Interiør og bolig", formOption: "Scott Kvitberg", img: IMG + "Image%202.jpg", skills: ["film"] },
+  { id: "kristine", name: "Kristine Elvemo", role: "Interiør og bolig", formOption: "Kristine Elvsmo", img: IMG + "Kristine,%20Kevin%20Fauske.jpg", face: [63, 31, 2.4], skills: [] },
+  { id: "henrik", name: "Henrik Eriksen", role: "Fotograf", formOption: "Henrik Eriksen", skills: [] },
 ];
 
-// value = nøyaktig tekst på avkrysningsvalget i Google-skjemaet. Valg innen samme tjeneste utelukker hverandre.
-const PRODUCTS = [
-  { value: "Dagbilder helbolig", label: "Dagbilder, hel bolig", short: "Hel bolig", svc: "dag" },
-  { value: "Dagbilder <10bilder", label: "Dagbilder, under 10 bilder", short: "Under 10 bilder", svc: "dag" },
-  { value: "Kveld helbolig", label: "Kveldsbilder, hel bolig", short: "Hel bolig", svc: "kveld" },
-  { value: "Kveld <10bilder", label: "Kveldsbilder, under 10 bilder", short: "Under 10 bilder", svc: "kveld" },
-  { value: "Drone", label: "Drone", short: "Tillegg", svc: "drone" },
-  { value: "Video (1min)", label: "Video (1 min)", short: "1 minutt", svc: "video" },
+// form = valget i Google-skjemaet (null: står i kommentaren i stedet).
+const MAIN = [
+  { id: "dag", label: "Dagfotografering", desc: "Lyse bilder av boligen", scopes: [
+    { id: "hel", label: "Hel bolig", form: "Dagbilder helbolig" }, { id: "ti", label: "Opptil 10 bilder", form: "Dagbilder <10bilder" }] },
+  { id: "kveld", label: "Kveldsfotografering", desc: "Rundt solnedgang", scopes: [
+    { id: "hel", label: "Hel bolig", form: "Kveld helbolig" }, { id: "ti", label: "Opptil 10 bilder", form: "Kveld <10bilder" }] },
+  { id: "video", label: "Video", desc: "Kort film, ca. 1 minutt", film: true, scopes: [
+    { id: "1min", label: "Ca. 1 minutt", form: "Video (1min)" }] },
+];
+const ADDONS = [
+  { id: "drone", label: "Drone", form: "Drone" },
+  { id: "plantegning", label: "Plantegning", form: null },
+  { id: "kveldsbilder", label: "Kveldsbilder", form: "Kveld <10bilder", when: m => m === "dag" },
+  { id: "video", label: "Video (ca. 1 min)", form: "Video (1min)", film: true, when: m => m !== "video" },
 ];
 
-const SERVICES = [
-  { id: "dag", kicker: "Dag", title: "Dagbilder", text: "Lyse, rene bilder av hele boligen eller utvalgte rom.", c: "#fbfaf8", tx: "#121212" },
-  { id: "kveld", kicker: "Kveld", title: "Kveldsbilder", text: "Stemning i skumringen, med lys i vinduene.", c: "#f2f1ee", tx: "#121212" },
-  { id: "drone", kicker: "Luft", title: "Drone", text: "Tomt, nabolag og utsikt fra lufta.", c: "#dddcd8", tx: "#121212" },
-  { id: "video", kicker: "Film", title: "Video", text: "Ett minutt film, klar for annonse og sosiale medier.", c: "#d0cfca", tx: "#121212" },
-];
-
-const MONTHS = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
-const MON3 = ["jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"];
-const WEEKDAYS = ["Søndag", "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag"];
-const WK = ["M", "T", "O", "T", "F", "L", "S"];
-
-/* ---------- Oppsett ---------- */
+/* ---------- Hjelpere ---------- */
 
 const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const pad = n => String(n).padStart(2, "0");
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const arrow = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-const bolt = s => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>`;
+const keyMin = k => Number(k.slice(0, 2)) * 60 + Number(k.slice(3, 5));
+const minKey = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+const endKey = k => minKey(keyMin(k) + DURATION_MIN);
+const hours = () => String(DURATION_MIN / 60).replace(".", ",");
+const MONTHS = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
+const WEEKDAYS = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
+const fmtDate = v => { const d = new Date(v + "T12:00"); return `${WEEKDAYS[d.getDay()]} ${d.getDate()}. ${MONTHS[d.getMonth()]}`; };
 const initials = p => p.name.split(" ").map(w => w[0]).join("").slice(0, 2);
-const avatar = (p, size) => p.any ? bolt(size) : p.img ? `<img src="${p.img}" alt="">` : `<span class="ini">${esc(initials(p))}</span>`;
-const tick = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
+const avatar = p => !p.img ? esc(initials(p)) : p.face
+  ? `<img src="${p.img}" alt="" style="object-position:${p.face[0]}% ${p.face[1]}%;transform:scale(${p.face[2]});transform-origin:${p.face[0]}% ${p.face[1]}%">`
+  : `<img src="${p.img}" alt="">`;
+const bolt = s => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>`;
 const today = new Date(); today.setHours(0, 0, 0, 0);
-let selected = "forste";
 
-// Hero: dagens dato i stort format
-$("#heroWeekday").textContent = WEEKDAYS[today.getDay()];
-$("#heroDate").innerHTML = `${pad(today.getDate())}.${pad(today.getMonth() + 1)}<br>${MON3[today.getMonth()].toUpperCase()}`;
-
-// Tjenester
-$("#svcStack").innerHTML = SERVICES.map(s => `
-  <div class="svc" style="--c:${s.c};--tx:${s.tx}">
-    <div class="name">
-      <small>${s.kicker}</small>
-      <span class="big">${s.title}</span>
-      <p>${s.text}</p>
-    </div>
-    <div class="slots">
-      ${PRODUCTS.filter(p => p.svc === s.id).map(p => `
-        <div class="slot">
-          <span class="t">${esc(p.short)}</span>
-          <label class="opt"><input type="checkbox" name="produkter" value="${esc(p.value)}" data-svc="${s.id}" aria-label="${esc(p.label)}"><span><em>Valgt</em></span></label>
-        </div>`).join("")}
-    </div>
-  </div>`).join("");
-
-// Fotografer (trekkspill)
-$("#peopleCount").textContent = `${PHOTOGRAPHERS.length - 1} stk`;
-$("#factCount").textContent = `${PHOTOGRAPHERS.length - 1} fotografer`;
-const chooseLabel = p => p.any ? "Velg første ledige" : `Velg ${p.name.split(" ")[0]}`;
-$("#rows").innerHTML = PHOTOGRAPHERS.map(p => `
-  <div class="row" data-id="${p.id}">
-    <button type="button" class="row-btn" aria-expanded="false">
-      <span class="box">${tick}</span>
-      <span class="cond">${esc(p.name)}</span>
-      <span class="busy-tag">Opptatt</span>
-      ${p.any ? '<span class="assigned-tag" id="assignedTag"></span>' : ""}
-      <span class="thumb${p.any ? " any" : ""}">${avatar(p, 18)}</span>
-      <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-    </button>
-    <div class="panel"><div>
-      <div class="inner${p.img ? "" : " noimg"}">
-        ${p.img ? `<img class="portrait" src="${p.img}" alt="${esc(p.name)}" loading="lazy">` : ""}
-        <div>
-          <div class="role">${esc(p.role)}</div>
-          ${p.bio ? `<p>${esc(p.bio)}</p>` : ""}
-          ${p.tags ? `<div class="tags">${p.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
-          <button type="button" class="choose" data-pick="${p.id}"><span class="lbl">${esc(chooseLabel(p))}</span><span class="ic">${arrow}</span></button>
-        </div>
-        ${p.work ? `<div class="work"><img src="${p.work}" alt="" loading="lazy"><small>Foto: ${esc(p.name)}</small></div>` : ""}
-      </div>
-    </div></div>
-  </div>`).join("");
-
-function toggleRow(row, open) {
-  document.querySelectorAll(".row").forEach(r => {
-    const on = r === row && open;
-    r.classList.toggle("open", on);
-    $(".row-btn", r).setAttribute("aria-expanded", on);
-  });
+// Solnedgang i Oslo (samme beregning som sunsetUtc i Code.gs). Returnerer lokal tid som «HH:MM».
+function sunsetLocal(date) {
+  const [y, m, d] = date.split("-").map(Number);
+  const rad = Math.PI / 180;
+  const N = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 0)) / 86400e3);
+  const lngHour = EVENING.LON / 15, t = N + (18 - lngHour) / 24;
+  const M = 0.9856 * t - 3.289;
+  const L = (M + 1.916 * Math.sin(M * rad) + 0.020 * Math.sin(2 * M * rad) + 282.634 + 360) % 360;
+  let RA = (Math.atan(0.91764 * Math.tan(L * rad)) / rad + 360) % 360;
+  RA = (RA + Math.floor(L / 90) * 90 - Math.floor(RA / 90) * 90) / 15;
+  const sinDec = 0.39782 * Math.sin(L * rad), cosDec = Math.cos(Math.asin(sinDec));
+  const cosH = (Math.cos(90.833 * rad) - sinDec * Math.sin(EVENING.LAT * rad)) / (cosDec * Math.cos(EVENING.LAT * rad));
+  if (cosH < -1 || cosH > 1) return null;
+  const UT = ((Math.acos(cosH) / rad / 15 + RA - 0.06571 * t - 6.622 - lngHour) % 24 + 24) % 24;
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Oslo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+    .formatToParts(new Date(Date.UTC(y, m - 1, d) + UT * 3600e3));
+  return `${parts.find(p => p.type === "hour").value}:${parts.find(p => p.type === "minute").value}`;
 }
-document.querySelectorAll(".row-btn").forEach(b => b.addEventListener("click", () => {
-  const row = b.closest(".row");
-  toggleRow(row, !row.classList.contains("open"));
-}));
-
-/* ---------- Valg av fotograf ---------- */
-
-// «Første ledige»: trekker en tilfeldig fotograf som er ledig på valgt tid. Trekningen beholdes til
-// dato eller tid endres, og bookingen sendes for den fotografen.
-let assigned = null;
-function resolveAssigned() {
-  const date = $("#f_dato").value, time = $("#f_tid").value;
-  const all = availFor(date);
-  if (selected !== "forste" || !date || !time || !all) { assigned = null; return; }
-  const free = PHOTOGRAPHERS.filter(p => !p.any && ((all[p.id] || {})[date] || []).includes(time)).map(p => p.id);
-  if (!free.includes(assigned)) assigned = free.length ? free[Math.floor(Math.random() * free.length)] : null;
-}
-// Fotografen bookingen faktisk gjelder.
-const bookedPhotographer = () => PHOTOGRAPHERS.find(x => x.id === (selected === "forste" && assigned ? assigned : selected));
-
-function selectPhotographer(id, scroll) {
-  selected = id;
-  resolveAssigned();
-  const p = bookedPhotographer();
-  document.querySelectorAll(".row").forEach(r => {
-    const on = r.dataset.id === id;
-    r.classList.toggle("sel", on);
-    const q = PHOTOGRAPHERS.find(x => x.id === r.dataset.id);
-    $(".choose .lbl", r).textContent = on ? "Valgt" : r.classList.contains("busy") ? "Opptatt på valgt tid" : chooseLabel(q);
-  });
-  const av = $("#sumAvatar");
-  av.className = "av" + (p.any ? " any" : "");
-  av.innerHTML = avatar(p, 18);
-  $("#sumName").textContent = p.name;
-  $("#sumRole").textContent = selected === "forste" && assigned ? "Første ledige" : p.role;
-  $("#assignedTag").textContent = selected === "forste" && assigned ? `→ ${p.name.split(" ")[0]}` : "";
-  if (scroll) $("#bestill").scrollIntoView({ behavior: "smooth", block: "start" });
+function eveningKey(date) {
+  const ss = sunsetLocal(date);
+  if (!ss) return null;
+  const m = keyMin(ss) - EVENING.BEFORE_SUNSET_MIN;
+  return minKey(Math.floor(m / 15) * 15);
 }
 
-document.addEventListener("click", e => {
-  const pick = e.target.closest("[data-pick]");
-  if (pick && !pick.closest(".row.busy")) {
-    $("#peopleNote").hidden = true;
-    selectPhotographer(pick.dataset.pick, window.innerWidth < 960);
-  }
+/* ---------- Tilstand ---------- */
+
+const state = {
+  step: 1, maxStep: 1,
+  main: null, scope: null, addons: new Set(),
+  date: "", time: "",
+  photographer: "forste", assigned: null,
+};
+
+/* ---------- Steg 1: tjenester ---------- */
+
+$("#mainOpts").innerHTML = MAIN.map(m => `
+  <label class="row"><input type="radio" name="main" value="${m.id}"><span class="dot"></span><span class="t">${m.label}</span><span class="d">${m.desc}</span></label>`).join("");
+
+function renderScopes() {
+  const m = MAIN.find(x => x.id === state.main);
+  $("#scopeGroup").hidden = !m;
+  if (!m) return;
+  if (!m.scopes.some(s => s.id === state.scope)) state.scope = m.scopes.length === 1 ? m.scopes[0].id : null;
+  $("#scopeOpts").innerHTML = m.scopes.map(s => `
+    <label class="chip"><input type="radio" name="scope" value="${s.id}"${s.id === state.scope ? " checked" : ""}><span>${s.label}</span></label>`).join("");
+}
+function renderAddons() {
+  const list = ADDONS.filter(a => !a.when || a.when(state.main));
+  [...state.addons].forEach(id => { if (!list.some(a => a.id === id)) state.addons.delete(id); });
+  $("#addonOpts").innerHTML = list.map(a => `
+    <label class="chip check"><input type="checkbox" value="${a.id}"${state.addons.has(a.id) ? " checked" : ""}><span>${a.label}</span></label>`).join("");
+}
+$("#mainOpts").addEventListener("change", e => {
+  const before = state.main;
+  state.main = e.target.value;
+  // Bytte mellom dag og kveld endrer hvilke tider som gjelder.
+  if (before && (before === "kveld") !== (state.main === "kveld")) state.time = "";
+  renderScopes(); renderAddons(); hideErr(1); update();
 });
+$("#scopeOpts").addEventListener("change", e => { state.scope = e.target.value; hideErr(1); update(); });
+$("#addonOpts").addEventListener("change", e => {
+  e.target.checked ? state.addons.add(e.target.value) : state.addons.delete(e.target.value);
+  update();
+});
+renderAddons();
 
-// Gråer ut fotografer som er opptatt på valgt dato og tid.
-function updatePeople() {
-  const date = $("#f_dato").value, time = $("#f_tid").value;
-  const all = availFor(date);
-  const known = date && time && all;
-  document.querySelectorAll(".row").forEach(r => {
-    const free = !known || ((all[r.dataset.id] || {})[date] || []).includes(time);
-    r.classList.toggle("busy", !free);
-  });
-  $("#peopleHint").textContent = known ? `Ledige ${WEEKDAYS[new Date(date + "T12:00").getDay()].toLowerCase()} kl. ${slotLabel(time)}` : "Velg dato og tid først for å se hvem som er ledig";
-  const cur = $(`.row[data-id="${selected}"]`);
-  if (cur && cur.classList.contains("busy")) {
-    const name = PHOTOGRAPHERS.find(x => x.id === selected).name.split(" ")[0];
-    $("#peopleNote").textContent = `${name} er opptatt på valgt tid, så vi har valgt første ledige. Du kan velge en annen fotograf som er ledig.`;
-    $("#peopleNote").hidden = false;
-    selectPhotographer("forste");
-  } else {
-    selectPhotographer(selected);
-  }
+const needsFilm = () => !!(MAIN.find(m => m.id === state.main) || {}).film || state.addons.has("video");
+function serviceText() {
+  const m = MAIN.find(x => x.id === state.main);
+  if (!m) return "";
+  const s = m.scopes.find(x => x.id === state.scope);
+  return [m.label + (s && m.scopes.length > 1 ? `, ${s.label.toLowerCase()}` : ""),
+    ...ADDONS.filter(a => state.addons.has(a.id)).map(a => a.label.toLowerCase())].join(" + ");
 }
 
-/* ---------- Ledige tider ---------- */
+/* ---------- Ledighet ---------- */
 
-// Ledige tider per måned for alle fotografer: { forste: { "2026-10-19": ["08:00", ...] }, glenn: {...}, ... }
+// availCache["2026-10"] = { status: "ok" | "unconfirmed", slots: { forste: {dato: [...]}, glenn: {...}, ... } }
 const availCache = {};
-const slotLabel = t => `${t.slice(0, 2)}–${pad(Number(t.slice(0, 2)) + SLOT_HOURS)}`;
-const availFor = date => date ? availCache[date.slice(0, 7)] : null;
+const ymKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+const slotsOfDay = date => [...new Set([...DAY_SLOTS, eveningKey(date)].filter(Boolean))].sort();
 
-// Uten kobling til kalenderen: alle luker på hverdager er ledige (minus de som er for nær i tid).
-function defaultSlots(from, to) {
-  const out = {};
+// Lokale luker (brukes når kalenderen ikke svarer): hverdager, minus det som er for nær i tid.
+function localSlots(date) {
+  const d = new Date(date + "T00:00");
+  if (!WORKDAYS.includes(d.getDay())) return [];
   const earliest = Date.now() + MIN_LEAD_HOURS * 3600e3;
-  for (let d = new Date(from + "T00:00"); iso(d) <= to; d.setDate(d.getDate() + 1)) {
-    if (!WORKDAYS.includes(d.getDay())) continue;
-    const free = SLOT_STARTS.filter(h => new Date(d.getFullYear(), d.getMonth(), d.getDate(), h).getTime() >= earliest);
-    if (free.length) out[iso(d)] = free.map(h => `${pad(h)}:00`);
-  }
-  return out;
+  return slotsOfDay(date).filter(k => new Date(`${date}T${k}`).getTime() >= earliest);
 }
 
-async function monthSlots(y, m) {
-  const key = `${y}-${pad(m + 1)}`;
+async function loadMonth(d) {
+  const key = ymKey(d);
   if (availCache[key]) return availCache[key];
-  const from = iso(new Date(Math.max(new Date(y, m, 1), today)));
-  const to = iso(new Date(y, m + 1, 0));
-  let all = null;
-  if (AVAILABILITY_URL) {
-    try {
-      const r = await fetch(`${AVAILABILITY_URL}?action=slots&photographer=all&from=${from}&to=${to}`);
-      const j = await r.json();
-      if (j.ok) all = j.slots;
-    } catch (err) { /* faller tilbake til standardluker under */ }
-  }
-  if (!all) {
-    const def = defaultSlots(from, to);
-    all = Object.fromEntries(PHOTOGRAPHERS.map(p => [p.id, def]));
-  }
-  return (availCache[key] = all);
+  const from = iso(new Date(Math.max(new Date(d.getFullYear(), d.getMonth(), 1), today)));
+  const to = iso(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+  let entry = { status: "unconfirmed", slots: null };
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 9000);
+    const r = await fetch(`${AVAILABILITY_URL}?action=slots&photographer=all&from=${from}&to=${to}`, { signal: ctrl.signal });
+    clearTimeout(timer);
+    const j = await r.json();
+    const fresh = j.ok && j.updated && Date.now() - j.updated < STALE_MIN * 60e3;
+    if (fresh) entry = { status: "ok", slots: j.slots };
+  } catch (err) { /* kalenderen svarte ikke: tider vises som ønsker, ikke som bekreftet ledige */ }
+  return (availCache[key] = entry);
 }
 
-/* ---------- Kalender ---------- */
+const monthEntry = date => date ? availCache[date.slice(0, 7)] : null;
+const confirmed = date => (monthEntry(date) || {}).status === "ok";
+
+// Ledige starttider for en fotograf («forste» = minst én som kan tildeles automatisk).
+function freeFor(pid, date) {
+  const e = monthEntry(date);
+  if (!e || e.status !== "ok") return localSlots(date);
+  const of = id => (e.slots[id] || {})[date] || [];
+  if (pid !== "forste") return of(pid);
+  const auto = PHOTOGRAPHERS.filter(p => !AUTO_ASSIGN_EXCLUDE.includes(p.id));
+  return of("forste").filter(k => auto.some(p => of(p.id).includes(k)));
+}
+const relevantKeys = date => state.main === "kveld" ? [eveningKey(date)].filter(Boolean) : DAY_SLOTS;
+const freeRelevant = (pid, date) => freeFor(pid, date).filter(k => relevantKeys(date).includes(k));
+
+// Jevn fordeling: blant ledige fotografer (med film-kompetanse ved video) velges den med minst
+// opptatt uke. Glenn tildeles ikke automatisk. Lik belastning: første i listen.
+function autoAssign() {
+  const { date, time } = state;
+  if (!date || !time || !confirmed(date)) return null;
+  const pool = PHOTOGRAPHERS.filter(p => !AUTO_ASSIGN_EXCLUDE.includes(p.id) && freeFor(p.id, date).includes(time));
+  const skilled = needsFilm() ? pool.filter(p => p.skills.includes("film")) : pool;
+  const cands = skilled.length ? skilled : pool;
+  if (!cands.length) return null;
+  const d = new Date(date + "T12:00");
+  const monday = new Date(d); monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  const load = id => {
+    let busy = 0;
+    for (let i = 0; i < 5; i++) {
+      const day = new Date(monday); day.setDate(monday.getDate() + i);
+      const k = iso(day), e = monthEntry(k);
+      if (!e || e.status !== "ok" || day < today) continue;
+      busy += DAY_SLOTS.length - ((e.slots[id] || {})[k] || []).filter(x => DAY_SLOTS.includes(x)).length;
+    }
+    return busy;
+  };
+  const min = Math.min(...cands.map(p => load(p.id)));
+  const best = cands.filter(p => load(p.id) === min);
+  return (best.find(p => p.id === state.assigned) || best[0]).id;
+}
+
+/* ---------- Steg 2: kalender, tid, fotograf ---------- */
 
 let view = new Date(today.getFullYear(), today.getMonth(), 1);
-let currentSlots = null; // ledige tider for «første ledige» (minst én fotograf ledig); null mens de lastes
 let renderSeq = 0;
 
-async function renderCal() {
+async function renderCalendar() {
   const seq = ++renderSeq;
   const y = view.getFullYear(), m = view.getMonth();
-  const prev = new Date(y, m - 1, 1), next = new Date(y, m + 1, 1);
-  $("#mPrev").textContent = MON3[prev.getMonth()];
-  $("#mCur").textContent = MON3[m];
-  $("#mNext").textContent = MON3[next.getMonth()];
+  $("#calMonth").textContent = `${MONTHS[m]} ${y}`;
   $("#calPrev").disabled = y === today.getFullYear() && m === today.getMonth();
-  $("#calWk").innerHTML = WK.map((w, i) => `<span class="${(today.getDay() + 6) % 7 === i ? "today" : ""}">${w}</span>`).join("");
-
-  const loaded = availCache[`${y}-${pad(m + 1)}`];
-  drawDots(loaded ? loaded.forste : null);
-  if (!loaded) {
-    $("#calDots").classList.add("loading");
-    const all = await monthSlots(y, m);
+  if (!availCache[ymKey(view)]) {
+    $("#calDays").classList.add("loading");
+    drawDays(false);
+    await loadMonth(view);
     if (seq !== renderSeq) return;
-    $("#calDots").classList.remove("loading");
-    drawDots(all.forste);
   }
+  $("#calDays").classList.remove("loading");
+  drawDays(true);
 }
 
-function drawDots(slots) {
+function drawDays(ready) {
   const y = view.getFullYear(), m = view.getMonth();
-  currentSlots = slots;
-  // Valgt dato/tid som ikke lenger er ledig nullstilles.
-  const sel = $("#f_dato").value;
-  if (slots && sel && sel.startsWith(`${y}-${pad(m + 1)}`)) {
-    const free = slots[sel] || [];
-    if (!free.length) { $("#f_dato").value = ""; $("#f_tid").value = ""; }
-    else if (!free.includes($("#f_tid").value)) $("#f_tid").value = "";
-  }
-
   const lead = (new Date(y, m, 1).getDay() + 6) % 7;
   const days = new Date(y, m + 1, 0).getDate();
-  const chosen = $("#f_dato").value;
   let html = "";
-  for (let i = 0; i < lead; i++) html += '<span class="dot blank"></span>';
+  for (let i = 0; i < lead; i++) html += '<span class="day blank"></span>';
   for (let d = 1; d <= days; d++) {
-    const date = new Date(y, m, d);
-    const key = iso(date);
+    const date = new Date(y, m, d), key = iso(date);
     const past = date < today;
-    const full = !past && slots && !(slots[key] || []).length;
-    const cls = [past ? "past" : "", key === iso(today) ? "today" : "", full ? "full" : "", key === chosen ? "sel" : ""].join(" ");
-    html += `<button type="button" class="dot ${cls}" data-date="${key}" aria-label="${d}. ${MONTHS[m]}${full ? ", ingen ledige tider" : ""}"${past || full ? " disabled" : ""}>${d}</button>`;
+    const full = ready && !past && !freeRelevant(state.photographer, key).length;
+    const cls = ["day", past && "past", full && "full", key === iso(today) && "today", key === state.date && "sel"].filter(Boolean).join(" ");
+    html += `<button type="button" class="${cls}" data-date="${key}" aria-label="${d}. ${MONTHS[m]}${full ? ", ingen ledige tider" : ""}"${past || full ? " disabled" : ""}>${d}</button>`;
   }
-  const total = lead + days;
-  for (let i = total; i < Math.ceil(total / 7) * 7; i++) html += '<span class="dot blank"></span>';
-  $("#calDots").innerHTML = html;
-  showDate();
+  $("#calDays").innerHTML = html;
+  const entry = availCache[ymKey(view)];
+  $("#availNotice").hidden = !(ready && entry && entry.status !== "ok");
+  $("#availNotice").textContent = "Vi får ikke sjekket kalenderen akkurat nå. Velg ønsket tid, så bekrefter vi den så snart vi kan.";
+  renderTimes();
 }
 
-function showDate() {
-  const v = $("#f_dato").value;
-  const t = $("#f_tid").value;
-  updatePeople();
-  if (!v) {
-    $("#calDay").textContent = "00"; $("#calDay").classList.add("none");
-    $("#calMon").textContent = MONTHS[view.getMonth()]; $("#calYr").textContent = view.getFullYear(); $("#calWd").textContent = "";
-    $("#calHint").textContent = "Velg dato, så tidspunkt. Overstrekte dager er ikke ledige.";
-    $("#times").hidden = true;
-    $("#sumWd").textContent = "Dato ikke valgt";
-    $("#sumBig").innerHTML = "00.00<br>&mdash;"; $("#sumBig").classList.add("none");
-    return;
+function renderTimes() {
+  const date = state.date;
+  $("#timeGroup").hidden = !date;
+  if (date) {
+    const keys = relevantKeys(date);
+    const free = freeFor(state.photographer, date);
+    if (state.time && (!free.includes(state.time) || !keys.includes(state.time))) state.time = "";
+    $("#timeLabel").textContent = `${confirmed(date) ? "Ledige tider" : "Ønsket tid"} ${fmtDate(date)}`;
+    $("#timeOpts").innerHTML = keys.map(k => {
+      const ok = free.includes(k);
+      return `<button type="button" class="time${k === state.time ? " sel" : ""}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}">${k}–${endKey(k)}</button>`;
+    }).join("");
+    $("#timeHint").textContent = state.main === "kveld"
+      ? `Kveldsbildene tas rundt solnedgang (kl. ${sunsetLocal(date)}). Varighet ca. ${hours()} t.`
+      : `Varighet ca. ${hours()} t.`;
   }
-  const d = new Date(v + "T12:00");
-  $("#calDay").textContent = pad(d.getDate()); $("#calDay").classList.remove("none");
-  $("#calMon").textContent = MONTHS[d.getMonth()]; $("#calYr").textContent = d.getFullYear();
-  $("#calWd").textContent = t ? slotLabel(t) : WEEKDAYS[d.getDay()].slice(0, 3);
-  $("#calHint").textContent = t ? "" : "Velg tidspunkt.";
-  $("#sumWd").textContent = WEEKDAYS[d.getDay()] + (t ? ` · kl. ${slotLabel(t)}` : " · velg tidspunkt");
-  $("#sumBig").innerHTML = `${pad(d.getDate())}.${pad(d.getMonth() + 1)}<br>${MON3[d.getMonth()].toUpperCase()}`;
-  $("#sumBig").classList.remove("none");
+  renderPhotographers();
+  update();
+}
 
-  // Tidsluker for valgt dag (bare når datoen er i måneden som vises)
-  if (iso(d).slice(0, 7) !== iso(view).slice(0, 7)) { $("#times").hidden = true; return; }
-  const free = (currentSlots || {})[v] || [];
-  $("#times").hidden = false;
-  $("#timeRow").innerHTML = SLOT_STARTS.map(h => {
-    const k = `${pad(h)}:00`;
-    const ok = free.includes(k);
-    return `<button type="button" class="tslot${k === t ? " sel" : ""}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${slotLabel(k)}${ok ? "" : ", opptatt"}">${slotLabel(k)}</button>`;
+function renderPhotographers() {
+  const { date, time } = state;
+  const known = date && time && confirmed(date);
+  if (state.photographer !== "forste" && known && !freeFor(state.photographer, date).includes(time)) {
+    const p = PHOTOGRAPHERS.find(x => x.id === state.photographer);
+    state.photographer = "forste";
+    showErr(2, `${p.name.split(" ")[0]} er opptatt på valgt tid, så vi har valgt første ledige fotograf.`);
+  }
+  state.assigned = state.photographer === "forste" ? autoAssign() : null;
+
+  const cur = state.photographer === "forste"
+    ? (state.assigned && PHOTOGRAPHERS.find(p => p.id === state.assigned))
+    : PHOTOGRAPHERS.find(p => p.id === state.photographer);
+  $("#phAv").className = "av" + (cur ? "" : " any");
+  $("#phAv").innerHTML = cur ? avatar(cur) : bolt(16);
+  if (state.photographer === "forste") {
+    $("#phName").textContent = cur ? cur.name : "Første ledige fotograf";
+    $("#phNote").textContent = cur ? "Første ledige på valgt tid"
+      : date && time && !confirmed(date) ? "Vi tildeler fotograf når vi bekrefter" : "Vi velger en ledig fotograf for deg";
+  } else {
+    $("#phName").textContent = cur.name;
+    $("#phNote").textContent = "Valgt av deg";
+  }
+
+  const cards = [{ id: "forste", name: "Første ledige", any: true }, ...PHOTOGRAPHERS];
+  $("#phGrid").innerHTML = cards.map(p => {
+    const busy = known && !p.any && !freeFor(p.id, date).includes(time);
+    const sub = p.any ? "Anbefalt" : busy ? "Opptatt" : p.role;
+    return `<button type="button" class="ph${state.photographer === p.id ? " sel" : ""}${busy ? " busy" : ""}" data-ph="${p.id}"${busy ? ' aria-disabled="true"' : ""}>
+      <span class="av${p.any ? " any" : ""}">${p.any ? bolt(14) : avatar(p)}</span>
+      <span><span class="nm">${esc(p.any ? p.name : p.name.split(" ")[0])}</span><br><span class="st">${esc(sub)}</span></span></button>`;
   }).join("");
 }
 
-$("#calDots").addEventListener("click", e => {
-  const b = e.target.closest(".dot[data-date]");
+$("#calDays").addEventListener("click", e => {
+  const b = e.target.closest(".day[data-date]");
   if (!b) return;
-  if ($("#f_dato").value !== b.dataset.date) $("#f_tid").value = "";
-  $("#f_dato").value = b.dataset.date;
-  drawDots(currentSlots);
+  if (state.date !== b.dataset.date) state.time = "";
+  state.date = b.dataset.date;
+  hideErr(2);
+  drawDays(true);
 });
-$("#timeRow").addEventListener("click", e => {
-  const b = e.target.closest(".tslot");
+$("#timeOpts").addEventListener("click", e => {
+  const b = e.target.closest(".time[data-time]");
   if (!b) return;
-  $("#f_tid").value = b.dataset.time;
-  $("#calCard").classList.remove("err");
-  showDate();
+  state.time = b.dataset.time;
+  hideErr(2);
+  renderTimes();
 });
-$("#calPrev").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCal(); });
-$("#calNext").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); renderCal(); });
+$("#calPrev").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCalendar(); });
+$("#calNext").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); renderCalendar(); });
+$("#phToggle").addEventListener("click", () => {
+  const open = $("#phGrid").hidden;
+  $("#phGrid").hidden = !open;
+  $("#phToggle").textContent = open ? "Skjul" : "Velg selv";
+  $("#phToggle").setAttribute("aria-expanded", open);
+});
+$("#phGrid").addEventListener("click", e => {
+  const b = e.target.closest(".ph[data-ph]");
+  if (!b || b.classList.contains("busy")) return;
+  state.photographer = b.dataset.ph;
+  hideErr(2);
+  drawDays(true); // kalenderen viser valgt fotografs ledighet
+});
 
-/* ---------- Produkter og oppsummering ---------- */
+/* ---------- Adresseoppslag (Kartverket) ---------- */
 
-const prodBoxes = () => [...document.querySelectorAll('input[name="produkter"]')];
-
-function syncProducts() {
-  const chosen = prodBoxes().filter(b => b.checked);
-  $("#sumProd").textContent = chosen.length
-    ? chosen.map(b => PRODUCTS.find(p => p.value === b.value).label).join(", ")
-    : "Ingen valgt";
+const addr = $("#f_adresse");
+let sugTimer = null, sugItems = [], sugIdx = -1;
+const titleCase = s => String(s || "").toLowerCase().replace(/(^|[\s-])\S/g, c => c.toUpperCase());
+addr.addEventListener("input", () => {
+  update();
+  clearTimeout(sugTimer);
+  const q = addr.value.trim();
+  if (q.length < 3) return closeSuggest();
+  sugTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(`https://ws.geonorge.no/adresser/v1/sok?sok=${encodeURIComponent(q)}&fuzzy=true&treffPerSide=6`);
+      const j = await r.json();
+      if (addr.value.trim() !== q) return;
+      sugItems = (j.adresser || []).map(a => {
+        const sub = `${a.postnummer} ${titleCase(a.poststed)}`;
+        return { text: `${a.adressetekst}, ${sub}`, main: a.adressetekst, sub };
+      });
+      sugIdx = -1;
+      drawSuggest();
+    } catch (err) { closeSuggest(); }
+  }, 220);
+});
+function drawSuggest() {
+  if (!sugItems.length) return closeSuggest();
+  $("#suggest").innerHTML = sugItems.map((s, i) => `<li role="option" data-i="${i}" class="${i === sugIdx ? "act" : ""}">${esc(s.main)}<small>${esc(s.sub)}</small></li>`).join("");
+  $("#suggest").hidden = false;
+  addr.setAttribute("aria-expanded", "true");
 }
-$("#svcStack").addEventListener("change", e => {
-  const box = e.target;
-  if (box.checked) prodBoxes().forEach(b => { if (b !== box && b.dataset.svc === box.dataset.svc) b.checked = false; });
-  syncProducts();
+function closeSuggest() { $("#suggest").hidden = true; addr.setAttribute("aria-expanded", "false"); sugItems = []; }
+function pickSuggest(i) { addr.value = sugItems[i].text; addr.classList.remove("err"); closeSuggest(); update(); }
+$("#suggest").addEventListener("mousedown", e => { const li = e.target.closest("li"); if (li) { e.preventDefault(); pickSuggest(+li.dataset.i); } });
+addr.addEventListener("keydown", e => {
+  if ($("#suggest").hidden) return;
+  if (e.key === "ArrowDown") { sugIdx = Math.min(sugIdx + 1, sugItems.length - 1); drawSuggest(); e.preventDefault(); }
+  else if (e.key === "ArrowUp") { sugIdx = Math.max(sugIdx - 1, 0); drawSuggest(); e.preventDefault(); }
+  else if (e.key === "Enter" && sugIdx >= 0) { pickSuggest(sugIdx); e.preventDefault(); }
+  else if (e.key === "Escape") closeSuggest();
 });
-$("#f_adresse").addEventListener("input", e => { $("#sumAddr").textContent = e.target.value.trim() || "—"; });
+addr.addEventListener("blur", () => setTimeout(closeSuggest, 150));
+
+/* ---------- Oppsummering ---------- */
+
+function summaryRows() {
+  const p = state.photographer === "forste"
+    ? (state.assigned ? `${PHOTOGRAPHERS.find(x => x.id === state.assigned).name} (første ledige)` : "Første ledige")
+    : PHOTOGRAPHERS.find(x => x.id === state.photographer).name;
+  const tid = state.date ? `${fmtDate(state.date)}${state.time ? `, kl. ${state.time}–${endKey(state.time)}` : ""}` : "";
+  return [
+    ["Tjeneste", serviceText()],
+    ["Adresse", addr.value.trim()],
+    ["Tid", tid + (state.date && state.time && !confirmed(state.date) ? " (ønsket)" : "")],
+    ["Varighet", state.main ? `ca. ${hours()} t` : ""],
+    ["Fotograf", p],
+  ];
+}
+const rowsHtml = rows => rows.map(([k, v]) => `<div><dt>${k}</dt><dd class="${v ? "" : "empty"}">${v ? esc(v) : "–"}</dd></div>`).join("");
+function update() {
+  const rows = summaryRows();
+  $$("[data-sum]").forEach(dl => { dl.innerHTML = rowsHtml(rows); });
+  const d = state.date && new Date(state.date + "T12:00");
+  const short = [serviceText().split(" + ")[0], d && state.time ? `${d.getDate()}. ${MONTHS[d.getMonth()].slice(0, 3)} kl. ${state.time}` : ""].filter(Boolean).join(" · ");
+  $("#sumShort").textContent = short || "Ingen valg ennå";
+}
+
+/* ---------- Steg og validering ---------- */
+
+function showErr(n, msg) { const el = $(`#err${n}`); el.textContent = msg; el.hidden = false; }
+function hideErr(n) { $(`#err${n}`).hidden = true; }
+
+function validStep(n) {
+  if (n === 1) {
+    if (!state.main) return showErr(1, "Velg en hovedtjeneste."), false;
+    if (!state.scope) return showErr(1, "Velg omfang."), false;
+  }
+  if (n === 2) {
+    if (!addr.value.trim()) { showErr(2, "Skriv inn adressen for fotograferingen."); addr.classList.add("err"); return false; }
+    if (!state.date || !state.time) return showErr(2, "Velg dato og tidspunkt."), false;
+  }
+  if (n === 3) {
+    let first = null;
+    ["f_navn", "f_tlf", "f_epost"].forEach(id => {
+      const el = $("#" + id), v = el.value.trim();
+      const bad = !v || (id === "f_epost" && !/^\S+@\S+\.\S+$/.test(v)) || (id === "f_tlf" && v.replace(/\D/g, "").length < 8);
+      el.classList.toggle("err", bad);
+      if (bad && !first) first = el;
+    });
+    if (first) { first.focus(); return showErr(3, "Fyll inn navn, telefon og en gyldig e-postadresse."), false; }
+  }
+  hideErr(n);
+  return true;
+}
+
+function goStep(n, scroll = true) {
+  for (let i = 1; i < n; i++) if (!validStep(i)) { n = i; break; }
+  state.step = n;
+  state.maxStep = Math.max(state.maxStep, n);
+  $$(".step").forEach(s => { s.hidden = +s.dataset.step !== n; });
+  $$("#stepper li").forEach(li => {
+    const s = +li.dataset.step;
+    li.className = s === n ? "cur" : s <= state.maxStep ? "done" : "";
+  });
+  if (n === 2) renderCalendar();
+  update();
+  if (scroll) $(".head").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+document.addEventListener("click", e => {
+  const go = e.target.closest("[data-go]");
+  if (go) goStep(+go.dataset.go);
+  const li = e.target.closest("#stepper li.done");
+  if (li) goStep(+li.dataset.step);
+});
+$$("input, textarea").forEach(el => el.addEventListener("input", () => el.classList.remove("err")));
+
+/* ---------- Husk meg ---------- */
+
+const REMEMBER_KEY = "fotostallen-booking-kontakt";
+const REMEMBER_FIELDS = ["f_navn", "f_tlf", "f_epost", "f_faktura"];
+try {
+  const saved = JSON.parse(localStorage.getItem(REMEMBER_KEY) || "null");
+  if (saved) {
+    REMEMBER_FIELDS.forEach(id => { if (saved[id]) $("#" + id).value = saved[id]; });
+    $("#f_husk").checked = true;
+    if (saved.f_faktura) $("#moreFaktura").open = true;
+  }
+} catch (err) { /* lagring ikke tilgjengelig */ }
+function remember() {
+  try {
+    if ($("#f_husk").checked) localStorage.setItem(REMEMBER_KEY, JSON.stringify(Object.fromEntries(REMEMBER_FIELDS.map(id => [id, $("#" + id).value.trim()]))));
+    else localStorage.removeItem(REMEMBER_KEY);
+  } catch (err) { /* ignorer */ }
+}
 
 /* ---------- Innsending ---------- */
 
 const form = $("#booking");
-
-function validate() {
-  let ok = true;
-  form.querySelectorAll("[required]").forEach(el => {
-    const bad = !el.value.trim() || (el.type === "email" && !/^\S+@\S+\.\S+$/.test(el.value));
-    el.classList.toggle("err", bad);
-    if (bad) ok = false;
-  });
-  const noTime = !$("#f_dato").value || !$("#f_tid").value;
-  $("#calCard").classList.toggle("err", noTime);
-  return ok && !noTime;
-}
-form.addEventListener("input", e => { if (e.target.classList.contains("err")) e.target.classList.remove("err"); });
-
-function showError(msg) {
-  $("#formError").textContent = msg;
-  $("#formError").style.display = "block";
-}
-
 form.addEventListener("submit", async e => {
   e.preventDefault();
-  if (!validate()) {
-    const noTime = !$("#f_dato").value || !$("#f_tid").value;
-    showError(noTime ? "Velg dato og tidspunkt i kalenderen, og fyll ut feltene som er markert." : "Fyll ut feltene som er markert.");
-    const first = document.querySelector(".cal.err, .err");
-    first.scrollIntoView({ behavior: "smooth", block: "center" });
-    if (first.matches("input, textarea")) first.focus({ preventScroll: true });
-    return;
-  }
-  $("#formError").style.display = "none";
+  for (const n of [1, 2, 3]) if (!validStep(n)) { if (n !== 3) goStep(n); return; }
+  remember();
 
-  const p = bookedPhotographer();
-  const viaAny = selected === "forste" && !p.any;
   const v = id => $("#" + id).value.trim();
-  const tid = slotLabel(v("f_tid"));
-  const products = prodBoxes().filter(b => b.checked).map(b => b.value);
+  const m = MAIN.find(x => x.id === state.main), scope = m.scopes.find(s => s.id === state.scope);
+  const addons = ADDONS.filter(a => state.addons.has(a.id));
+  const formProducts = [...new Set([scope.form, ...addons.map(a => a.form)].filter(Boolean))];
+  const booked = state.photographer === "forste" ? state.assigned : state.photographer;
+  const p = PHOTOGRAPHERS.find(x => x.id === booked);
+  const services = serviceText();
+  const tid = `${state.time}–${endKey(state.time)}`;
+  const faktura = v("f_faktura") || `${v("f_navn")}, ${v("f_epost")}`;
+  const note = [
+    state.photographer === "forste" && p ? "Kunden valgte første ledige." : "",
+    addons.some(a => a.id === "plantegning") ? "Ønsker plantegning." : "",
+    v("f_mer"),
+  ].filter(Boolean).join(" ");
+
   const btn = $("#submitBtn");
-  btn.disabled = true;
-
+  btn.disabled = true; btn.textContent = "Sender …";
+  hideErr(3);
   try {
-    // 1) Legg bookingen i køen (sjekker samtidig at tiden fortsatt er ledig).
-    if (AVAILABILITY_URL) {
-      let res = null;
-      try {
-        const r = await fetch(AVAILABILITY_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "book", photographer: p.id, date: v("f_dato"), time: v("f_tid"),
-            navn: v("f_navn"), telefon: v("f_tlf"), epost: v("f_epost"), oppdrag: v("f_oppdrag"), faktura: v("f_faktura"),
-            address: v("f_adresse"), kvm: v("f_kvm"), ankomst: v("f_ankomst"), products,
-            note: [viaAny ? "Kunden valgte første ledige." : "", v("f_mer")].filter(Boolean).join(" "),
-          }),
-        });
-        res = await r.json();
-      } catch (err) { /* kalenderen svarte ikke; bestillingen sendes likevel via skjemaet */ }
-      if (res && !res.ok && res.error === "taken") {
-        Object.keys(availCache).forEach(k => delete availCache[k]);
-        $("#f_tid").value = "";
-        await renderCal();
-        showError("Beklager, det tidspunktet ble nettopp tatt. Velg et annet tidspunkt.");
-        $("#calCard").classList.add("err");
-        $("#dato").scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
+    // 1) Reserver tiden (kø i Apps Script, som sjekker at tiden fortsatt er ledig).
+    let res = null;
+    try {
+      const r = await fetch(AVAILABILITY_URL, {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "book", photographer: booked || "forste", date: state.date, time: state.time,
+          services, products: formProducts, navn: v("f_navn"), telefon: v("f_tlf"), epost: v("f_epost"),
+          oppdrag: v("f_oppdrag"), faktura, address: addr.value.trim(), kvm: v("f_kvm"), ankomst: v("f_ankomst"), note,
+        }),
+      });
+      res = await r.json();
+    } catch (err) { res = null; }
+    if (res && !res.ok && res.error === "taken") {
+      Object.keys(availCache).forEach(k => delete availCache[k]);
+      state.time = "";
+      goStep(2);
+      showErr(2, "Beklager, det tidspunktet ble nettopp tatt. Velg et annet.");
+      return;
     }
+    const reserved = !!(res && res.ok);
+    if (!reserved && !navigator.onLine) throw new Error("offline");
 
-    // 2) Send til Google-skjemaet som før. Skjemaets felt heter fortsatt «megler», men brukes for alle kunder.
+    // 2) Kopi til Google-skjemaet som før.
     const data = new URLSearchParams();
     data.append(ENTRY.megler, `${v("f_navn")}, ${v("f_tlf")}`);
     data.append(ENTRY.kontor, v("f_oppdrag") ? `Oppdragsnr. ${v("f_oppdrag")}` : "");
     data.append(ENTRY.epost, v("f_epost"));
-    data.append(ENTRY.adresse, v("f_adresse"));
-    data.append(ENTRY.faktura, v("f_faktura"));
+    data.append(ENTRY.adresse, addr.value.trim());
+    data.append(ENTRY.faktura, faktura);
     data.append(ENTRY.kvm, v("f_kvm"));
     data.append(ENTRY.ankomst, v("f_ankomst"));
-    data.append(ENTRY.fotograf, p.formOption || "Første ledig");
-    const [y, m, d] = v("f_dato").split("-");
+    data.append(ENTRY.fotograf, p ? p.formOption : "Første ledig");
+    const [y, mo, d] = state.date.split("-");
     data.append(ENTRY.dato + "_year", y);
-    data.append(ENTRY.dato + "_month", String(Number(m)));
+    data.append(ENTRY.dato + "_month", String(Number(mo)));
     data.append(ENTRY.dato + "_day", String(Number(d)));
-    products.forEach(x => data.append(ENTRY.produkter, x));
-    data.append(ENTRY.insta, form.insta.value);
-    // Skjemaets datofelt har ikke klokkeslett, så tidspunktet skrives først i "Noe mer?".
-    const extra = [
-      `Tidspunkt: kl. ${tid}`,
+    formProducts.forEach(x => data.append(ENTRY.produkter, x));
+    data.append(ENTRY.insta, "Nei");
+    data.append(ENTRY.mer, [
+      `Tidspunkt: kl. ${tid}${confirmed(state.date) ? "" : " (ønsket, ikke sjekket mot kalender)"}`,
+      reserved ? `Referanse: ${res.ref}` : "Ikke reservert automatisk – bekreft manuelt.",
+      `Tjenester: ${services}`,
+      state.photographer === "forste" && p ? `Første ledige – tildelt ${p.name}` : "",
       v("f_oppdrag") ? `Oppdragsnr.: ${v("f_oppdrag")}` : "",
-      viaAny ? `Første ledige – tildelt ${p.name}` : "",
-      p.formOption ? "" : `Ønsket fotograf: ${p.name}`,
-      v("f_mer"),
-    ].filter(Boolean).join("\n");
-    data.append(ENTRY.mer, extra);
-    // Google svarer uten CORS-headere, så vi kan ikke lese svaret, men innsendingen går gjennom.
-    await fetch(GOOGLE_FORM, { method: "POST", mode: "no-cors", body: data });
+      note,
+    ].filter(Boolean).join("\n"));
+    try { await fetch(GOOGLE_FORM, { method: "POST", mode: "no-cors", body: data }); } catch (err) { /* reservasjonen er hovedkanalen */ }
 
-    form.style.display = "none";
-    $("#doneText").textContent = p.any
-      ? `Vi har mottatt bestillingen for kl. ${tid} og sender første ledige fotograf. Vi tar kontakt for å bekrefte.`
-      : `Vi har mottatt bestillingen for kl. ${tid} og gir beskjed til ${p.name.split(" ")[0]}. Vi tar kontakt for å bekrefte.`;
-    $("#done").style.display = "block";
-    $("#done").scrollIntoView({ behavior: "smooth", block: "center" });
+    // 3) Kvittering
+    $("#rcTitle").textContent = reserved ? "Takk, bestillingen er mottatt" : "Takk, vi har mottatt forespørselen";
+    $("#rcText").innerHTML = reserved
+      ? `Referanse <span class="ref">${esc(res.ref)}</span>. Vi har satt av tiden og bekrefter så snart vi kan.${res.emailed ? ` En bekreftelse er sendt til ${esc(v("f_epost"))}.` : ""}`
+      : "Vi fikk ikke reservert tiden automatisk, men forespørselen er sendt. Vi tar kontakt for å bekrefte tid og fotograf.";
+    $("#rcSum").innerHTML = rowsHtml(summaryRows());
+    form.hidden = true;
+    $("#receipt").hidden = false;
+    $$("#stepper li").forEach(li => { li.className = "done"; li.style.pointerEvents = "none"; });
+    $(".head").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
-    showError("Noe gikk galt. Prøv igjen, eller send oss en e-post på kontakt@fotostallen.no.");
+    showErr(3, "Noe gikk galt under innsendingen. Sjekk nettforbindelsen og prøv igjen, eller send oss en e-post på kontakt@fotostallen.no.");
   } finally {
-    btn.disabled = false;
+    btn.disabled = false; btn.textContent = "Send bestilling";
   }
 });
 
 $("#again").addEventListener("click", () => {
-  form.reset();
-  prodBoxes().forEach(b => b.checked = false);
-  $("#f_dato").value = "";
-  $("#f_tid").value = "";
-  $("#sumAddr").textContent = "—";
-  $("#peopleNote").hidden = true;
+  Object.assign(state, { step: 1, maxStep: 1, main: null, scope: null, date: "", time: "", photographer: "forste", assigned: null });
+  state.addons.clear();
   Object.keys(availCache).forEach(k => delete availCache[k]);
-  syncProducts();
-  $("#done").style.display = "none";
-  form.style.display = "block";
-  selected = "forste";
-  renderCal();
-  $("#dato").scrollIntoView({ behavior: "smooth" });
+  ["f_adresse", "f_mer", "f_kvm", "f_ankomst", "f_oppdrag"].forEach(id => { $("#" + id).value = ""; });
+  $$("#mainOpts input").forEach(i => { i.checked = false; });
+  $$("#stepper li").forEach(li => { li.style.pointerEvents = ""; });
+  renderScopes(); renderAddons();
+  $("#receipt").hidden = true; form.hidden = false;
+  goStep(1);
+  loadMonth(view);
 });
 
-selectPhotographer("forste");
-toggleRow($(".row"), true);
-syncProducts();
-renderCal();
+goStep(1, false);
+// Hent ledighet i bakgrunnen, så kalenderen er klar når kunden kommer til steg 2.
+loadMonth(view);
 
 /* ---------- Innebygging ---------- */
 
