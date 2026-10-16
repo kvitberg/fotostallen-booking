@@ -1,6 +1,6 @@
 # Koble bookingsiden til fotografenes kalendere
 
-Bookingsiden viser ledige tidsluker (08–10, 10–12, 12–14, 14–16, 16–18 på hverdager). Ledighet hentes fra de samme iCloud-kalenderne som fakturaroboten leser, og hver bestilling legges inn i **fotografens egen kalender**.
+Bookingsiden viser ledige tider på hverdager: oppdrag på 1,5 time med start 08:00, 09:30, 11:00, 12:30, 14:00 og 15:30, og for kveldsfoto én luke som starter 30 minutter før solnedgang i Oslo. Ledighet hentes fra de samme iCloud-kalenderne som fakturaroboten leser, og hver bestilling legges inn i **fotografens egen kalender**.
 
 ```
 iCloud: «Glenn Foto», «Scott foto», …  ◀──les og skriv (CalDAV)──  synkjobb på Scotts Mac (hvert 5. min)
@@ -66,11 +66,16 @@ Stoppe jobben: `npm --prefix ~/Claude/fotostallen-booking/synk run avinstaller`.
 
 ---
 
+
+## Bekreftelse på e-post
+
+Apps Script-en sender en bekreftelse til kunden fra **booking@fotostallen.no**, med kopi til samme adresse, så snart den adressen er lagt inn som «Send e-post som»-alias i Gmail-kontoen som eier skriptet (scott.kvitberg@gmail.com → Innstillinger → Kontoer → Send e-post som). Før aliaset finnes, sendes ingen e-post, og kunden ser bare kvitteringen på siden.
+
 ## Endre fotografer, kalendere eller tidsluker
 
 Endringer må gjøres to steder:
 
-- `index.html`: `PHOTOGRAPHERS` og `SLOT_STARTS`, `SLOT_HOURS`, `WORKDAYS`, `MIN_LEAD_HOURS`
+- `index.html`: `PHOTOGRAPHERS`, `DURATION_MIN`, `DAY_SLOTS`, `EVENING`, `WORKDAYS`, `MIN_LEAD_HOURS`, `AUTO_ASSIGN_EXCLUDE`
 - `apps-script/Code.gs`: `CONFIG` øverst. `ICLOUD_CALENDARS` sier hvilken iCloud-kalender som hører til hvilken fotograf. Lim inn filen på nytt i Apps Script og lag ny versjon av distribusjonen.
 
 ## Tester
