@@ -119,6 +119,7 @@
   .row-btn .thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; filter: grayscale(1); transition: filter .3s; }
   .row.open .thumb img, .row.sel .thumb img { filter: none; }
   .row-btn .thumb.any { background: var(--ink); display: grid; place-items: center; }
+  .ini { width: 100%; height: 100%; display: grid; place-items: center; font-size: 14px; font-weight: 600; letter-spacing: .02em; color: #fff; background: #9a9995; }
   .row.sel .thumb.any { background: var(--accent); }
   .row-btn .chev { width: 20px; flex: 0 0 auto; opacity: .5; transition: transform .25s; }
   .row.open .chev { transform: rotate(45deg); }
@@ -523,16 +524,14 @@ const PHOTOGRAPHERS = [
     bio: "Scott tar bilder av interiørprosjekter, portretter, produkter og bolig for salg. Han jobber med både stills og film, og har et blikk for romfølelse, detaljer og stemning.",
   },
   {
-    id: "helene", name: "Helene Stenseth", role: "Interiør og bolig", formOption: null,
-    img: IMG + "Image%202%20(4).jpg",
-    tags: ["Interiør", "Bolig", "Portrett"],
-    bio: "Helene tar bilder av interiørprosjekter, portretter, produkter og bolig for salg, og har et blikk for romfølelse, detaljer og stemning.",
-  },
-  {
     id: "kristine", name: "Kristine Elvemo", role: "Interiør og bolig", formOption: "Kristine Elvsmo",
     img: IMG + "Kristine,%20Kevin%20Fauske.jpg",
     tags: ["Interiør", "Bolig", "Portrett"],
     bio: "Kristine tar bilder av interiørprosjekter, portretter, produkter og bolig for salg, og har et blikk for romfølelse, detaljer og stemning.",
+  },
+  {
+    // Mangler portrett og beskrivelse: send bilde og tekst, så legges de inn (img, bio, tags).
+    id: "henrik", name: "Henrik Eriksen", role: "Fotograf", formOption: "Henrik Eriksen",
   },
 ];
 
@@ -566,6 +565,8 @@ const pad = n => String(n).padStart(2, "0");
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const arrow = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const bolt = s => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>`;
+const initials = p => p.name.split(" ").map(w => w[0]).join("").slice(0, 2);
+const avatar = (p, size) => p.any ? bolt(size) : p.img ? `<img src="${p.img}" alt="">` : `<span class="ini">${esc(initials(p))}</span>`;
 const tick = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
 const today = new Date(); today.setHours(0, 0, 0, 0);
 let selected = "forste";
@@ -599,15 +600,15 @@ $("#rows").innerHTML = PHOTOGRAPHERS.map(p => `
     <button type="button" class="row-btn" aria-expanded="false">
       <span class="box">${tick}</span>
       <span class="cond">${esc(p.name)}</span>
-      <span class="thumb${p.any ? " any" : ""}">${p.any ? bolt(18) : `<img src="${p.img}" alt="" loading="lazy">`}</span>
+      <span class="thumb${p.any ? " any" : ""}">${avatar(p, 18)}</span>
       <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
     </button>
     <div class="panel"><div>
-      <div class="inner${p.any ? " noimg" : ""}">
-        ${p.any ? "" : `<img class="portrait" src="${p.img}" alt="${esc(p.name)}" loading="lazy">`}
+      <div class="inner${p.img ? "" : " noimg"}">
+        ${p.img ? `<img class="portrait" src="${p.img}" alt="${esc(p.name)}" loading="lazy">` : ""}
         <div>
           <div class="role">${esc(p.role)}</div>
-          <p>${esc(p.bio)}</p>
+          ${p.bio ? `<p>${esc(p.bio)}</p>` : ""}
           ${p.tags ? `<div class="tags">${p.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
           <button type="button" class="choose" data-pick="${p.id}"><span class="lbl">${p.any ? "Velg første ledige" : `Velg ${esc(p.name.split(" ")[0])}`}</span><span class="ic">${arrow}</span></button>
         </div>
@@ -641,7 +642,7 @@ function selectPhotographer(id, scroll) {
   });
   const av = $("#sumAvatar");
   av.className = "av" + (p.any ? " any" : "");
-  av.innerHTML = p.any ? bolt(18) : `<img src="${p.img}" alt="">`;
+  av.innerHTML = avatar(p, 18);
   $("#sumName").textContent = p.name;
   $("#sumRole").textContent = p.role;
   renderCal();
@@ -690,7 +691,7 @@ async function monthSlots(pid, y, m) {
 /* ---------- Kalender ---------- */
 
 let view = new Date(today.getFullYear(), today.getMonth(), 1);
-let currentSlots = {};
+let currentSlots = null; // null mens ledige tider lastes
 let renderSeq = 0;
 
 async function renderCal() {
@@ -716,7 +717,7 @@ async function renderCal() {
 
 function drawDots(slots) {
   const y = view.getFullYear(), m = view.getMonth();
-  currentSlots = slots || {};
+  currentSlots = slots;
   // Valgt dato/tid som ikke lenger er ledig (f.eks. etter bytte av fotograf) nullstilles.
   const sel = $("#f_dato").value;
   if (slots && sel && sel.startsWith(`${y}-${pad(m + 1)}`)) {
@@ -767,7 +768,7 @@ function showDate() {
 
   // Tidsluker for valgt dag (bare når datoen er i måneden som vises)
   if (iso(d).slice(0, 7) !== iso(view).slice(0, 7)) { $("#times").hidden = true; return; }
-  const free = currentSlots[v] || [];
+  const free = (currentSlots || {})[v] || [];
   $("#times").hidden = false;
   $("#timeRow").innerHTML = SLOT_STARTS.map(h => {
     const k = `${pad(h)}:00`;

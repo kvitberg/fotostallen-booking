@@ -59,8 +59,8 @@ Send lenken til Scott på en privat kanal. Alle som har lenken kan se avtalene, 
      | `ICS_lars` | iCloud-lenken til Lars Petter |
      | `ICS_kevin` | … |
      | `ICS_scott` | … |
-     | `ICS_helene` | … |
-     | `ICS_kristine` | … |
+          | `ICS_kristine` | … |
+| `ICS_henrik` | … |
 
      Fotografer som ikke er koblet ennå vises med alle luker ledige (bortsett fra luker som allerede er booket via siden).
 4. Tilbake i editoren: velg funksjonen **`setup`** i menyen øverst og trykk **Kjør**. Godkjenn tilgangen Google ber om (kalender og eksterne nettadresser). Dette lager én bookingkalender per fotograf, pluss én for «Første ledige».

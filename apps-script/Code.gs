@@ -28,8 +28,8 @@ const CONFIG = {
     lars: "Lars Petter Skillestad",
     kevin: "Kevin Fauske",
     scott: "Scott Kvitberg",
-    helene: "Helene Stenseth",
     kristine: "Kristine Elvemo",
+    henrik: "Henrik Eriksen",
   },
 };
 const ANY = "forste"; // «Første ledige»
