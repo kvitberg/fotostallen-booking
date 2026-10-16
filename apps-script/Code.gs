@@ -11,8 +11,9 @@
  *  - Bookingsiden spør GET ?action=slots&photographer=all&from=…&to=… og får ledige luker for
  *    «første ledige» og hver fotograf (photographer=glenn gir bare én).
  *  - Bookingsiden sender POST { action: "book", … }. Bookingen legges i en kø og blokkerer luken med en gang.
- *  - Synkjobben henter køen, legger hver booking inn som «FORELØPIG» i iCloud-kalenderen
- *    «Fotostallen bookinger» (som fakturaroboten ikke leser), og kvitterer med action=ack.
+ *  - Synkjobben henter køen, legger hver booking inn i fotografens egen iCloud-kalender (for «første
+ *    ledige» velges en fotograf som er ledig), og kvitterer med action=ack. Fakturaroboten ser bookingen
+ *    som et oppdrag med ukjent tittelformat, så den havner i Sjekk til tittelen får vanlig format.
  *
  * Skriptegenskaper (Prosjektinnstillinger → Skriptegenskaper):
  *   SYNC_TOKEN = hemmelig nøkkel som synkjobben bruker (står i synk/.env på Macen)
@@ -44,7 +45,6 @@ const CONFIG = {
     kristine: "Kristine Foto",
     henrik: "Henrik Foto",
   },
-  BOOKING_CALENDAR: "Fotostallen bookinger",
 };
 const ANY = "forste"; // «Første ledige»
 
@@ -218,20 +218,28 @@ function overlaps(list, s, e) {
   return list.some(b => b.start < e && b.end > s);
 }
 
-/** Brukes av synkjobben: iCalendar-tekst for en foreløpig booking. */
-function bookingIcs(q, nowMs) {
+/**
+ * Brukes av synkjobben: iCalendar-tekst for en booking i fotografens kalender.
+ * assigned = fotografen bookingen legges hos (for «første ledige» valgt av synkjobben).
+ *
+ * Tittelen er laget for fakturaroboten: «fotografering» gjør den til et oppdrag, og uten «Kode:Navn»-format
+ * havner den i Sjekk. Kolon, klammer og ordene «faktura»/«utsatt» fjernes fra kundens tekst, så den ikke
+ * feiltolkes.
+ */
+function bookingIcs(q, nowMs, assigned) {
   const start = zonedToUtc(ymd(q.date), Number(q.time.slice(0, 2)), 0, CONFIG.TZ);
   const end = start + CONFIG.SLOT_HOURS * 3600e3;
-  const who = q.photographer === ANY ? "Første ledige" : CONFIG.PHOTOGRAPHERS[q.photographer].split(" ")[0];
+  const who = CONFIG.PHOTOGRAPHERS[assigned] || assigned;
   const desc = [
-    "Foreløpig booking fra fotostallen.no – må bekreftes.",
+    "Bestilt via fotostallen.no – tidspunktet må bekreftes med kunden.",
     "",
-    `Fotograf: ${q.photographer === ANY ? "Første ledige" : CONFIG.PHOTOGRAPHERS[q.photographer]}`,
+    `Fotograf: ${who}${q.photographer === ANY ? " (tildelt som første ledige)" : ""}`,
     `Kunde: ${q.navn}`,
     `Telefon: ${q.telefon}`,
     `E-post: ${q.epost}`,
     q.oppdrag ? `Oppdragsnr.: ${q.oppdrag}` : null,
-    `Faktura: ${q.faktura}`,
+    `Faktura til: ${q.faktura}`,
+    `Adresse: ${q.address}`,
     q.kvm ? `Størrelse: ${q.kvm} kvm` : null,
     q.ankomst ? `Ankomst: ${q.ankomst}` : null,
     `Produkter: ${(q.products || []).join(", ") || "–"}`,
@@ -244,14 +252,25 @@ function bookingIcs(q, nowMs) {
     `DTSTAMP:${utcStamp(nowMs)}`,
     `DTSTART:${utcStamp(start)}`,
     `DTEND:${utcStamp(end)}`,
-    `SUMMARY:${icsText(`FORELØPIG – ${who} – ${q.address}`)}`,
+    `SUMMARY:${icsText(bookingTitle(q))}`,
     `LOCATION:${icsText(q.address)}`,
     `DESCRIPTION:${icsText(desc)}`,
-    "STATUS:TENTATIVE",
-    `X-FOTOSTALLEN-FOTOGRAF:${q.photographer}`,
+    `X-FOTOSTALLEN-FOTOGRAF:${assigned}`,
     "END:VEVENT", "END:VCALENDAR",
   ];
   return lines.map(foldLine).join("\r\n") + "\r\n";
+}
+
+function bookingTitle(q) {
+  const safe = t => String(t || "").replace(/[:\[\]]/g, " ").replace(/\b(faktura\w*|utsatt)\b/gi, " ").replace(/\s+/g, " ").trim();
+  return ["Nettbooking fotografering", safe(q.navn), safe(q.address)].filter(Boolean).join(" – ");
+}
+
+/** Brukes av synkjobben: første fotograf (i CONFIG-rekkefølge) som er ledig hele luken. */
+function pickFree(busyById, q) {
+  const s = zonedToUtc(ymd(q.date), Number(q.time.slice(0, 2)), 0, CONFIG.TZ);
+  const e = s + CONFIG.SLOT_HOURS * 3600e3;
+  return Object.keys(CONFIG.PHOTOGRAPHERS).find(pid => busyById[pid] && !overlaps(busyById[pid], s, e)) || null;
 }
 
 function icsText(s) {
@@ -501,4 +520,4 @@ function json(obj) {
 }
 
 // Gjør funksjonene tilgjengelige for testene i node (ignoreres i Apps Script).
-if (typeof module !== "undefined") module.exports = { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, zonedToUtc, fmtYmd, addDays, ymd, CONFIG, ANY };
+if (typeof module !== "undefined") module.exports = { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, zonedToUtc, fmtYmd, addDays, ymd, CONFIG, ANY };

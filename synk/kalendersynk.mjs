@@ -1,9 +1,11 @@
 // Synker fotografenes iCloud-kalendere med bookingsiden. Kjøres hvert 5. minutt av en LaunchAgent på Macen.
 //
-//  1. Henter køen med nye bookinger fra Apps Script-en og legger dem inn som «FORELØPIG»-avtaler
-//     i iCloud-kalenderen «Fotostallen bookinger» (som fakturaroboten ikke leser).
-//  2. Leser fotografenes kalendere og sender bare hvilke luker som er ledige (masker) til Apps Script-en.
-//     Titler, adresser og andre detaljer forlater aldri Macen.
+//  1. Leser fotografenes kalendere.
+//  2. Henter køen med nye bookinger fra Apps Script-en og legger hver booking inn i fotografens egen
+//     kalender. For «første ledige» velges første fotograf som er ledig på tidspunktet. Kan kalenderen
+//     ikke skrives til, havner bookingen i Scotts kalender med beskjed om hvem den var til.
+//  3. Sender bare hvilke luker som er ledige (masker) til Apps Script-en.
+//     Titler, adresser og andre detaljer fra kalenderne forlater aldri Macen.
 //
 // Bruker samme iCloud-tilgang som fakturaroboten (ICLOUD_BRUKER/ICLOUD_APP_PASSORD i dens .env.local).
 //
@@ -20,7 +22,7 @@ const DRY = process.argv.includes("--dry");
 // Samme kode som Apps Script-en kjører: ICS-tolking, masker og bookingfil.
 const mod = { exports: {} };
 new Function("module", readFileSync(join(here, "..", "apps-script", "Code.gs"), "utf8"))(mod);
-const { busyFromIcs, buildMasks, bookingIcs, computeSlots, zonedToUtc, ymd, addDays, fmtYmd, CONFIG, ANY } = mod.exports;
+const { busyFromIcs, buildMasks, bookingIcs, pickFree, computeSlots, zonedToUtc, ymd, addDays, fmtYmd, CONFIG, ANY } = mod.exports;
 
 function readEnv(path) {
   if (!existsSync(path)) return {};
@@ -78,48 +80,47 @@ async function icsText(calendar) {
   return objects.map(o => o.data || "").join("\n");
 }
 
-// 1) Nye bookinger fra køen → iCloud
-let bookingCal = byName(CONFIG.BOOKING_CALENDAR);
-if (!DRY) {
-  if (!bookingCal) {
-    // Lag bookingkalenderen ved siden av de andre kalenderne på kontoen (bare første gang).
-    const home = calendars.find(c => /\/calendars\/[^/]+\/$/.test(c.url)).url.replace(/[^/]+\/$/, "");
-    await client.makeCalendar({
-      url: `${home}fotostallen-bookinger/`,
-      props: { "d:displayname": CONFIG.BOOKING_CALENDAR },
-    });
-    bookingCal = (await client.fetchCalendars()).find(c => String(c.displayName) === CONFIG.BOOKING_CALENDAR);
-    if (!bookingCal) fail(`Klarte ikke å lage kalenderen «${CONFIG.BOOKING_CALENDAR}».`);
-    log(`Laget kalenderen «${CONFIG.BOOKING_CALENDAR}».`);
-  }
-  const { queue } = await post({ action: "sync" });
-  const done = [];
-  for (const q of queue) {
-    const res = await client.createCalendarObject({ calendar: bookingCal, filename: `${q.id}.ics`, iCalString: bookingIcs(q, Date.now()) });
-    // 412 = finnes allerede (lagt inn ved en tidligere kjøring som ikke rakk å kvittere).
-    if (res.ok || res.status === 412) done.push(q.id);
-    else log(`Kunne ikke legge inn booking ${q.id} (${q.date} ${q.time}): iCloud svarte ${res.status}`);
-  }
-  if (done.length) {
-    await post({ action: "ack", ids: done });
-    log(`La inn ${done.length} foreløpig${done.length === 1 ? "" : "e"} booking${done.length === 1 ? "" : "er"} i «${CONFIG.BOOKING_CALENDAR}».`);
-  }
-}
-
-// 2) Ledighet per fotograf
+// 1) Opptatt per fotograf
 const busy = {};
+const cals = {};
 const missing = [];
 for (const [pid, name] of Object.entries(CONFIG.ICLOUD_CALENDARS)) {
   const cal = byName(name);
   if (!cal) { missing.push(name); continue; }
+  cals[pid] = cal;
   busy[pid] = busyFromIcs(await icsText(cal), fromMs, toMs);
 }
-const bookingText = bookingCal ? await icsText(bookingCal) : "";
-for (const pid of Object.keys(busy)) {
-  busy[pid].push(...busyFromIcs(bookingText, fromMs, toMs, ev => ev.fotograf === pid));
-}
-busy[ANY] = busyFromIcs(bookingText, fromMs, toMs, ev => ev.fotograf === ANY);
 if (missing.length) log(`Fant ikke kalender: ${missing.join(", ")} (fotografen vises som ledig).`);
+
+// 2) Nye bookinger fra køen → fotografens kalender
+if (!DRY) {
+  const { queue } = await post({ action: "sync" });
+  const done = [];
+  for (const q of queue) {
+    let target = q.photographer === ANY ? pickFree(busy, q) : q.photographer;
+    if (!target || !cals[target]) target = "scott"; // ingen ledig / ukjent kalender: Scott fordeler
+    let res = await client.createCalendarObject({ calendar: cals[target], filename: `${q.id}.ics`, iCalString: bookingIcs(q, Date.now(), target) });
+    if (!res.ok && res.status !== 412 && target !== "scott") {
+      log(`Kunne ikke skrive til «${cals[target].displayName}» (${res.status}); legger bookingen i Scotts kalender.`);
+      const intended = target;
+      target = "scott";
+      res = await client.createCalendarObject({
+        calendar: cals.scott, filename: `${q.id}.ics`,
+        iCalString: bookingIcs({ ...q, note: [`Var ment for ${CONFIG.PHOTOGRAPHERS[intended]}.`, q.note].filter(Boolean).join(" ") }, Date.now(), intended),
+      });
+    }
+    // 412 = finnes allerede (lagt inn ved en tidligere kjøring som ikke rakk å kvittere).
+    if (res.ok || res.status === 412) {
+      done.push(q.id);
+      const s = zonedToUtc(ymd(q.date), Number(q.time.slice(0, 2)), 0, CONFIG.TZ);
+      (busy[target] = busy[target] || []).push({ start: s, end: s + CONFIG.SLOT_HOURS * 3600e3 });
+      log(`Booking ${q.date} kl. ${q.time} lagt i «${cals[target].displayName}».`);
+    } else {
+      log(`Kunne ikke legge inn booking ${q.id} (${q.date} ${q.time}): iCloud svarte ${res.status}. Prøver igjen neste gang.`);
+    }
+  }
+  if (done.length) await post({ action: "ack", ids: done });
+}
 
 const free = buildMasks(busy, start, days);
 
@@ -131,10 +132,10 @@ if (DRY) {
     const slots = computeSlots(pid, start, to, store, [], Date.now());
     const n = Object.values(slots).reduce((a, s) => a + s.length, 0);
     const label = pid === ANY ? "Første ledige" : CONFIG.PHOTOGRAPHERS[pid];
-    const periods = busy[pid] ? `${busy[pid].length} opptatte perioder i vinduet` : "ingen kalender";
+    const periods = pid === ANY ? "minst én ledig" : busy[pid] ? `${busy[pid].length} opptatte perioder i vinduet` : "ingen kalender";
     log(`  ${label.padEnd(24)} ${String(n).padStart(3)} ledige   (${periods})`);
   }
 } else {
   await post({ action: "sync", data: { start, free } });
-  log(`Synket ledighet for ${Object.keys(busy).length - 1} fotografer (${days} dager).`);
+  log(`Synket ledighet for ${Object.keys(busy).length} fotografer (${days} dager).`);
 }

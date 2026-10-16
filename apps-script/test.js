@@ -6,7 +6,7 @@ const path = require("node:path");
 
 const mod = { exports: {} };
 new Function("module", fs.readFileSync(path.join(__dirname, "Code.gs"), "utf8"))(mod);
-const { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, zonedToUtc } = mod.exports;
+const { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, zonedToUtc } = mod.exports;
 
 const oslo = (date, h, mi = 0) => zonedToUtc({ y: +date.slice(0, 4), m: +date.slice(5, 7), d: +date.slice(8, 10) }, h, mi, "Europe/Oslo");
 const FROM = oslo("2026-10-01", 0), TO = oslo("2026-12-01", 0);
@@ -170,15 +170,30 @@ test("bookingfilen til iCloud kan leses tilbake og merkes med fotograf", () => {
     navn: "Kari Nordmann", telefon: "99999999", epost: "kari@example.com", oppdrag: "1234", faktura: "Krogsveen AS, faktura@example.com",
     kvm: "80", ankomst: "Kode 1234",
     products: ["Dagbilder helbolig", "Drone"], note: "Ring på\nfør du går opp" };
-  const text = bookingIcs(q, NOW);
+  const text = bookingIcs(q, NOW, "glenn");
   assert.ok(text.split("\r\n").every(l => l.length <= 75), "linjer er brettet");
   const [ev] = parseIcs(text);
   assert.strictEqual(ev.fotograf, "glenn");
   assert.strictEqual(ev.uid, "abc-123@booking.fotostallen.no");
-  const busy = busyFromIcs(text, FROM, TO, e => e.fotograf === "glenn");
-  assert.deepStrictEqual(busy, [{ start: oslo("2026-10-26", 8), end: oslo("2026-10-26", 10) }], "riktig tid etter sommertid");
-  assert.deepStrictEqual(busyFromIcs(text, FROM, TO, e => e.fotograf === "kevin"), [], "filtreres per fotograf");
+  assert.deepStrictEqual(busyFromIcs(text, FROM, TO), [{ start: oslo("2026-10-26", 8), end: oslo("2026-10-26", 10) }], "riktig tid etter sommertid");
   const flat = text.replace(/\r\n /g, "");
-  assert.ok(flat.includes("SUMMARY:FORELØPIG – Glenn – Torggata 1\\, 0181 Oslo\\; 3. etg"), "tittel med escaping");
-  assert.ok(flat.includes("Kunde: Kari Nordmann") && flat.includes("Oppdragsnr.: 1234") && !flat.includes("Megler"), "kundefelt i beskrivelsen");
+  assert.ok(flat.includes("SUMMARY:Nettbooking fotografering – Kari Nordmann – Torggata 1\\, 0181 Oslo\\; 3. etg"), "tittel med escaping");
+  assert.ok(flat.includes("Kunde: Kari Nordmann") && flat.includes("Oppdragsnr.: 1234") && flat.includes("Faktura til: Krogsveen AS"), "kundefelt i beskrivelsen");
+  assert.ok(!/STATUS:TENTATIVE|FORELØPIG/.test(flat), "vanlig avtale, ikke foreløpig");
+});
+
+test("tittelen tolkes av fakturaroboten som oppdrag med ukjent format (havner i Sjekk)", () => {
+  // Samme mønster som fakturaroboten/src/lib/parse/tittel.ts (KONTOR_MOENSTER) – må ikke treffe.
+  const KONTOR = /([A-Za-zÆØÅæøå]{2,})\s*:\s*([A-Za-zÆØÅæøå.]+(?:\s+[A-Za-zÆØÅæøå.]+)*?)\s*(?:[-–]\s*(.*))?$/;
+  const t = bookingTitle({ navn: "Per: Hansen [privat]", address: "Fakturaveien 2 utsatt" });
+  assert.ok(!KONTOR.test(t), "ingen «Kode:Navn»");
+  assert.ok(!/fakt|utsatt|\[/i.test(t), "ingen ord som endrer behandlingen");
+  assert.ok(/\bfotografering\b/.test(t), "sterkt jobbord");
+});
+
+test("første ledige går til første fotograf som er ledig hele luken", () => {
+  const q = { date: "2026-10-20", time: "10:00" };
+  const opptatt = [{ start: oslo("2026-10-20", 11), end: oslo("2026-10-20", 12) }];
+  assert.strictEqual(pickFree({ glenn: opptatt, lars: [], kevin: [] }, q), "lars");
+  assert.strictEqual(pickFree({ glenn: opptatt }, q), null, "ingen ledige");
 });

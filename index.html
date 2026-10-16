@@ -104,6 +104,8 @@
   .people-note { margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; background: #fff; font-size: 13.5px; }
   .row .busy-tag { display: none; font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); flex: 0 0 auto; }
   .row.busy .busy-tag { display: inline; }
+  .assigned-tag { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); flex: 0 0 auto; }
+  .assigned-tag:empty { display: none; }
   .row.busy .row-btn .cond { color: #c4c3bf; }
   .row.busy .thumb { opacity: .45; }
   .row.busy .choose { background: rgba(18,18,18,.08); color: var(--muted); pointer-events: none; }
@@ -493,8 +495,8 @@ const ENTRY = {
 };
 
 // Adressen til Apps Script-en som leser fotografenes iCloud-kalendere (se OPPSETT.md).
-// Tom = ingen kobling ennå; da vises alle luker på hverdager som ledige.
-const AVAILABILITY_URL = "";
+// Svarer ikke skriptet, vises alle luker på hverdager som ledige.
+const AVAILABILITY_URL = "https://script.google.com/macros/s/AKfycbz658un01tmfXgolFZIZm63V0tFDNqSNW23FtAszJo_gN4U_DvrUXPUSpjlRO8czIoZ/exec";
 
 // Tidsluker: starttidspunkt, varighet i timer, hvilke ukedager (0 = søndag) og minste varsel.
 const SLOT_STARTS = [8, 10, 12, 14, 16];
@@ -615,6 +617,7 @@ $("#rows").innerHTML = PHOTOGRAPHERS.map(p => `
       <span class="box">${tick}</span>
       <span class="cond">${esc(p.name)}</span>
       <span class="busy-tag">Opptatt</span>
+      ${p.any ? '<span class="assigned-tag" id="assignedTag"></span>' : ""}
       <span class="thumb${p.any ? " any" : ""}">${avatar(p, 18)}</span>
       <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
     </button>
@@ -646,9 +649,23 @@ document.querySelectorAll(".row-btn").forEach(b => b.addEventListener("click", (
 
 /* ---------- Valg av fotograf ---------- */
 
+// «Første ledige»: trekker en tilfeldig fotograf som er ledig på valgt tid. Trekningen beholdes til
+// dato eller tid endres, og bookingen sendes for den fotografen.
+let assigned = null;
+function resolveAssigned() {
+  const date = $("#f_dato").value, time = $("#f_tid").value;
+  const all = availFor(date);
+  if (selected !== "forste" || !date || !time || !all) { assigned = null; return; }
+  const free = PHOTOGRAPHERS.filter(p => !p.any && ((all[p.id] || {})[date] || []).includes(time)).map(p => p.id);
+  if (!free.includes(assigned)) assigned = free.length ? free[Math.floor(Math.random() * free.length)] : null;
+}
+// Fotografen bookingen faktisk gjelder.
+const bookedPhotographer = () => PHOTOGRAPHERS.find(x => x.id === (selected === "forste" && assigned ? assigned : selected));
+
 function selectPhotographer(id, scroll) {
   selected = id;
-  const p = PHOTOGRAPHERS.find(x => x.id === id);
+  resolveAssigned();
+  const p = bookedPhotographer();
   document.querySelectorAll(".row").forEach(r => {
     const on = r.dataset.id === id;
     r.classList.toggle("sel", on);
@@ -659,7 +676,8 @@ function selectPhotographer(id, scroll) {
   av.className = "av" + (p.any ? " any" : "");
   av.innerHTML = avatar(p, 18);
   $("#sumName").textContent = p.name;
-  $("#sumRole").textContent = p.role;
+  $("#sumRole").textContent = selected === "forste" && assigned ? "Første ledige" : p.role;
+  $("#assignedTag").textContent = selected === "forste" && assigned ? `→ ${p.name.split(" ")[0]}` : "";
   if (scroll) $("#bestill").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -889,7 +907,8 @@ form.addEventListener("submit", async e => {
   }
   $("#formError").style.display = "none";
 
-  const p = PHOTOGRAPHERS.find(x => x.id === selected);
+  const p = bookedPhotographer();
+  const viaAny = selected === "forste" && !p.any;
   const v = id => $("#" + id).value.trim();
   const tid = slotLabel(v("f_tid"));
   const products = prodBoxes().filter(b => b.checked).map(b => b.value);
@@ -907,7 +926,8 @@ form.addEventListener("submit", async e => {
           body: JSON.stringify({
             action: "book", photographer: p.id, date: v("f_dato"), time: v("f_tid"),
             navn: v("f_navn"), telefon: v("f_tlf"), epost: v("f_epost"), oppdrag: v("f_oppdrag"), faktura: v("f_faktura"),
-            address: v("f_adresse"), kvm: v("f_kvm"), ankomst: v("f_ankomst"), products, note: v("f_mer"),
+            address: v("f_adresse"), kvm: v("f_kvm"), ankomst: v("f_ankomst"), products,
+            note: [viaAny ? "Kunden valgte første ledige." : "", v("f_mer")].filter(Boolean).join(" "),
           }),
         });
         res = await r.json();
@@ -943,6 +963,7 @@ form.addEventListener("submit", async e => {
     const extra = [
       `Tidspunkt: kl. ${tid}`,
       v("f_oppdrag") ? `Oppdragsnr.: ${v("f_oppdrag")}` : "",
+      viaAny ? `Første ledige – tildelt ${p.name}` : "",
       p.formOption ? "" : `Ønsket fotograf: ${p.name}`,
       v("f_mer"),
     ].filter(Boolean).join("\n");

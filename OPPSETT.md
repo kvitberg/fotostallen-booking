@@ -1,23 +1,22 @@
 # Koble bookingsiden til fotografenes kalendere
 
-Bookingsiden viser ledige tidsluker (08–10, 10–12, 12–14, 14–16, 16–18 på hverdager) for fotografen kunden velger. Ledighet hentes fra de samme iCloud-kalenderne som fakturaroboten leser. Hver bestilling legges inn som en **FORELØPIG**-avtale i iCloud-kalenderen «Fotostallen bookinger».
+Bookingsiden viser ledige tidsluker (08–10, 10–12, 12–14, 14–16, 16–18 på hverdager). Ledighet hentes fra de samme iCloud-kalenderne som fakturaroboten leser, og hver bestilling legges inn i **fotografens egen kalender**.
 
 ```
-iCloud: «Glenn Foto», «Scott foto», …  ──les (CalDAV)──▶  synkjobb på Scotts Mac (hvert 5. min)
-                                                              │  bare ledig/opptatt per luke
-                                                              ▼
-bookingsiden  ◀──ledige luker──  Apps Script (Scotts Google-konto)  ◀──nye bookinger──  bookingsiden
-                                                              │  kø med nye bookinger
-                                                              ▼
-iCloud: «Fotostallen bookinger»  ◀──FORELØPIG-avtaler──  synkjobb på Scotts Mac
+iCloud: «Glenn Foto», «Scott foto», …  ◀──les og skriv (CalDAV)──  synkjobb på Scotts Mac (hvert 5. min)
+                                                                       │  bare ledig/opptatt per luke
+                                                                       ▼
+bookingsiden  ◀──ledige luker / nye bookinger──▶  Apps Script (Scotts Google-konto, kø)
 ```
 
-- **Synkjobben** (`synk/kalendersynk.mjs`) bruker samme iCloud-innlogging som fakturaroboten (leses fra fakturarobotens `.env.local`). Den sender bare ut ett tegn per dag og fotograf som sier hvilke luker som er ledige. Titler, adresser og kunder forlater aldri Macen.
+- **Synkjobben** (`synk/kalendersynk.mjs`) bruker samme iCloud-innlogging som fakturaroboten (leses fra fakturarobotens `.env.local`). Til Apps Script-en sender den bare ett tegn per dag og fotograf som sier hvilke luker som er ledige. Titler og detaljer fra kalenderne forlater aldri Macen.
 - **Apps Script-en** (`apps-script/Code.gs`) svarer bookingsiden og holder nye bookinger i en kø. En booket luke blir opptatt med en gang.
-- **«Fotostallen bookinger»** er en egen iCloud-kalender. Fakturaroboten leser bare kalenderne i sin `kalendere.json`, så foreløpige bookinger kan aldri bli fakturaer.
+- **Bookingen** legges i kalenderen til fotografen kunden valgte. Velger kunden «Første ledige», trekker siden en tilfeldig fotograf som er ledig på tidspunktet og viser den fotografen («Første ledige → Kristine»). Bookingen havner hos den fotografen.
+- **Fakturaroboten** ser bookingen som et oppdrag (tittel «Nettbooking fotografering – Navn – Adresse», kundeinfo i notatet). Tittelen har ikke vanlig «Kontor:Megler»-format, så oppdraget havner i **Sjekk**. Når oppdraget er bekreftet, gi tittelen vanlig format, så faktureres det som andre oppdrag. Avlyses det, slett avtalen.
+- Kan en fotografs kalender ikke skrives til, havner bookingen i «Scott foto» med beskjed om hvem den var ment for.
 - Macen sender bare forespørsler ut. Ingenting på den åpnes mot internett.
 
-Er Macen av, viser siden de sist kjente ledige tidene. Nye bookinger venter i køen og legges inn i iCloud når Macen er på igjen. De kommer uansett også inn via Google-skjemaet.
+Er Macen av, viser siden de sist kjente ledige tidene. Nye bookinger venter i køen og legges inn når Macen er på igjen. De kommer uansett også inn via Google-skjemaet.
 
 ---
 
@@ -57,19 +56,13 @@ Installer så jobben som kjører hvert 5. minutt:
 npm --prefix ~/Claude/fotostallen-booking/synk run installer
 ```
 
-Første kjøring lager kalenderen «Fotostallen bookinger» i iCloud. Loggen ser du med:
+Loggen ser du med:
 
 ```bash
 npm --prefix ~/Claude/fotostallen-booking/synk run logg
 ```
 
 Stoppe jobben: `npm --prefix ~/Claude/fotostallen-booking/synk run avinstaller`.
-
-## Steg 3 – Del bookingkalenderen (valgfritt)
-
-I Kalender-appen på Mac: høyreklikk «Fotostallen bookinger» → **Del kalender…** → legg til fotografene. Da ser de de foreløpige bookingene på telefonen. Hver avtale har fotografens navn i tittelen, f.eks. «FORELØPIG – Glenn – Torggata 1».
-
-Når en booking er bekreftet, legg den inn i fotografens vanlige kalender (da plukker fakturaroboten den opp som før), og slett den foreløpige.
 
 ---
 
