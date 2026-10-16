@@ -176,6 +176,21 @@
   .receipt p { color: var(--muted); margin: 0 0 18px; max-width: 520px; }
   .receipt .ref { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
 
+  /* Én side: seksjonene ligger under hverandre og åpnes etter tur */
+  .step { scroll-margin-top: 16px; }
+  .step + .step { margin-top: 36px; padding-top: 32px; border-top: 1px solid var(--line); }
+  h2 .num { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 12px; font-weight: 600; margin-right: 10px; vertical-align: 2px; }
+  .step.open { animation: open .45s cubic-bezier(.2, .7, .2, 1) both; }
+  .reveal { animation: reveal .3s ease both; }
+  @keyframes open { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+  @keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .advance { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent); font-weight: 500; margin-top: 10px; }
+  .advance::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); border-right-color: transparent; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .step.open, .reveal { animation: none; }
+  }
+
   footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   footer a { color: var(--ink); text-decoration: none; }
 
@@ -224,7 +239,7 @@
       <form id="booking" novalidate>
         <!-- Steg 1 -->
         <div class="step" data-step="1">
-          <h2>Velg tjenester</h2>
+          <h2><span class="num">1</span>Velg tjenester</h2>
           <div class="group">
             <div class="glabel">Hovedtjeneste</div>
             <div class="rows" id="mainOpts"></div>
@@ -238,18 +253,27 @@
             <div class="chips" id="addonOpts"></div>
           </div>
           <p class="err-msg" id="err1" hidden></p>
-          <div class="actions"><button type="button" class="btn primary" data-go="2">Neste: Tid og sted</button></div>
+          <div class="actions next"><button type="button" class="btn primary" data-go="2">Fortsett</button></div>
         </div>
 
         <!-- Steg 2 -->
         <div class="step" data-step="2" hidden>
-          <h2>Tid og sted</h2>
+          <h2><span class="num">2</span>Tid og sted</h2>
           <div class="group">
             <div class="field">
               <label for="f_adresse">Adresse for fotografering</label>
               <input id="f_adresse" autocomplete="off" placeholder="Gate og nummer, sted" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
               <ul class="suggest" id="suggest" role="listbox" hidden></ul>
             </div>
+          </div>
+          <div class="group">
+            <div class="glabel">Fotograf</div>
+            <div class="ph-current">
+              <div class="av any" id="phAv"></div>
+              <div class="who"><strong id="phName">Første ledige fotograf</strong><small id="phNote">Vi velger en ledig fotograf for deg</small></div>
+              <button type="button" class="linkbtn" id="phToggle" aria-expanded="false">Velg selv</button>
+            </div>
+            <div class="ph-grid" id="phGrid" hidden></div>
           </div>
           <div class="group">
             <div class="glabel">Dato</div>
@@ -268,26 +292,15 @@
             <div class="glabel" id="timeLabel">Tidspunkt</div>
             <div class="times" id="timeOpts"></div>
             <p class="hint" id="timeHint"></p>
-          </div>
-          <div class="group">
-            <div class="glabel">Fotograf</div>
-            <div class="ph-current">
-              <div class="av any" id="phAv"></div>
-              <div class="who"><strong id="phName">Første ledige fotograf</strong><small id="phNote">Vi velger en ledig fotograf for deg</small></div>
-              <button type="button" class="linkbtn" id="phToggle" aria-expanded="false">Velg selv</button>
-            </div>
-            <div class="ph-grid" id="phGrid" hidden></div>
+            <p class="advance" id="advanceMsg" hidden>Går videre til kontaktinformasjon …</p>
           </div>
           <p class="err-msg" id="err2" hidden></p>
-          <div class="actions">
-            <button type="button" class="btn" data-go="1">Tilbake</button>
-            <button type="button" class="btn primary" data-go="3">Neste: Kontakt</button>
-          </div>
+          <div class="actions next"><button type="button" class="btn primary" data-go="3">Fortsett</button></div>
         </div>
 
         <!-- Steg 3 -->
         <div class="step" data-step="3" hidden>
-          <h2>Kontakt og bekreftelse</h2>
+          <h2><span class="num">3</span>Kontakt og bekreftelse</h2>
           <div class="grid2">
             <div class="field full"><label for="f_navn">Fullt navn</label><input id="f_navn" autocomplete="name" required></div>
             <div class="field"><label for="f_tlf">Telefon</label><input id="f_tlf" type="tel" autocomplete="tel" required></div>
@@ -313,10 +326,7 @@
           <div class="glabel">Oppsummering</div>
           <div class="review"><dl class="sum-list" data-sum></dl></div>
           <p class="err-msg" id="err3" hidden></p>
-          <div class="actions">
-            <button type="button" class="btn" data-go="2">Tilbake</button>
-            <button type="submit" class="btn primary" id="submitBtn">Send bestilling</button>
-          </div>
+          <div class="actions"><button type="submit" class="btn primary" id="submitBtn">Send bestilling</button></div>
           <p class="hint">Bestillingen er ikke bindende før vi har bekreftet tidspunktet.</p>
         </div>
       </form>
@@ -610,7 +620,9 @@ function drawDays(ready) {
 
 function renderTimes() {
   const date = state.date;
+  const wasHidden = $("#timeGroup").hidden;
   $("#timeGroup").hidden = !date;
+  if (date && wasHidden) { $("#timeGroup").classList.remove("reveal"); void $("#timeGroup").offsetWidth; $("#timeGroup").classList.add("reveal"); }
   if (date) {
     const keys = relevantKeys(date);
     const free = freeFor(state.photographer, date);
@@ -670,12 +682,25 @@ $("#calDays").addEventListener("click", e => {
   hideErr(2);
   drawDays(true);
 });
+// Når tiden er valgt (og adressen er fylt inn), går bookingen videre til kontaktinformasjon.
+let advanceTimer = null;
 $("#timeOpts").addEventListener("click", e => {
   const b = e.target.closest(".time[data-time]");
   if (!b) return;
   state.time = b.dataset.time;
   hideErr(2);
   renderTimes();
+  clearTimeout(advanceTimer);
+  if (!addr.value.trim()) {
+    showErr(2, "Skriv inn adressen, så går vi videre.");
+    addr.classList.add("err");
+    addr.scrollIntoView({ behavior: "smooth", block: "center" });
+    addr.focus({ preventScroll: true });
+    return;
+  }
+  addr.classList.remove("err");
+  $("#advanceMsg").hidden = false;
+  advanceTimer = setTimeout(() => { if (state.step === 2 && state.time) goStep(3); }, 650);
 });
 $("#calPrev").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCalendar(); });
 $("#calNext").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); renderCalendar(); });
@@ -724,7 +749,10 @@ function drawSuggest() {
   addr.setAttribute("aria-expanded", "true");
 }
 function closeSuggest() { $("#suggest").hidden = true; addr.setAttribute("aria-expanded", "false"); sugItems = []; }
-function pickSuggest(i) { addr.value = sugItems[i].text; addr.classList.remove("err"); closeSuggest(); update(); }
+function pickSuggest(i) {
+  addr.value = sugItems[i].text; addr.classList.remove("err"); closeSuggest(); update();
+  if (state.step === 2 && state.date && state.time && !$("#err2").hidden) { hideErr(2); $("#advanceMsg").hidden = false; advanceTimer = setTimeout(() => goStep(3), 650); }
+}
 $("#suggest").addEventListener("mousedown", e => { const li = e.target.closest("li"); if (li) { e.preventDefault(); pickSuggest(+li.dataset.i); } });
 addr.addEventListener("keydown", e => {
   if ($("#suggest").hidden) return;
@@ -787,25 +815,49 @@ function validStep(n) {
   return true;
 }
 
+// Én side: seksjonene åpnes etter tur og blir liggende. goStep(n) åpner seksjon n (hvis de foregående
+// er gyldige), lar den gli inn og ruller dit.
 function goStep(n, scroll = true) {
   for (let i = 1; i < n; i++) if (!validStep(i)) { n = i; break; }
   state.step = n;
   state.maxStep = Math.max(state.maxStep, n);
-  $$(".step").forEach(s => { s.hidden = +s.dataset.step !== n; });
-  $$("#stepper li").forEach(li => {
-    const s = +li.dataset.step;
-    li.className = s === n ? "cur" : s <= state.maxStep ? "done" : "";
+  clearTimeout(advanceTimer); $("#advanceMsg").hidden = true;
+  $$(".step").forEach(sec => {
+    const k = +sec.dataset.step;
+    const show = k <= state.maxStep;
+    if (show && sec.hidden) {
+      sec.hidden = false;
+      sec.classList.remove("open"); void sec.offsetWidth; sec.classList.add("open");
+      if (k === 2) renderCalendar();
+    }
+    sec.hidden = !show;
+    // «Fortsett» trengs ikke når neste seksjon allerede er åpen.
+    const next = $(".actions.next", sec);
+    if (next) next.hidden = k < state.maxStep;
   });
-  if (n === 2) renderCalendar();
+  setCurrent(n);
   update();
-  if (scroll) $(".head").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (scroll) (n === 1 ? $(".head") : $(`.step[data-step="${n}"]`)).scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function setCurrent(n) {
+  $$("#stepper li").forEach(li => {
+    const k = +li.dataset.step;
+    li.className = k === n ? "cur" : k <= state.maxStep ? "done" : "";
+  });
 }
 document.addEventListener("click", e => {
   const go = e.target.closest("[data-go]");
   if (go) goStep(+go.dataset.go);
-  const li = e.target.closest("#stepper li.done");
-  if (li) goStep(+li.dataset.step);
+  const li = e.target.closest("#stepper li.done, #stepper li.cur");
+  if (li && +li.dataset.step <= state.maxStep) goStep(+li.dataset.step);
 });
+// Stegindikatoren følger med når kunden ruller.
+if ("IntersectionObserver" in window) {
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting && !$("#booking").hidden) setCurrent(+en.target.dataset.step); });
+  }, { rootMargin: "-40% 0px -55% 0px" });
+  $$(".step").forEach(sec => io.observe(sec));
+}
 $$("input, textarea").forEach(el => el.addEventListener("input", () => el.classList.remove("err")));
 
 /* ---------- Husk meg ---------- */
@@ -929,6 +981,7 @@ $("#again").addEventListener("click", () => {
   $$("#stepper li").forEach(li => { li.style.pointerEvents = ""; });
   renderScopes(); renderAddons();
   $("#receipt").hidden = true; form.hidden = false;
+  $$(".step").forEach(sec => { if (+sec.dataset.step > 1) sec.hidden = true; });
   goStep(1);
   loadMonth(view);
 });
