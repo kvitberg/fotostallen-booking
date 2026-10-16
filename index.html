@@ -492,6 +492,7 @@ const IMG = "https://impro.usercontent.one/appid/oneComWsb/domain/fotostallen.no
 
 // formOption = nøyaktig tekst på valget i Google-skjemaet. null = finnes ikke der ennå
 // (da sendes "Første ledig" og ønsket fotograf skrives i "Noe mer?").
+// Eksempelbilde i profilen: legg til work: IMG + "filnavn.jpg" på fotografen.
 const PHOTOGRAPHERS = [
   {
     id: "forste", name: "Første ledige", role: "Raskest mulig", formOption: "Første ledig", any: true,
@@ -499,19 +500,19 @@ const PHOTOGRAPHERS = [
   },
   {
     id: "glenn", name: "Glenn Pettersen", role: "Film og video", formOption: "Glenn Pettersen",
-    img: IMG + "Image%202%20(5).jpg", work: IMG + "GP_DO2_2W7A3253.jpg",
+    img: IMG + "Image%202%20(5).jpg",
     tags: ["Film", "Reklame", "Bolig"],
     bio: "Glenn er kollektivets filmfotograf. Han lager alt fra stemningsfulle Instagram-videoer til større reklamefilmer, med oppdrag for blant annet Devold, Janus og flere eiendomsmeglere.",
   },
   {
     id: "lars", name: "Lars Petter Skillestad", role: "Interiør og bolig", formOption: "Lars-Petter Skillestad",
-    img: IMG + "Image%202%20(8).jpg", work: IMG + "6L9A2189.jpg",
+    img: IMG + "Image%202%20(8).jpg",
     tags: ["Interiør", "Bolig", "Produkt", "Film"],
     bio: "Lars Petter tar bilder av interiørprosjekter, portretter, produkter og bolig for salg. Han jobber med både stills og film, og har et blikk for romfølelse, detaljer og stemning.",
   },
   {
     id: "kevin", name: "Kevin Fauske", role: "Interiør, analog og digital", formOption: "Kevin Fauske",
-    img: IMG + "Kevin,%20Kristine%20Elvemo_2.jpg", work: IMG + "R1-09413-0006.jpg",
+    img: IMG + "Kevin,%20Kristine%20Elvemo_2.jpg",
     tags: ["Interiør", "Analog"],
     bio: "Kevin er den kreative altmuligmannen i kollektivet, med inspirasjon fra både analoge og digitale kameraer. Han jobber mest med interiørarkitekter og fanger både detaljer og helhet.",
   },
@@ -529,7 +530,7 @@ const PHOTOGRAPHERS = [
   },
   {
     id: "kristine", name: "Kristine Elvemo", role: "Interiør og bolig", formOption: "Kristine Elvsmo",
-    img: IMG + "Kristine,%20Kevin%20Fauske.jpg", work: IMG + "6L9A6327.jpg",
+    img: IMG + "Kristine,%20Kevin%20Fauske.jpg",
     tags: ["Interiør", "Bolig", "Portrett"],
     bio: "Kristine tar bilder av interiørprosjekter, portretter, produkter og bolig for salg, og har et blikk for romfølelse, detaljer og stemning.",
   },
