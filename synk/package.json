@@ -1,0 +1,16 @@
+{
+  "name": "fotostallen-kalendersynk",
+  "private": true,
+  "type": "module",
+  "description": "Synker fotografenes iCloud-kalendere med bookingsiden (se OPPSETT.md).",
+  "scripts": {
+    "synk": "node kalendersynk.mjs",
+    "dry": "node kalendersynk.mjs --dry",
+    "installer": "cp no.fotostallen.kalendersynk.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/no.fotostallen.kalendersynk.plist",
+    "avinstaller": "launchctl bootout gui/$(id -u)/no.fotostallen.kalendersynk; rm -f ~/Library/LaunchAgents/no.fotostallen.kalendersynk.plist",
+    "logg": "tail -n 40 ~/Library/Logs/kalendersynk.log"
+  },
+  "dependencies": {
+    "tsdav": "2.3.1"
+  }
+}

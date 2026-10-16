@@ -1,18 +1,20 @@
 /**
  * Fotostallen booking – ledige tider og foreløpige bookinger.
  *
- * Kjører som Google Apps Script-webapp på Scotts Google-konto (se OPPSETT.md).
- *  - GET  ?action=slots&photographer=glenn&from=2026-10-19&to=2026-10-31
- *      → { ok: true, connected: true, slots: { "2026-10-19": ["08:00", "12:00"], ... } }
- *    Leser fotografens iCloud-kalender (offentlig delingslenke) og fotografens bookingkalender.
- *    Bare ledig/opptatt sendes videre, aldri hva avtalene heter.
- *  - POST { action: "book", photographer, date, time, address, ... }
- *      → { ok: true } eller { ok: false, error: "taken" }
- *    Sjekker at tiden fortsatt er ledig og legger inn en «FORELØPIG»-avtale i bookingkalenderen.
+ * To deler som deler denne filen:
+ *  1) Google Apps Script-webapp (på Scotts Google-konto) som bookingsiden snakker med.
+ *  2) Synkjobben på Macen (synk/kalendersynk.mjs) laster den samme filen for ICS-tolking og lukeberegning.
+ *
+ * Flyt:
+ *  - Synkjobben leser fotografenes iCloud-kalendere (CalDAV, samme tilgang som fakturaroboten) og sender
+ *    hvilke luker som er ledige («masker», ingen titler eller detaljer) hit med action=sync.
+ *  - Bookingsiden spør GET ?action=slots&photographer=glenn&from=…&to=… og får ledige luker.
+ *  - Bookingsiden sender POST { action: "book", … }. Bookingen legges i en kø og blokkerer luken med en gang.
+ *  - Synkjobben henter køen, legger hver booking inn som «FORELØPIG» i iCloud-kalenderen
+ *    «Fotostallen bookinger» (som fakturaroboten ikke leser), og kvitterer med action=ack.
  *
  * Skriptegenskaper (Prosjektinnstillinger → Skriptegenskaper):
- *   ICS_glenn, ICS_lars, ...  = iCloud-lenken til kalenderen (webcal://... eller https://...)
- *   CAL_glenn, CAL_lars, ...  = ID til bookingkalenderen (lages av setup())
+ *   SYNC_TOKEN = hemmelig nøkkel som synkjobben bruker (står i synk/.env på Macen)
  */
 
 const CONFIG = {
@@ -22,6 +24,7 @@ const CONFIG = {
   WORKDAYS: [1, 2, 3, 4, 5], // 0 = søndag
   MIN_LEAD_HOURS: 3,
   MAX_RANGE_DAYS: 62,
+  SYNC_DAYS: 120,
   MAX_BOOKINGS_PER_HOUR: 15,
   PHOTOGRAPHERS: {
     glenn: "Glenn Pettersen",
@@ -31,6 +34,16 @@ const CONFIG = {
     kristine: "Kristine Elvemo",
     henrik: "Henrik Eriksen",
   },
+  // iCloud-kalendernavn per fotograf (samme kalendere som fakturaroboten leser).
+  ICLOUD_CALENDARS: {
+    glenn: "Glenn Foto",
+    lars: "LPS fotostallen",
+    kevin: "Kevin Foto",
+    scott: "Scott foto",
+    kristine: "Kristine Foto",
+    henrik: "Henrik Foto",
+  },
+  BOOKING_CALENDAR: "Fotostallen bookinger",
 };
 const ANY = "forste"; // «Første ledige»
 
@@ -44,7 +57,8 @@ function doGet(e) {
     if (id !== ANY && !CONFIG.PHOTOGRAPHERS[id]) return json({ ok: false, error: "unknown_photographer" });
     if (!isDate(p.from) || !isDate(p.to) || p.to < p.from) return json({ ok: false, error: "bad_range" });
     if (daysBetween(p.from, p.to) > CONFIG.MAX_RANGE_DAYS) return json({ ok: false, error: "range_too_long" });
-    return json({ ok: true, connected: isConnected(id), slots: freeSlots(id, p.from, p.to) });
+    const store = readStore();
+    return json({ ok: true, updated: store ? store.updated : null, slots: computeSlots(id, p.from, p.to, store, readQueue(), Date.now()) });
   } catch (err) {
     console.error(err);
     return json({ ok: false, error: "server" });
@@ -52,10 +66,20 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  let body;
+  try { body = JSON.parse(e.postData.contents); } catch (err) { return json({ ok: false, error: "bad_json" }); }
+  if (body.action === "book") return book(body);
+  if (body.action === "sync" || body.action === "ack") {
+    const token = PropertiesService.getScriptProperties().getProperty("SYNC_TOKEN");
+    if (!token || body.token !== token) return json({ ok: false, error: "unauthorized" });
+    return body.action === "sync" ? sync(body) : ack(body);
+  }
+  return json({ ok: false, error: "unknown_action" });
+}
+
+function book(b) {
   const lock = LockService.getScriptLock();
   try {
-    const b = JSON.parse(e.postData.contents);
-    if (b.action !== "book") return json({ ok: false, error: "unknown_action" });
     const id = b.photographer;
     if (id !== ANY && !CONFIG.PHOTOGRAPHERS[id]) return json({ ok: false, error: "unknown_photographer" });
     if (!isDate(b.date) || CONFIG.SLOT_STARTS.map(slotKey).indexOf(b.time) < 0) return json({ ok: false, error: "bad_slot" });
@@ -63,32 +87,19 @@ function doPost(e) {
 
     lock.waitLock(20000);
     if (tooManyBookings()) return json({ ok: false, error: "rate_limited" });
-
+    const queue = readQueue();
     // Sjekk på nytt at tiden er ledig (noen kan ha booket i mellomtiden).
-    const free = freeSlots(id, b.date, b.date, true)[b.date] || [];
+    const free = computeSlots(id, b.date, b.date, readStore(), queue, Date.now())[b.date] || [];
     if (free.indexOf(b.time) < 0) return json({ ok: false, error: "taken" });
 
-    const cal = bookingCalendar(id);
-    if (!cal) return json({ ok: false, error: "not_set_up" });
-    const start = new Date(zonedToUtc(ymd(b.date), Number(b.time.slice(0, 2)), 0, CONFIG.TZ));
-    const end = new Date(start.getTime() + CONFIG.SLOT_HOURS * 3600e3);
-    const who = id === ANY ? "Første ledige" : CONFIG.PHOTOGRAPHERS[id];
-    const products = Array.isArray(b.products) ? b.products.map(x => clean(x, 60)).join(", ") : "";
-    cal.createEvent(`FORELØPIG – ${clean(b.address, 200)}`, start, end, {
-      location: clean(b.address, 200),
-      description: [
-        "Foreløpig booking fra fotostallen.no – må bekreftes.",
-        "",
-        `Fotograf: ${who}`,
-        `Megler: ${clean(b.megler, 200)}`,
-        `Kontor: ${clean(b.kontor, 200)}`,
-        `E-post: ${clean(b.epost, 200)}`,
-        `Størrelse: ${clean(b.kvm, 40)} kvm`,
-        `Ankomst: ${clean(b.ankomst, 300)}`,
-        `Produkter: ${products || "–"}`,
-        b.note ? `Notat: ${clean(b.note, 1000)}` : "",
-      ].filter(x => x !== "").join("\n"),
+    queue.push({
+      id: Utilities.getUuid(), created: Date.now(), photographer: id, date: b.date, time: b.time,
+      address: clean(b.address, 200), megler: clean(b.megler, 200), kontor: clean(b.kontor, 200),
+      epost: clean(b.epost, 200), kvm: clean(b.kvm, 40), ankomst: clean(b.ankomst, 300),
+      products: Array.isArray(b.products) ? b.products.slice(0, 10).map(x => clean(x, 60)) : [],
+      note: clean(b.note, 1000),
     });
+    writeQueue(queue);
     countBooking();
     return json({ ok: true });
   } catch (err) {
@@ -99,121 +110,161 @@ function doPost(e) {
   }
 }
 
-/* ---------- Oppsett (kjøres manuelt fra editoren) ---------- */
-
-/** Lager én bookingkalender per fotograf (+ «Første ledige») og lagrer ID-ene. */
-function setup() {
-  const props = PropertiesService.getScriptProperties();
-  const ids = Object.keys(CONFIG.PHOTOGRAPHERS).concat([ANY]);
-  ids.forEach(id => {
-    if (props.getProperty("CAL_" + id)) return;
-    const name = id === ANY ? "Første ledige" : CONFIG.PHOTOGRAPHERS[id].split(" ")[0];
-    const cal = CalendarApp.createCalendar(`Fotostallen bookinger – ${name}`, { timeZone: CONFIG.TZ });
-    props.setProperty("CAL_" + id, cal.getId());
-    console.log(`Laget kalender for ${name}: ${cal.getId()}`);
-  });
-  console.log("Ferdig. Del den hemmelige iCal-adressen til hver kalender med riktig fotograf (se OPPSETT.md).");
+/** Synkjobben sender ferske masker og får køen tilbake. */
+function sync(b) {
+  const d = b.data;
+  if (d) {
+    if (!isDate(d.start) || typeof d.free !== "object") return json({ ok: false, error: "bad_data" });
+    PropertiesService.getScriptProperties().setProperty("STORE", JSON.stringify({ updated: Date.now(), start: d.start, free: d.free }));
+  }
+  return json({ ok: true, queue: readQueue() });
 }
 
-/** Viser hvor mange avtaler som leses fra hver fotografs iCloud-kalender de neste 30 dagene. */
-function testConnections() {
-  const from = Date.now(), to = from + 30 * 86400e3;
-  Object.keys(CONFIG.PHOTOGRAPHERS).forEach(id => {
-    if (!isConnected(id)) return console.log(`${id}: ikke koblet (mangler ICS_${id})`);
-    try {
-      const busy = icsBusy(id, from, to, true);
-      console.log(`${id}: ${busy.length} opptatte perioder neste 30 dager`);
-    } catch (err) {
-      console.log(`${id}: FEIL – ${err}`);
-    }
-  });
+/** Synkjobben kvitterer for bookinger som er lagt inn i iCloud. */
+function ack(b) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+    const done = {};
+    (b.ids || []).forEach(x => { done[x] = true; });
+    writeQueue(readQueue().filter(q => !done[q.id]));
+    return json({ ok: true });
+  } finally {
+    try { lock.releaseLock(); } catch (err) {}
+  }
 }
 
-/* ---------- Ledige tider ---------- */
+function readStore() {
+  const v = PropertiesService.getScriptProperties().getProperty("STORE");
+  return v ? JSON.parse(v) : null;
+}
+function readQueue() {
+  const v = PropertiesService.getScriptProperties().getProperty("QUEUE");
+  return v ? JSON.parse(v) : [];
+}
+function writeQueue(q) {
+  PropertiesService.getScriptProperties().setProperty("QUEUE", JSON.stringify(q));
+}
 
-function freeSlots(id, from, to, fresh) {
-  const startMs = zonedToUtc(ymd(from), 0, 0, CONFIG.TZ);
-  const endMs = zonedToUtc(addDays(ymd(to), 1), 0, 0, CONFIG.TZ);
-  const people = id === ANY ? Object.keys(CONFIG.PHOTOGRAPHERS) : [id];
-  const busyById = {};
-  people.forEach(pid => { busyById[pid] = busyFor(pid, startMs, endMs, fresh); });
-  // Bookinger på «Første ledige» blokkerer ingen bestemt fotograf, men samme luke på den kalenderen.
-  const anyBusy = id === ANY ? calendarBusy(ANY, startMs, endMs) : [];
-  return computeSlots(from, to, people.map(pid => busyById[pid]), anyBusy, Date.now());
+/* ---------- Ledige luker (ren JavaScript, testes med node) ---------- */
+
+/**
+ * Masker: for hver fotograf (og «forste») en streng med ett tegn per dag fra store.start.
+ * Tegnet er et base-32-siffer der bit i = 1 betyr at luke SLOT_STARTS[i] er ledig i kalenderen.
+ * Uten data (ikke synket ennå, eller dato utenfor vinduet) regnes luken som ledig.
+ */
+function maskFree(store, pid, date, i) {
+  if (!store || !store.free || typeof store.free[pid] !== "string") return true;
+  const idx = daysBetween(store.start, date);
+  const ch = store.free[pid][idx];
+  if (idx < 0 || ch === undefined) return true;
+  return ((parseInt(ch, 32) >> i) & 1) === 1;
 }
 
 /**
- * Ren beregning (testbar): en luke er ledig hvis minst én av personene er ledig
- * (for én fotograf: den ene), luken ikke er tatt i «Første ledige»-kalenderen,
- * den er på en arbeidsdag og starter minst MIN_LEAD_HOURS fra nå.
+ * En luke er ledig når den er på en arbeidsdag, starter minst MIN_LEAD_HOURS fra nå, og
+ *  - for én fotograf: ledig i fotografens kalender og ikke i køen for fotografen;
+ *  - for «Første ledige»: minst én fotograf er ledig, og luken er ikke tatt av en annen «første ledige»-booking.
  */
-function computeSlots(from, to, busyLists, sharedBusy, nowMs) {
+function computeSlots(id, from, to, store, queue, nowMs) {
   const out = {};
   const earliest = nowMs + CONFIG.MIN_LEAD_HOURS * 3600e3;
+  const queued = (pid, date, key) => queue.some(q => q.photographer === pid && q.date === date && q.time === key);
+  const personFree = (pid, date, i, key) => maskFree(store, pid, date, i) && !queued(pid, date, key);
+  const people = Object.keys(CONFIG.PHOTOGRAPHERS);
   for (let d = ymd(from); fmtYmd(d) <= to; d = addDays(d, 1)) {
-    const weekday = new Date(Date.UTC(d.y, d.m - 1, d.d)).getUTCDay();
-    if (CONFIG.WORKDAYS.indexOf(weekday) < 0) continue;
+    const date = fmtYmd(d);
+    if (CONFIG.WORKDAYS.indexOf(weekdayOf(d)) < 0) continue;
     const free = [];
-    CONFIG.SLOT_STARTS.forEach(h => {
-      const s = zonedToUtc(d, h, 0, CONFIG.TZ);
-      const e = s + CONFIG.SLOT_HOURS * 3600e3;
-      if (s < earliest) return;
-      if (overlaps(sharedBusy, s, e)) return;
-      if (busyLists.some(list => !overlaps(list, s, e))) free.push(slotKey(h));
+    CONFIG.SLOT_STARTS.forEach((h, i) => {
+      const key = slotKey(h);
+      if (zonedToUtc(d, h, 0, CONFIG.TZ) < earliest) return;
+      const ok = id === ANY
+        ? personFree(ANY, date, i, key) && people.some(pid => personFree(pid, date, i, key))
+        : personFree(id, date, i, key);
+      if (ok) free.push(key);
     });
-    if (free.length) out[fmtYmd(d)] = free;
+    if (free.length) out[date] = free;
   }
   return out;
+}
+
+/** Brukes av synkjobben: lager masker fra opptatte perioder per fotograf. */
+function buildMasks(busyById, start, days) {
+  const free = {};
+  Object.keys(busyById).forEach(pid => {
+    let str = "";
+    for (let n = 0; n < days; n++) {
+      const d = addDays(ymd(start), n);
+      let bits = 0;
+      CONFIG.SLOT_STARTS.forEach((h, i) => {
+        const s = zonedToUtc(d, h, 0, CONFIG.TZ);
+        if (!overlaps(busyById[pid], s, s + CONFIG.SLOT_HOURS * 3600e3)) bits |= 1 << i;
+      });
+      str += bits.toString(32);
+    }
+    free[pid] = str;
+  });
+  return free;
 }
 
 function overlaps(list, s, e) {
   return list.some(b => b.start < e && b.end > s);
 }
 
-function busyFor(id, fromMs, toMs, fresh) {
-  return icsBusy(id, fromMs, toMs, fresh).concat(calendarBusy(id, fromMs, toMs));
+/** Brukes av synkjobben: iCalendar-tekst for en foreløpig booking. */
+function bookingIcs(q, nowMs) {
+  const start = zonedToUtc(ymd(q.date), Number(q.time.slice(0, 2)), 0, CONFIG.TZ);
+  const end = start + CONFIG.SLOT_HOURS * 3600e3;
+  const who = q.photographer === ANY ? "Første ledige" : CONFIG.PHOTOGRAPHERS[q.photographer].split(" ")[0];
+  const desc = [
+    "Foreløpig booking fra fotostallen.no – må bekreftes.",
+    "",
+    `Fotograf: ${q.photographer === ANY ? "Første ledige" : CONFIG.PHOTOGRAPHERS[q.photographer]}`,
+    `Megler: ${q.megler}`,
+    `Kontor: ${q.kontor}`,
+    `E-post: ${q.epost}`,
+    `Størrelse: ${q.kvm} kvm`,
+    `Ankomst: ${q.ankomst}`,
+    `Produkter: ${(q.products || []).join(", ") || "–"}`,
+    q.note ? `Notat: ${q.note}` : "",
+  ].filter(x => x !== "").join("\n");
+  const lines = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Fotostallen//Booking//NO", "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${q.id}@booking.fotostallen.no`,
+    `DTSTAMP:${utcStamp(nowMs)}`,
+    `DTSTART:${utcStamp(start)}`,
+    `DTEND:${utcStamp(end)}`,
+    `SUMMARY:${icsText(`FORELØPIG – ${who} – ${q.address}`)}`,
+    `LOCATION:${icsText(q.address)}`,
+    `DESCRIPTION:${icsText(desc)}`,
+    "STATUS:TENTATIVE",
+    `X-FOTOSTALLEN-FOTOGRAF:${q.photographer}`,
+    "END:VEVENT", "END:VCALENDAR",
+  ];
+  return lines.map(foldLine).join("\r\n") + "\r\n";
 }
 
-function isConnected(id) {
-  if (id === ANY) return Object.keys(CONFIG.PHOTOGRAPHERS).some(isConnected);
-  return !!PropertiesService.getScriptProperties().getProperty("ICS_" + id);
+function icsText(s) {
+  return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 }
 
-function bookingCalendar(id) {
-  const calId = PropertiesService.getScriptProperties().getProperty("CAL_" + id);
-  return calId ? CalendarApp.getCalendarById(calId) : null;
+/** Bretter linjer slik iCalendar krever (maks 75 byte; vi bretter på 60 tegn for å tåle æøå). */
+function foldLine(line) {
+  const out = [];
+  for (let i = 0; i < line.length; i += 60) out.push((i ? " " : "") + line.slice(i, i + 60));
+  return out.join("\r\n");
 }
 
-function calendarBusy(id, fromMs, toMs) {
-  const cal = bookingCalendar(id);
-  if (!cal) return [];
-  return cal.getEvents(new Date(fromMs), new Date(toMs)).map(ev => ({
-    start: ev.getStartTime().getTime(),
-    end: ev.getEndTime().getTime(),
-  }));
-}
-
-/** Opptatte perioder fra iCloud-kalenderen. Resultatet caches i 5 minutter. */
-function icsBusy(id, fromMs, toMs, fresh) {
-  const url = PropertiesService.getScriptProperties().getProperty("ICS_" + id);
-  if (!url) return [];
-  const cache = CacheService.getScriptCache();
-  const key = `busy_${id}_${fromMs}_${toMs}`;
-  if (!fresh) {
-    const hit = cache.get(key);
-    if (hit) return JSON.parse(hit);
-  }
-  const res = UrlFetchApp.fetch(url.replace(/^webcal:/i, "https:"), { muteHttpExceptions: true, followRedirects: true });
-  if (res.getResponseCode() !== 200) throw new Error(`iCloud svarte ${res.getResponseCode()} for ${id}`);
-  const busy = busyFromIcs(res.getContentText(), fromMs, toMs);
-  try { cache.put(key, JSON.stringify(busy), 300); } catch (err) { /* for stort for cache */ }
-  return busy;
+function utcStamp(ms) {
+  return new Date(ms).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
 /* ---------- ICS-tolking (ren JavaScript, testes med node) ---------- */
 
-function busyFromIcs(text, fromMs, toMs) {
-  const events = parseIcs(text);
+function busyFromIcs(text, fromMs, toMs, keep) {
+  const events = parseIcs(text).filter(ev => !keep || keep(ev));
   const overridden = {}; // uid → { startMs: true } for enkeltforekomster som er flyttet/endret
   events.forEach(ev => {
     if (ev.recurrenceId) {
@@ -261,6 +312,7 @@ function parseIcs(text) {
     else if (name === "STATUS") cur.status = value.trim().toUpperCase();
     else if (name === "TRANSP") cur.transp = value.trim().toUpperCase();
     else if (name === "EXDATE") value.split(",").forEach(v => cur.exdates.push(dt(v)));
+    else if (name === "X-FOTOSTALLEN-FOTOGRAF") cur.fotograf = value.trim();
   });
   return events;
 }
@@ -441,4 +493,4 @@ function json(obj) {
 }
 
 // Gjør funksjonene tilgjengelige for testene i node (ignoreres i Apps Script).
-if (typeof module !== "undefined") module.exports = { busyFromIcs, computeSlots, zonedToUtc, CONFIG };
+if (typeof module !== "undefined") module.exports = { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, zonedToUtc, fmtYmd, addDays, ymd, CONFIG, ANY };

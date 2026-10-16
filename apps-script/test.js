@@ -6,14 +6,16 @@ const path = require("node:path");
 
 const mod = { exports: {} };
 new Function("module", fs.readFileSync(path.join(__dirname, "Code.gs"), "utf8"))(mod);
-const { busyFromIcs, computeSlots, zonedToUtc } = mod.exports;
+const { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, zonedToUtc } = mod.exports;
 
 const oslo = (date, h, mi = 0) => zonedToUtc({ y: +date.slice(0, 4), m: +date.slice(5, 7), d: +date.slice(8, 10) }, h, mi, "Europe/Oslo");
 const FROM = oslo("2026-10-01", 0), TO = oslo("2026-12-01", 0);
 const NOW = Date.UTC(2026, 9, 16, 12, 0); // fredag 16. okt kl. 14 i Oslo
 
 const ics = body => `BEGIN:VCALENDAR\r\nVERSION:2.0\r\n${body.trim().split("\n").map(l => l.trim()).join("\r\n")}\r\nEND:VCALENDAR\r\n`;
-const slotsFor = (text, from, to) => computeSlots(from, to, [busyFromIcs(text, FROM, TO)], [], NOW);
+// Samme vei som i drift: opptatte perioder → masker (synkjobben) → ledige luker (webappen).
+const storeFrom = busyById => ({ updated: NOW, start: "2026-10-01", free: buildMasks(busyById, "2026-10-01", 61) });
+const slotsFor = (text, from, to) => computeSlots("glenn", from, to, storeFrom({ glenn: busyFromIcs(text, FROM, TO) }), [], NOW);
 
 test("enkel avtale med TZID blokkerer bare overlappende luker", () => {
   const cal = ics(`
@@ -143,9 +145,37 @@ test("helg, dagens passerte luker og første ledige", () => {
   assert.strictEqual(empty["2026-10-16"], undefined, "fredag 14:00 + 3 t: ingen luker igjen");
   assert.strictEqual(empty["2026-10-17"], undefined, "lørdag");
   assert.strictEqual(empty["2026-10-19"].length, 5);
-  const busyA = [{ start: oslo("2026-10-19", 8), end: oslo("2026-10-19", 18) }];
-  const any = computeSlots("2026-10-19", "2026-10-19", [busyA, []], [], NOW);
-  assert.strictEqual(any["2026-10-19"].length, 5, "én ledig fotograf holder");
-  const shared = [{ start: oslo("2026-10-19", 10), end: oslo("2026-10-19", 12) }];
-  assert.ok(!computeSlots("2026-10-19", "2026-10-19", [[], []], shared, NOW)["2026-10-19"].includes("10:00"), "tatt på første ledige");
+  const allDay = [{ start: oslo("2026-10-19", 8), end: oslo("2026-10-19", 18) }];
+  const store = storeFrom({ glenn: allDay, lars: [], kevin: allDay, scott: allDay, kristine: allDay, henrik: allDay, forste: [] });
+  assert.strictEqual(computeSlots("forste", "2026-10-19", "2026-10-19", store, [], NOW)["2026-10-19"].length, 5, "én ledig fotograf holder");
+  assert.strictEqual(computeSlots("glenn", "2026-10-19", "2026-10-19", store, [], NOW)["2026-10-19"], undefined, "Glenn er opptatt");
+  const taken = storeFrom({ forste: [{ start: oslo("2026-10-19", 10), end: oslo("2026-10-19", 12) }] });
+  assert.ok(!computeSlots("forste", "2026-10-19", "2026-10-19", taken, [], NOW)["2026-10-19"].includes("10:00"), "tatt av annen første ledige-booking");
+});
+
+test("bookinger i køen blokkerer luken med en gang", () => {
+  const queue = [{ photographer: "kevin", date: "2026-10-20", time: "10:00" }, { photographer: "forste", date: "2026-10-20", time: "14:00" }];
+  const kevin = computeSlots("kevin", "2026-10-20", "2026-10-20", null, queue, NOW)["2026-10-20"];
+  assert.deepStrictEqual(kevin, ["08:00", "12:00", "14:00", "16:00"], "Kevins kø blokkerer bare Kevin, ikke første ledige-luken");
+  const any = computeSlots("forste", "2026-10-20", "2026-10-20", null, queue, NOW)["2026-10-20"];
+  assert.ok(any.includes("10:00") && !any.includes("14:00"));
+});
+
+test("uten synkdata er alle luker på hverdager ledige", () => {
+  assert.strictEqual(computeSlots("scott", "2026-10-19", "2026-10-23", null, [], NOW)["2026-10-21"].length, 5);
+});
+
+test("bookingfilen til iCloud kan leses tilbake og merkes med fotograf", () => {
+  const q = { id: "abc-123", photographer: "glenn", date: "2026-10-26", time: "08:00", address: "Torggata 1, 0181 Oslo; 3. etg",
+    megler: "Kari Megler 99999999", kontor: "Krogsveen", epost: "kari@example.com", kvm: "80", ankomst: "Kode 1234",
+    products: ["Dagbilder helbolig", "Drone"], note: "Ring på\nfør du går opp" };
+  const text = bookingIcs(q, NOW);
+  assert.ok(text.split("\r\n").every(l => l.length <= 75), "linjer er brettet");
+  const [ev] = parseIcs(text);
+  assert.strictEqual(ev.fotograf, "glenn");
+  assert.strictEqual(ev.uid, "abc-123@booking.fotostallen.no");
+  const busy = busyFromIcs(text, FROM, TO, e => e.fotograf === "glenn");
+  assert.deepStrictEqual(busy, [{ start: oslo("2026-10-26", 8), end: oslo("2026-10-26", 10) }], "riktig tid etter sommertid");
+  assert.deepStrictEqual(busyFromIcs(text, FROM, TO, e => e.fotograf === "kevin"), [], "filtreres per fotograf");
+  assert.ok(/SUMMARY:FORELØPIG – Glenn – Torggata 1\\, 0181 Oslo\; 3. etg/.test(text.replace(/\r\n /g, "")), "tittel med escaping");
 });
