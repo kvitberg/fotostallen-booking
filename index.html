@@ -11,21 +11,22 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f4ef;
-    --surface: #fffdf9;
-    --ink: #1f1e1c;
-    --muted: #7a776f;
-    --faint: #b3afa6;
-    --line: #e3dfd6;
-    --fill: #ebe7df;
-    --accent: #9c4a3d;
-    --accent-ink: #fff;
-    --accent-soft: #f3e7e3;
-    --radius: 8px;
+    --bg: #e8e7e4;
+    --card: #f2f1ee;
+    --surface: #fbfaf8;
+    --ink: #121212;
+    --muted: #8b8a86;
+    --faint: #b5b4b0;
+    --line: rgba(18,18,18,.12);
+    --dot: #c9c8c4;
+    --accent: #dc384c;
+    --accent-dark: #b82a3c;
+    --accent-soft: #fbe6e9;
     --sans: "Inter Tight", system-ui, -apple-system, sans-serif;
+    --cond: "Barlow Condensed", "Arial Narrow", sans-serif;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
@@ -34,189 +35,227 @@
   img { display: block; max-width: 100%; }
   a { color: inherit; }
   [hidden] { display: none !important; }
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 20px 48px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; }
+  .cond { font-family: var(--cond); font-weight: 700; text-transform: uppercase; letter-spacing: .005em; line-height: .95; }
+  .card { background: var(--card); border-radius: 30px; padding: 24px 26px; }
+  .label, .glabel { font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .glabel { display: block; margin-bottom: 12px; }
+  .glabel span { text-transform: none; letter-spacing: 0; }
+  .hint { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
 
   /* Topp */
-  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
-  .brand { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-  h1 { font-size: 26px; font-weight: 600; letter-spacing: -.02em; line-height: 1.15; margin: 0; }
-  .stepper { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
-  .stepper li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--faint); padding: 6px 10px 6px 6px; border-radius: 999px; }
-  .stepper li .n { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 600; }
-  .stepper li.done { color: var(--muted); cursor: pointer; }
-  .stepper li.done .n { background: var(--ink); border-color: var(--ink); color: #fff; }
-  .stepper li.cur { color: var(--ink); font-weight: 500; }
-  .stepper li.cur .n { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
+  .brand { font-size: 12px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  h1 { margin: 0; font-size: clamp(40px, 6vw, 64px); }
+  .stepper { display: flex; gap: 8px; list-style: none; margin: 0; padding: 0; }
+  .stepper li { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 18px 0 8px; border-radius: 999px; border: 1px solid rgba(18,18,18,.18); font-size: 14px; font-weight: 500; color: var(--muted); }
+  .stepper li .n { width: 26px; height: 26px; border-radius: 50%; background: rgba(18,18,18,.08); display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--ink); }
+  .stepper li.done { color: var(--ink); cursor: pointer; }
+  .stepper li.cur { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .stepper li.cur .n { background: var(--accent); color: #fff; }
 
   /* Oppsett */
-  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; align-items: start; }
-  h2 { font-size: 18px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 18px; }
-  .group { margin-bottom: 26px; }
-  .glabel { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-  .glabel span { text-transform: none; letter-spacing: 0; font-weight: 400; }
-  .hint { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+  .layout > * { min-width: 0; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+  .step { scroll-margin-top: 16px; }
+  .step + .step { margin-top: 56px; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 6px 16px; }
+  .sec-head h2 { margin: 0; font-size: clamp(34px, 4.6vw, 52px); }
+  .sec-head p { margin: 0; color: var(--muted); font-size: 15px; text-align: right; }
+  .group { margin-bottom: 24px; }
+  .group:last-child { margin-bottom: 0; }
+  .stack { display: grid; gap: 12px; }
 
   /* Hovedtjeneste */
   .rows { border-top: 1px solid var(--line); }
-  .row { display: flex; align-items: center; gap: 14px; padding: 13px 4px; border-bottom: 1px solid var(--line); cursor: pointer; position: relative; }
+  .row { display: flex; align-items: center; gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--line); cursor: pointer; position: relative; }
   .row input { position: absolute; opacity: 0; pointer-events: none; }
-  .row .dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--faint); flex: 0 0 auto; transition: all .15s; }
-  .row .t { font-weight: 500; }
+  .row .dot { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--faint); flex: 0 0 auto; transition: all .15s; }
+  .row .t { font-size: 18px; font-weight: 500; letter-spacing: -.01em; }
   .row .d { font-size: 13px; color: var(--muted); margin-left: auto; text-align: right; }
   .row:hover .dot { border-color: var(--ink); }
-  .row:has(input:checked) .dot { border: 5px solid var(--accent); }
-  .row:has(input:checked) .t { color: var(--accent); }
+  .row:has(input:checked) .dot { border: 6px solid var(--accent); }
   .row:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
 
   /* Valgknapper */
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { position: relative; }
   .chip input { position: absolute; opacity: 0; pointer-events: none; }
-  .chip span { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 14px; cursor: pointer; transition: all .15s; }
+  .chip span { display: inline-flex; align-items: center; gap: 6px; height: 42px; padding: 0 18px; border: 1px solid rgba(18,18,18,.18); border-radius: 999px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .15s; }
   .chip span:hover { border-color: var(--ink); }
-  .chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .chip.check span::before { content: "+"; font-size: 16px; line-height: 1; color: var(--muted); }
-  .chip.check input:checked + span::before { content: "✓"; font-size: 12px; color: #fff; }
+  .chip input:checked + span { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip.check span::before { content: "+"; font-size: 17px; line-height: 1; font-weight: 400; }
+  .chip.check input:checked + span::before { content: "✓"; font-size: 12px; }
   .chip input:focus-visible + span { outline: 2px solid var(--ink); outline-offset: 2px; }
 
   /* Felt */
-  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; position: relative; }
-  .field label { font-size: 13px; font-weight: 500; }
-  .field label .o { font-weight: 400; color: var(--muted); }
-  .field input, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); outline: 0; transition: border-color .15s; }
-  .field textarea { min-height: 76px; resize: vertical; }
-  .field input:focus, .field textarea:focus { border-color: var(--ink); }
-  .field input.err, .field textarea.err { border-color: var(--accent); background: var(--accent-soft); }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .field { display: flex; flex-direction: column; padding-top: 14px; position: relative; }
+  .field:first-child { padding-top: 0; }
+  .field label { font-size: 11.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .field label .o { text-transform: none; letter-spacing: 0; }
+  .field input, .field textarea { font-size: 19px; font-weight: 500; letter-spacing: -.01em; padding: 8px 0 10px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; outline: 0; width: 100%; transition: border-color .2s; }
+  .field textarea { min-height: 70px; resize: vertical; font-size: 17px; }
+  .field input::placeholder, .field textarea::placeholder { color: #bdbcb8; font-weight: 400; }
+  .field input:focus, .field textarea:focus { border-bottom-color: var(--ink); }
+  .field input.err, .field textarea.err { border-bottom-color: var(--accent); }
+  .field:has(.err) label { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
   .grid2 .full { grid-column: 1 / -1; }
-  details.more { border-top: 1px solid var(--line); }
-  details.more.last { border-bottom: 1px solid var(--line); margin-bottom: 18px; }
-  details.more summary { list-style: none; cursor: pointer; padding: 12px 2px; font-size: 14px; font-weight: 500; display: flex; justify-content: space-between; }
+  .grid2 .field { padding-top: 14px; }
+  details.more { border-top: 1px solid var(--line); margin-top: 18px; }
+  details.more + details.more { margin-top: 0; }
+  details.more.last { border-bottom: 1px solid var(--line); }
+  details.more summary { list-style: none; cursor: pointer; padding: 14px 2px; font-size: 15px; font-weight: 500; display: flex; justify-content: space-between; }
   details.more summary::-webkit-details-marker { display: none; }
-  details.more summary::after { content: "+"; color: var(--muted); font-weight: 400; font-size: 18px; line-height: 1; }
+  details.more summary::after { content: "+"; color: var(--muted); font-size: 20px; line-height: 1; }
   details.more[open] summary::after { content: "–"; }
-  details.more .inner { padding: 2px 0 6px; }
-  .remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin: 4px 0 20px; cursor: pointer; }
+  details.more .inner { padding: 0 0 14px; }
+  .remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin: 18px 0 0; cursor: pointer; }
   .remember input { accent-color: var(--accent); width: 16px; height: 16px; }
 
   /* Adresseforslag */
-  .suggest { position: absolute; top: 100%; left: 0; right: 0; z-index: 5; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(31,30,28,.08); }
-  .suggest li { padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .suggest { position: absolute; top: 100%; left: 0; right: 0; z-index: 5; margin: 4px 0 0; padding: 6px; list-style: none; background: #fff; border-radius: 18px; box-shadow: 0 14px 40px rgba(18,18,18,.12); }
+  .suggest li { padding: 9px 12px; border-radius: 12px; cursor: pointer; font-size: 15px; }
   .suggest li small { color: var(--muted); margin-left: 6px; }
-  .suggest li.act, .suggest li:hover { background: var(--fill); }
-
-  /* Kalender */
-  .cal { max-width: 320px; }
-  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-  .cal-head strong { font-weight: 600; text-transform: capitalize; }
-  .cal-head button { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); display: grid; place-items: center; }
-  .cal-head button:hover { border-color: var(--ink); }
-  .cal-head button[disabled] { opacity: .3; pointer-events: none; }
-  .wk, .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .wk span { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0; }
-  .day { aspect-ratio: 1; border: 0; border-radius: 50%; background: var(--fill); font-size: 13px; padding: 0; transition: background .12s; font-variant-numeric: tabular-nums; }
-  .day:hover { background: #ddd8ce; }
-  .day.past { background: var(--ink); color: rgba(255,255,255,.35); pointer-events: none; }
-  .day.full { background: transparent; color: var(--faint); text-decoration: line-through; pointer-events: none; }
-  .day.today { box-shadow: inset 0 0 0 1.5px var(--accent); }
-  .day.sel { background: var(--accent); color: #fff; }
-  .day.blank { background: transparent; pointer-events: none; }
-  .day:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-  .days.loading .day:not(.past):not(.blank) { animation: pulse 1s ease-in-out infinite alternate; }
-  @keyframes pulse { to { opacity: .4; } }
-  .notice { font-size: 13px; padding: 10px 12px; border-radius: var(--radius); background: var(--accent-soft); color: #6f3328; margin: 0 0 14px; }
-
-  .times { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
-  .time { height: 40px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); font-size: 14px; font-variant-numeric: tabular-nums; }
-  .time:hover { border-color: var(--ink); }
-  .time.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .time[disabled] { color: var(--faint); text-decoration: line-through; background: transparent; pointer-events: none; }
+  .suggest li.act, .suggest li:hover { background: var(--card); }
 
   /* Fotograf */
-  .ph-current { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .ph-current { display: flex; align-items: center; gap: 12px; padding: 12px; background: #fff; border-radius: 18px; }
   .ph-current .who { flex: 1; min-width: 0; }
-  .ph-current strong { font-weight: 500; display: block; }
+  .ph-current strong { font-weight: 600; display: block; line-height: 1.2; }
   .ph-current small { color: var(--muted); font-size: 13px; }
-  .linkbtn { background: none; border: 0; padding: 4px; font-size: 13px; font-weight: 500; color: var(--accent); }
-  .av { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--fill); flex: 0 0 auto; display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .linkbtn { background: none; border: 0; padding: 4px 6px; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .av { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; background: var(--dot); flex: 0 0 auto; display: grid; place-items: center; font-size: 13px; font-weight: 600; color: #fff; }
   .av img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
-  .av.any { background: var(--ink); color: #fff; }
-  .ph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
-  .ph { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); text-align: left; }
+  .av.any { background: var(--accent); }
+  .ph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
+  .ph { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; border: 1px solid transparent; border-radius: 999px; background: #fff; text-align: left; }
+  .ph .av { width: 36px; height: 36px; }
   .ph:hover { border-color: var(--ink); }
-  .ph .nm { font-size: 14px; font-weight: 500; line-height: 1.2; }
+  .ph .nm { font-size: 14px; font-weight: 600; line-height: 1.15; }
   .ph .st { font-size: 12px; color: var(--muted); }
   .ph.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
   .ph.busy { opacity: .45; pointer-events: none; }
 
+  /* Kalender (som det første designet) */
+  .notice { font-size: 13.5px; padding: 12px 16px; border-radius: 18px; background: var(--accent-soft); color: #8e2232; margin: 0 0 12px; }
+  .cal { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); column-gap: 44px; padding: 26px 30px 30px; outline: 2px solid transparent; outline-offset: 3px; transition: outline-color .2s; }
+  .cal.err { outline-color: var(--accent); }
+  .cal .nav { display: flex; align-items: center; justify-content: space-between; }
+  .cal .nav .m { font-size: 22px; font-weight: 500; letter-spacing: .02em; color: var(--faint); text-transform: uppercase; min-width: 52px; }
+  .cal .nav .m.cur { color: var(--ink); text-align: center; }
+  .cal .nav .m:last-child { text-align: right; }
+  .cal .nav button { background: none; border: 0; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+  .cal .nav button:hover { background: rgba(18,18,18,.06); color: var(--ink); }
+  .cal .nav button[disabled] { opacity: .25; pointer-events: none; }
+  .cal .bigday { font-size: clamp(100px, 11vw, 150px); font-weight: 700; letter-spacing: -.06em; line-height: .8; margin: 30px 0 14px -4px; }
+  .cal .bigday.none { color: var(--dot); }
+  .cal .meta { display: flex; justify-content: space-between; align-items: flex-start; }
+  .cal .meta .mon { font-size: 26px; font-weight: 700; letter-spacing: .01em; text-transform: uppercase; line-height: 1; }
+  .cal .meta .yr { font-size: 26px; color: var(--muted); line-height: 1.15; }
+  .cal .meta .wd { font-size: 26px; color: var(--muted); }
+  .cal .hint { margin-top: 18px; }
+  .wk, .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .wk span { text-align: center; font-size: 11px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+  .wk span.today { color: var(--accent); }
+  .day { aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; background: var(--dot); font-size: 11px; color: rgba(18,18,18,.5); display: grid; place-items: center; transition: transform .12s, background .15s; font-variant-numeric: tabular-nums; }
+  .day:hover { transform: scale(1.08); background: #b4b3af; color: var(--ink); }
+  .day.past { background: var(--ink); color: rgba(255,255,255,.3); pointer-events: none; }
+  .day.full { background: rgba(18,18,18,.05); color: var(--faint); text-decoration: line-through; pointer-events: none; }
+  .day.today { box-shadow: inset 0 0 0 2px var(--accent); }
+  .day.today:not(.sel):not(.past) { background: transparent; color: var(--accent); }
+  .day.sel { background: var(--accent); color: #fff; box-shadow: none; }
+  .day.blank { background: transparent; box-shadow: inset 0 0 0 1px rgba(18,18,18,.12); pointer-events: none; }
+  .day:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .days.loading .day:not(.past):not(.blank) { animation: pulse 1s ease-in-out infinite alternate; }
+  @keyframes pulse { to { opacity: .45; } }
+  .times-wrap { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .times-wrap .label { display: block; margin-bottom: 12px; }
+  .times { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+  .time { height: 46px; border-radius: 999px; border: 1px solid rgba(18,18,18,.18); background: transparent; font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; transition: all .15s; padding: 0; }
+  .time:hover { border-color: var(--ink); }
+  .time.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .time[disabled] { color: var(--faint); text-decoration: line-through; border-color: transparent; background: rgba(18,18,18,.04); pointer-events: none; }
+
   /* Knapper */
-  .actions { display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
-  .btn { height: 44px; padding: 0 22px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); font-weight: 500; }
+  .actions { display: flex; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .btn { height: 52px; padding: 0 26px; border-radius: 999px; border: 1px solid rgba(18,18,18,.18); background: transparent; font-weight: 500; font-size: 16px; }
   .btn:hover { border-color: var(--ink); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn.primary:hover { background: #87392e; }
+  .btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; display: inline-flex; align-items: center; gap: 14px; padding-right: 7px; }
+  .btn.primary::after { content: ""; width: 38px; height: 38px; border-radius: 50%; background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center / 16px no-repeat; }
+  .btn.primary:hover { background: #000; }
   .btn[disabled] { opacity: .6; cursor: wait; }
-  .err-msg { color: var(--accent); font-size: 14px; font-weight: 500; margin: 0 0 12px; }
+  .err-msg { color: var(--accent); font-size: 14px; font-weight: 600; margin: 14px 6px 0; }
+  .advance { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent); font-weight: 500; margin-top: 12px; }
+  .advance::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); border-right-color: transparent; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* Oppsummering */
-  .summary { position: sticky; top: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 6px; }
-  .summary h3 { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .summary { position: sticky; top: 16px; padding: 22px 24px 18px; }
+  .pill { display: inline-flex; align-items: center; height: 38px; padding: 0 18px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 14px; font-weight: 500; }
+  .sum-wd { margin: 22px 0 8px; font-size: 15px; color: #3d3d3b; }
+  .sum-big { font-size: 64px; font-weight: 500; letter-spacing: -.055em; line-height: .84; margin-bottom: 18px; }
+  .sum-big.none { color: var(--dot); }
   .sum-list { margin: 0; }
-  .sum-list div { display: grid; grid-template-columns: 82px 1fr; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
-  .sum-list div:last-child { border-bottom: 0; }
+  .sum-list div { display: grid; grid-template-columns: 78px 1fr; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); font-size: 14px; }
   .sum-list dt { color: var(--muted); font-size: 13px; }
-  .sum-list dd { margin: 0; font-weight: 500; }
+  .sum-list dd { margin: 0; font-weight: 600; }
   .sum-list dd.empty { color: var(--faint); font-weight: 400; }
   .summary details { display: none; }
-  .review { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 16px; margin-bottom: 18px; }
+  .review .sum-list div:first-child { border-top: 0; }
+  .review { margin-top: 22px; background: #fff; border-radius: 18px; padding: 6px 16px; }
 
   /* Kvittering */
-  .receipt .ok { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; margin-bottom: 16px; }
-  .receipt h2 { font-size: 24px; margin-bottom: 8px; }
-  .receipt p { color: var(--muted); margin: 0 0 18px; max-width: 520px; }
-  .receipt .ref { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+  .receipt .bigthanks { font-size: clamp(80px, 11vw, 140px); font-weight: 500; letter-spacing: -.055em; line-height: .84; margin: 24px 0 16px; }
+  .receipt p { color: #3d3d3b; font-size: 16px; margin: 0 0 6px; max-width: 520px; }
+  .receipt .ref { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .receipt .review { margin-bottom: 18px; }
 
-  /* Én side: seksjonene ligger under hverandre og åpnes etter tur */
-  .step { scroll-margin-top: 16px; }
-  .step + .step { margin-top: 36px; padding-top: 32px; border-top: 1px solid var(--line); }
-  h2 .num { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 12px; font-weight: 600; margin-right: 10px; vertical-align: 2px; }
+  footer { margin-top: 48px; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  footer .cond { font-size: 28px; }
+  footer span { font-size: 13px; color: var(--muted); }
+  footer a { color: var(--ink); text-decoration: none; font-weight: 500; }
+
+  /* Animasjoner */
   .step.open { animation: open .45s cubic-bezier(.2, .7, .2, 1) both; }
   .reveal { animation: reveal .3s ease both; }
   @keyframes open { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
   @keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  .advance { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent); font-weight: 500; margin-top: 10px; }
-  .advance::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); border-right-color: transparent; animation: spin .7s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) {
-    .step.open, .reveal { animation: none; }
-  }
-
-  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  footer a { color: var(--ink); text-decoration: none; }
+  @media (prefers-reduced-motion: reduce) { .step.open, .reveal { animation: none; } }
 
   .embedded .wrap { padding-top: 16px; }
 
-  @media (max-width: 860px) {
-    .layout { grid-template-columns: 1fr; gap: 0; }
-    .summary { position: static; order: -1; margin-bottom: 22px; padding: 0; }
-    .summary h3, .summary .desk { display: none; }
+  @media (max-width: 980px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .summary { position: static; order: -1; margin-bottom: 26px; padding: 0; }
+    .summary > .pill, .summary > .sum-wd, .summary > .sum-big, .summary > .desk { display: none; }
     .summary details { display: block; }
-    .summary details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; list-style: none; padding: 12px 16px; cursor: pointer; font-size: 14px; }
+    .summary details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; list-style: none; padding: 16px 22px; cursor: pointer; font-size: 14px; }
     .summary details summary::-webkit-details-marker { display: none; }
     .summary details summary b { font-weight: 600; }
     .summary details summary span { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: right; }
-    .summary details summary::after { content: "+"; color: var(--muted); font-size: 18px; line-height: 1; }
+    .summary details summary::after { content: "+"; color: var(--muted); font-size: 20px; line-height: 1; }
     .summary details[open] summary::after { content: "–"; }
-    .summary details .sum-list { padding: 0 16px 6px; }
+    .summary details .sum-list { padding: 0 22px 10px; }
   }
-  @media (max-width: 560px) {
-    .wrap { padding: 20px 16px 36px; }
-    .head { flex-direction: column; align-items: flex-start; gap: 14px; }
-    .stepper li { padding-right: 6px; }
+  @media (max-width: 760px) {
+    .cal { grid-template-columns: 1fr; padding: 22px 20px 24px; }
+    .cal .bigday { margin-top: 24px; }
+    .cal-dots { margin-top: 24px; order: 2; }
+    .cal-info { display: contents; }
+    .cal .times-wrap { order: 3; }
+  }
+  @media (max-width: 600px) {
+    .wrap { padding: 20px 12px 36px; }
+    .card { padding: 20px 18px; border-radius: 26px; }
+    .head { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .stepper li { padding-right: 12px; }
     .stepper li .lbl { display: none; }
     .stepper li.cur .lbl { display: inline; }
+    .sec-head p { display: none; }
     .grid2 { grid-template-columns: 1fr; }
     .row .d { display: none; }
+    .times { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
@@ -225,7 +264,7 @@
   <header class="head">
     <div>
       <div class="brand">Fotostallen</div>
-      <h1>Bestill fotografering</h1>
+      <h1 class="cond">Bestill fotografering</h1>
     </div>
     <ol class="stepper" id="stepper">
       <li data-step="1"><span class="n">1</span><span class="lbl">Tjenester</span></li>
@@ -239,7 +278,8 @@
       <form id="booking" novalidate>
         <!-- Steg 1 -->
         <div class="step" data-step="1">
-          <h2><span class="num">1</span>Velg tjenester</h2>
+          <div class="sec-head"><h2 class="cond">Tjenester</h2><p>Hva skal vi fotografere?</p></div>
+          <div class="card">
           <div class="group">
             <div class="glabel">Hovedtjeneste</div>
             <div class="rows" id="mainOpts"></div>
@@ -252,47 +292,61 @@
             <div class="glabel">Tillegg <span>(valgfritt)</span></div>
             <div class="chips" id="addonOpts"></div>
           </div>
+          </div>
           <p class="err-msg" id="err1" hidden></p>
           <div class="actions next"><button type="button" class="btn primary" data-go="2">Fortsett</button></div>
         </div>
 
         <!-- Steg 2 -->
         <div class="step" data-step="2" hidden>
-          <h2><span class="num">2</span>Tid og sted</h2>
-          <div class="group">
-            <div class="field">
-              <label for="f_adresse">Adresse for fotografering</label>
-              <input id="f_adresse" autocomplete="off" placeholder="Gate og nummer, sted" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
-              <ul class="suggest" id="suggest" role="listbox" hidden></ul>
-            </div>
-          </div>
-          <div class="group">
-            <div class="glabel">Fotograf</div>
-            <div class="ph-current">
-              <div class="av any" id="phAv"></div>
-              <div class="who"><strong id="phName">Første ledige fotograf</strong><small id="phNote">Vi velger en ledig fotograf for deg</small></div>
-              <button type="button" class="linkbtn" id="phToggle" aria-expanded="false">Velg selv</button>
-            </div>
-            <div class="ph-grid" id="phGrid" hidden></div>
-          </div>
-          <div class="group">
-            <div class="glabel">Dato</div>
-            <p class="notice" id="availNotice" hidden></p>
-            <div class="cal">
-              <div class="cal-head">
-                <button type="button" id="calPrev" aria-label="Forrige måned"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
-                <strong id="calMonth"></strong>
-                <button type="button" id="calNext" aria-label="Neste måned"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+          <div class="sec-head"><h2 class="cond">Dato og tid</h2><p>Når skal vi komme?</p></div>
+          <div class="stack">
+            <div class="card">
+              <div class="group">
+                <div class="field">
+                  <label for="f_adresse">Adresse for fotografering</label>
+                  <input id="f_adresse" autocomplete="off" placeholder="Gate og nummer, sted" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
+                  <ul class="suggest" id="suggest" role="listbox" hidden></ul>
+                </div>
               </div>
-              <div class="wk"><span>M</span><span>T</span><span>O</span><span>T</span><span>F</span><span>L</span><span>S</span></div>
-              <div class="days" id="calDays" role="grid" aria-label="Velg dato"></div>
+              <div class="group">
+                <span class="glabel">Fotograf</span>
+                <div class="ph-current">
+                  <div class="av any" id="phAv"></div>
+                  <div class="who"><strong id="phName">Første ledige fotograf</strong><small id="phNote">Vi velger en ledig fotograf for deg</small></div>
+                  <button type="button" class="linkbtn" id="phToggle" aria-expanded="false">Velg selv</button>
+                </div>
+                <div class="ph-grid" id="phGrid" hidden></div>
+              </div>
             </div>
-          </div>
-          <div class="group" id="timeGroup" hidden>
-            <div class="glabel" id="timeLabel">Tidspunkt</div>
-            <div class="times" id="timeOpts"></div>
-            <p class="hint" id="timeHint"></p>
-            <p class="advance" id="advanceMsg" hidden>Går videre til kontaktinformasjon …</p>
+            <p class="notice" id="availNotice" hidden></p>
+            <div class="card cal" id="calCard">
+              <div class="cal-info">
+                <div class="nav">
+                  <span class="m" id="mPrev"></span>
+                  <button type="button" id="calPrev" aria-label="Forrige måned"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+                  <span class="m cur" id="mCur"></span>
+                  <button type="button" id="calNext" aria-label="Neste måned"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+                  <span class="m" id="mNext"></span>
+                </div>
+                <div class="bigday none" id="calDay">00</div>
+                <div class="meta">
+                  <div><div class="mon" id="calMon"></div><div class="yr" id="calYr"></div></div>
+                  <div class="wd" id="calWd"></div>
+                </div>
+                <p class="hint" id="calHint"></p>
+                <div class="times-wrap" id="timeGroup" hidden>
+                  <span class="label" id="timeLabel">Tidspunkt</span>
+                  <div class="times" id="timeOpts"></div>
+                  <p class="hint" id="timeHint"></p>
+                  <p class="advance" id="advanceMsg" hidden>Går videre til kontaktinformasjon …</p>
+                </div>
+              </div>
+              <div class="cal-dots">
+                <div class="wk" id="calWk"><span>M</span><span>T</span><span>O</span><span>T</span><span>F</span><span>L</span><span>S</span></div>
+                <div class="days" id="calDays" role="grid" aria-label="Velg dato"></div>
+              </div>
+            </div>
           </div>
           <p class="err-msg" id="err2" hidden></p>
           <div class="actions next"><button type="button" class="btn primary" data-go="3">Fortsett</button></div>
@@ -300,7 +354,8 @@
 
         <!-- Steg 3 -->
         <div class="step" data-step="3" hidden>
-          <h2><span class="num">3</span>Kontakt og bekreftelse</h2>
+          <div class="sec-head"><h2 class="cond">Kontakt</h2><p>Hvem bestiller?</p></div>
+          <div class="card">
           <div class="grid2">
             <div class="field full"><label for="f_navn">Fullt navn</label><input id="f_navn" autocomplete="name" required></div>
             <div class="field"><label for="f_tlf">Telefon</label><input id="f_tlf" type="tel" autocomplete="tel" required></div>
@@ -322,9 +377,8 @@
           </details>
           <div class="field"><label for="f_mer">Kommentar <span class="o">(valgfritt)</span></label><textarea id="f_mer" placeholder="Spesielle ønsker, kontaktperson på stedet …"></textarea></div>
           <label class="remember"><input type="checkbox" id="f_husk"> Husk kontaktopplysningene mine på denne enheten</label>
-
-          <div class="glabel">Oppsummering</div>
           <div class="review"><dl class="sum-list" data-sum></dl></div>
+          </div>
           <p class="err-msg" id="err3" hidden></p>
           <div class="actions"><button type="submit" class="btn primary" id="submitBtn">Send bestilling</button></div>
           <p class="hint">Bestillingen er ikke bindende før vi har bekreftet tidspunktet.</p>
@@ -332,17 +386,19 @@
       </form>
 
       <!-- Kvittering -->
-      <div class="receipt" id="receipt" hidden>
-        <div class="ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
-        <h2 id="rcTitle">Takk, bestillingen er mottatt</h2>
+      <div class="receipt card" id="receipt" hidden>
+        <span class="pill" id="rcTitle">Mottatt</span>
+        <div class="bigthanks">Takk.</div>
         <p id="rcText"></p>
         <div class="review"><dl class="sum-list" id="rcSum"></dl></div>
         <button type="button" class="btn" id="again">Ny bestilling</button>
       </div>
     </section>
 
-    <aside class="summary" aria-label="Din bestilling">
-      <h3>Din bestilling</h3>
+    <aside class="summary card" aria-label="Din bestilling">
+      <span class="pill">Din bestilling</span>
+      <div class="sum-wd" id="sumWd">Dato ikke valgt</div>
+      <div class="sum-big none" id="sumBig">00.00<br>&mdash;</div>
       <dl class="sum-list desk" data-sum></dl>
       <details id="sumDetails">
         <summary><b>Din bestilling</b><span id="sumShort">Ingen valg ennå</span></summary>
@@ -352,8 +408,8 @@
   </div>
 
   <footer>
+    <span class="cond">Fotostallen</span>
     <span>Spørsmål? <a href="mailto:kontakt@fotostallen.no">kontakt@fotostallen.no</a></span>
-    <span>Fotostallen</span>
   </footer>
 </main>
 
@@ -420,6 +476,7 @@ const endKey = k => minKey(keyMin(k) + DURATION_MIN);
 const hours = () => String(DURATION_MIN / 60).replace(".", ",");
 const MONTHS = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
 const WEEKDAYS = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
+const MON3 = ["jan", "feb", "mar", "apr", "mai", "jun", "jul", "aug", "sep", "okt", "nov", "des"];
 const fmtDate = v => { const d = new Date(v + "T12:00"); return `${WEEKDAYS[d.getDay()]} ${d.getDate()}. ${MONTHS[d.getMonth()]}`; };
 const initials = p => p.name.split(" ").map(w => w[0]).join("").slice(0, 2);
 const avatar = p => !p.img ? esc(initials(p)) : p.face
@@ -586,8 +643,11 @@ let renderSeq = 0;
 async function renderCalendar() {
   const seq = ++renderSeq;
   const y = view.getFullYear(), m = view.getMonth();
-  $("#calMonth").textContent = `${MONTHS[m]} ${y}`;
+  $("#mPrev").textContent = MON3[(m + 11) % 12];
+  $("#mCur").textContent = MON3[m];
+  $("#mNext").textContent = MON3[(m + 1) % 12];
   $("#calPrev").disabled = y === today.getFullYear() && m === today.getMonth();
+  $$("#calWk span").forEach((sp, i) => sp.classList.toggle("today", (today.getDay() + 6) % 7 === i));
   if (!availCache[ymKey(view)]) {
     $("#calDays").classList.add("loading");
     drawDays(false);
@@ -604,6 +664,7 @@ function drawDays(ready) {
   const days = new Date(y, m + 1, 0).getDate();
   let html = "";
   for (let i = 0; i < lead; i++) html += '<span class="day blank"></span>';
+  const total = lead + days;
   for (let d = 1; d <= days; d++) {
     const date = new Date(y, m, d), key = iso(date);
     const past = date < today;
@@ -611,6 +672,7 @@ function drawDays(ready) {
     const cls = ["day", past && "past", full && "full", key === iso(today) && "today", key === state.date && "sel"].filter(Boolean).join(" ");
     html += `<button type="button" class="${cls}" data-date="${key}" aria-label="${d}. ${MONTHS[m]}${full ? ", ingen ledige tider" : ""}"${past || full ? " disabled" : ""}>${d}</button>`;
   }
+  for (let i = total; i < Math.ceil(total / 7) * 7; i++) html += '<span class="day blank"></span>';
   $("#calDays").innerHTML = html;
   const entry = availCache[ymKey(view)];
   $("#availNotice").hidden = !(ready && entry && entry.status !== "ok");
@@ -618,8 +680,25 @@ function drawDays(ready) {
   renderTimes();
 }
 
+// Den store datoen til venstre i kalenderkortet.
+function renderDateInfo() {
+  const { date, time } = state;
+  if (!date) {
+    $("#calDay").textContent = "00"; $("#calDay").classList.add("none");
+    $("#calMon").textContent = MONTHS[view.getMonth()]; $("#calYr").textContent = view.getFullYear(); $("#calWd").textContent = "";
+    $("#calHint").textContent = "Velg dato, så kommer tidene. Overstrekte dager er ikke ledige.";
+    return;
+  }
+  const d = new Date(date + "T12:00");
+  $("#calDay").textContent = pad(d.getDate()); $("#calDay").classList.remove("none");
+  $("#calMon").textContent = MONTHS[d.getMonth()]; $("#calYr").textContent = d.getFullYear();
+  $("#calWd").textContent = time ? `${time}–${endKey(time)}` : WEEKDAYS[d.getDay()].slice(0, 3).replace(/^./, c => c.toUpperCase());
+  $("#calHint").textContent = time ? "" : "Velg tidspunkt.";
+}
+
 function renderTimes() {
   const date = state.date;
+  renderDateInfo();
   const wasHidden = $("#timeGroup").hidden;
   $("#timeGroup").hidden = !date;
   if (date && wasHidden) { $("#timeGroup").classList.remove("reveal"); void $("#timeGroup").offsetWidth; $("#timeGroup").classList.add("reveal"); }
@@ -627,7 +706,7 @@ function renderTimes() {
     const keys = relevantKeys(date);
     const free = freeFor(state.photographer, date);
     if (state.time && (!free.includes(state.time) || !keys.includes(state.time))) state.time = "";
-    $("#timeLabel").textContent = `${confirmed(date) ? "Ledige tider" : "Ønsket tid"} ${fmtDate(date)}`;
+    $("#timeLabel").textContent = confirmed(date) ? "Ledige tider" : "Ønsket tid";
     $("#timeOpts").innerHTML = keys.map(k => {
       const ok = free.includes(k);
       return `<button type="button" class="time${k === state.time ? " sel" : ""}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}">${k}–${endKey(k)}</button>`;
@@ -781,6 +860,16 @@ function summaryRows() {
 const rowsHtml = rows => rows.map(([k, v]) => `<div><dt>${k}</dt><dd class="${v ? "" : "empty"}">${v ? esc(v) : "–"}</dd></div>`).join("");
 function update() {
   const rows = summaryRows();
+  if (state.date) {
+    const d = new Date(state.date + "T12:00");
+    $("#sumWd").textContent = WEEKDAYS[d.getDay()].replace(/^./, c => c.toUpperCase()) + (state.time ? ` · kl. ${state.time}` : "");
+    $("#sumBig").innerHTML = `${pad(d.getDate())}.${pad(d.getMonth() + 1)}<br>${MON3[d.getMonth()].toUpperCase()}`;
+    $("#sumBig").classList.remove("none");
+  } else {
+    $("#sumWd").textContent = "Dato ikke valgt";
+    $("#sumBig").innerHTML = "00.00<br>&mdash;";
+    $("#sumBig").classList.add("none");
+  }
   $$("[data-sum]").forEach(dl => { dl.innerHTML = rowsHtml(rows); });
   const d = state.date && new Date(state.date + "T12:00");
   const short = [serviceText().split(" + ")[0], d && state.time ? `${d.getDate()}. ${MONTHS[d.getMonth()].slice(0, 3)} kl. ${state.time}` : ""].filter(Boolean).join(" · ");
@@ -956,7 +1045,7 @@ form.addEventListener("submit", async e => {
     try { await fetch(GOOGLE_FORM, { method: "POST", mode: "no-cors", body: data }); } catch (err) { /* reservasjonen er hovedkanalen */ }
 
     // 3) Kvittering
-    $("#rcTitle").textContent = reserved ? "Takk, bestillingen er mottatt" : "Takk, vi har mottatt forespørselen";
+    $("#rcTitle").textContent = reserved ? "Bestilling mottatt" : "Forespørsel mottatt";
     $("#rcText").innerHTML = reserved
       ? `Referanse <span class="ref">${esc(res.ref)}</span>. Vi har satt av tiden og bekrefter så snart vi kan.${res.emailed ? ` En bekreftelse er sendt til ${esc(v("f_epost"))}.` : ""}`
       : "Vi fikk ikke reservert tiden automatisk, men forespørselen er sendt. Vi tar kontakt for å bekrefte tid og fotograf.";
