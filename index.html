@@ -171,8 +171,7 @@
   .dot.sel { background: var(--accent); color: #fff; box-shadow: none; }
   .dot.blank { background: transparent; box-shadow: inset 0 0 0 1px rgba(18,18,18,.12); pointer-events: none; }
   .dot:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-  .dot.full { background: var(--ink); color: rgba(255,255,255,.3); pointer-events: none; }
-  .dot.today.full { box-shadow: inset 0 0 0 2px var(--accent); }
+  .dot.full { background: rgba(18,18,18,.05); color: #bdbcb8; text-decoration: line-through; pointer-events: none; }
   .dots.loading .dot:not(.past):not(.blank) { animation: pulse 1.1s ease-in-out infinite alternate; }
   @keyframes pulse { to { opacity: .45; } }
   .times { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
@@ -750,7 +749,7 @@ function showDate() {
   if (!v) {
     $("#calDay").textContent = "00"; $("#calDay").classList.add("none");
     $("#calMon").textContent = MONTHS[view.getMonth()]; $("#calYr").textContent = view.getFullYear(); $("#calWd").textContent = "";
-    $("#calHint").textContent = "Velg dato, så tidspunkt. Svarte dager er opptatt.";
+    $("#calHint").textContent = "Velg dato, så tidspunkt. Overstrekte dager er ikke ledige.";
     $("#times").hidden = true;
     $("#sumWd").textContent = "Dato ikke valgt";
     $("#sumBig").innerHTML = "00.00<br>&mdash;"; $("#sumBig").classList.add("none");
