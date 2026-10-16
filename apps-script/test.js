@@ -167,7 +167,8 @@ test("uten synkdata er alle luker på hverdager ledige", () => {
 
 test("bookingfilen til iCloud kan leses tilbake og merkes med fotograf", () => {
   const q = { id: "abc-123", photographer: "glenn", date: "2026-10-26", time: "08:00", address: "Torggata 1, 0181 Oslo; 3. etg",
-    megler: "Kari Megler 99999999", kontor: "Krogsveen", epost: "kari@example.com", kvm: "80", ankomst: "Kode 1234",
+    navn: "Kari Nordmann", telefon: "99999999", epost: "kari@example.com", oppdrag: "1234", faktura: "Krogsveen AS, faktura@example.com",
+    kvm: "80", ankomst: "Kode 1234",
     products: ["Dagbilder helbolig", "Drone"], note: "Ring på\nfør du går opp" };
   const text = bookingIcs(q, NOW);
   assert.ok(text.split("\r\n").every(l => l.length <= 75), "linjer er brettet");
@@ -177,5 +178,7 @@ test("bookingfilen til iCloud kan leses tilbake og merkes med fotograf", () => {
   const busy = busyFromIcs(text, FROM, TO, e => e.fotograf === "glenn");
   assert.deepStrictEqual(busy, [{ start: oslo("2026-10-26", 8), end: oslo("2026-10-26", 10) }], "riktig tid etter sommertid");
   assert.deepStrictEqual(busyFromIcs(text, FROM, TO, e => e.fotograf === "kevin"), [], "filtreres per fotograf");
-  assert.ok(/SUMMARY:FORELØPIG – Glenn – Torggata 1\\, 0181 Oslo\; 3. etg/.test(text.replace(/\r\n /g, "")), "tittel med escaping");
+  const flat = text.replace(/\r\n /g, "");
+  assert.ok(flat.includes("SUMMARY:FORELØPIG – Glenn – Torggata 1\\, 0181 Oslo\\; 3. etg"), "tittel med escaping");
+  assert.ok(flat.includes("Kunde: Kari Nordmann") && flat.includes("Oppdragsnr.: 1234") && !flat.includes("Megler"), "kundefelt i beskrivelsen");
 });

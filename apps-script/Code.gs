@@ -8,7 +8,8 @@
  * Flyt:
  *  - Synkjobben leser fotografenes iCloud-kalendere (CalDAV, samme tilgang som fakturaroboten) og sender
  *    hvilke luker som er ledige («masker», ingen titler eller detaljer) hit med action=sync.
- *  - Bookingsiden spør GET ?action=slots&photographer=glenn&from=…&to=… og får ledige luker.
+ *  - Bookingsiden spør GET ?action=slots&photographer=all&from=…&to=… og får ledige luker for
+ *    «første ledige» og hver fotograf (photographer=glenn gir bare én).
  *  - Bookingsiden sender POST { action: "book", … }. Bookingen legges i en kø og blokkerer luken med en gang.
  *  - Synkjobben henter køen, legger hver booking inn som «FORELØPIG» i iCloud-kalenderen
  *    «Fotostallen bookinger» (som fakturaroboten ikke leser), og kvitterer med action=ack.
@@ -54,11 +55,15 @@ function doGet(e) {
     const p = e.parameter || {};
     if (p.action !== "slots") return json({ ok: false, error: "unknown_action" });
     const id = p.photographer;
-    if (id !== ANY && !CONFIG.PHOTOGRAPHERS[id]) return json({ ok: false, error: "unknown_photographer" });
+    if (id !== "all" && id !== ANY && !CONFIG.PHOTOGRAPHERS[id]) return json({ ok: false, error: "unknown_photographer" });
     if (!isDate(p.from) || !isDate(p.to) || p.to < p.from) return json({ ok: false, error: "bad_range" });
     if (daysBetween(p.from, p.to) > CONFIG.MAX_RANGE_DAYS) return json({ ok: false, error: "range_too_long" });
-    const store = readStore();
-    return json({ ok: true, updated: store ? store.updated : null, slots: computeSlots(id, p.from, p.to, store, readQueue(), Date.now()) });
+    const store = readStore(), queue = readQueue(), now = Date.now();
+    const slotsFor = pid => computeSlots(pid, p.from, p.to, store, queue, now);
+    const slots = id === "all"
+      ? [ANY].concat(Object.keys(CONFIG.PHOTOGRAPHERS)).reduce((o, pid) => { o[pid] = slotsFor(pid); return o; }, {})
+      : slotsFor(id);
+    return json({ ok: true, updated: store ? store.updated : null, slots });
   } catch (err) {
     console.error(err);
     return json({ ok: false, error: "server" });
@@ -83,7 +88,7 @@ function book(b) {
     const id = b.photographer;
     if (id !== ANY && !CONFIG.PHOTOGRAPHERS[id]) return json({ ok: false, error: "unknown_photographer" });
     if (!isDate(b.date) || CONFIG.SLOT_STARTS.map(slotKey).indexOf(b.time) < 0) return json({ ok: false, error: "bad_slot" });
-    if (!clean(b.address, 200) || !clean(b.megler, 200)) return json({ ok: false, error: "missing_fields" });
+    if (!clean(b.address, 200) || !clean(b.navn, 200)) return json({ ok: false, error: "missing_fields" });
 
     lock.waitLock(20000);
     if (tooManyBookings()) return json({ ok: false, error: "rate_limited" });
@@ -94,8 +99,9 @@ function book(b) {
 
     queue.push({
       id: Utilities.getUuid(), created: Date.now(), photographer: id, date: b.date, time: b.time,
-      address: clean(b.address, 200), megler: clean(b.megler, 200), kontor: clean(b.kontor, 200),
-      epost: clean(b.epost, 200), kvm: clean(b.kvm, 40), ankomst: clean(b.ankomst, 300),
+      navn: clean(b.navn, 200), telefon: clean(b.telefon, 40), epost: clean(b.epost, 200),
+      oppdrag: clean(b.oppdrag, 60), faktura: clean(b.faktura, 500),
+      address: clean(b.address, 200), kvm: clean(b.kvm, 40), ankomst: clean(b.ankomst, 300),
       products: Array.isArray(b.products) ? b.products.slice(0, 10).map(x => clean(x, 60)) : [],
       note: clean(b.note, 1000),
     });
@@ -221,14 +227,16 @@ function bookingIcs(q, nowMs) {
     "Foreløpig booking fra fotostallen.no – må bekreftes.",
     "",
     `Fotograf: ${q.photographer === ANY ? "Første ledige" : CONFIG.PHOTOGRAPHERS[q.photographer]}`,
-    `Megler: ${q.megler}`,
-    `Kontor: ${q.kontor}`,
+    `Kunde: ${q.navn}`,
+    `Telefon: ${q.telefon}`,
     `E-post: ${q.epost}`,
-    `Størrelse: ${q.kvm} kvm`,
-    `Ankomst: ${q.ankomst}`,
+    q.oppdrag ? `Oppdragsnr.: ${q.oppdrag}` : null,
+    `Faktura: ${q.faktura}`,
+    q.kvm ? `Størrelse: ${q.kvm} kvm` : null,
+    q.ankomst ? `Ankomst: ${q.ankomst}` : null,
     `Produkter: ${(q.products || []).join(", ") || "–"}`,
-    q.note ? `Notat: ${q.note}` : "",
-  ].filter(x => x !== "").join("\n");
+    q.note ? `Notat: ${q.note}` : null,
+  ].filter(x => x !== null).join("\n");
   const lines = [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Fotostallen//Booking//NO", "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
@@ -247,7 +255,7 @@ function bookingIcs(q, nowMs) {
 }
 
 function icsText(s) {
-  return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 }
 
 /** Bretter linjer slik iCalendar krever (maks 75 byte; vi bretter på 60 tegn for å tåle æøå). */

@@ -50,12 +50,9 @@
   .cond { font-family: var(--cond); font-weight: 700; text-transform: uppercase; letter-spacing: .005em; line-height: .95; }
   .big { font-weight: 500; letter-spacing: -.055em; line-height: .84; }
 
-  /* Topp */
-  header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 76px; }
-  .logo img { height: 34px; width: auto; }
 
   /* Hero */
-  .hero { padding: 8px 0 0; }
+  .hero { padding: 16px 0 0; }
   .hero .card { padding: 26px 30px 30px; }
   .hero .weekday { margin: 38px 0 12px; font-size: 17px; color: #3d3d3b; }
   .hero-date { display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: center; }
@@ -101,10 +98,16 @@
   .opt input:focus-visible + span { outline: 2px solid var(--tx); outline-offset: 2px; }
 
   /* Fotografer + dato */
-  .pick-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 
   .people { padding: 22px 24px 10px; }
-  .people .head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 14px; }
+  .people .head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-bottom: 14px; }
+  .people-note { margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; background: #fff; font-size: 13.5px; }
+  .row .busy-tag { display: none; font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); flex: 0 0 auto; }
+  .row.busy .busy-tag { display: inline; }
+  .row.busy .row-btn .cond { color: #c4c3bf; }
+  .row.busy .thumb { opacity: .45; }
+  .row.busy .choose { background: rgba(18,18,18,.08); color: var(--muted); pointer-events: none; }
+  .row.busy .choose .ic { display: none; }
   .row { border-top: 1px solid var(--line); }
   .row-btn {
     width: 100%; display: flex; align-items: center; gap: 14px; background: none; border: 0; padding: 20px 0; text-align: left;
@@ -143,7 +146,13 @@
   .choose .ic { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.18); color: #fff; display: grid; place-items: center; }
   .row.sel .choose { background: var(--accent); }
 
-  .cal { padding: 22px 24px 26px; position: sticky; top: 16px; outline: 2px solid transparent; outline-offset: 3px; transition: outline-color .2s; }
+  .cal {
+    padding: 24px 28px 28px; outline: 2px solid transparent; outline-offset: 3px; transition: outline-color .2s;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); grid-template-areas: "info dots" "times dots"; column-gap: 48px; align-content: start;
+  }
+  .cal-info { grid-area: info; }
+  .cal-dots { grid-area: dots; align-self: start; }
+  .cal .times { grid-area: times; align-self: end; }
   .cal.err { outline-color: var(--accent); }
   .cal .nav { display: flex; align-items: center; justify-content: space-between; }
   .cal .nav .m { font-size: 22px; font-weight: 500; letter-spacing: .02em; color: #b5b4b0; text-transform: uppercase; min-width: 52px; }
@@ -176,6 +185,7 @@
   .dots.loading .dot:not(.past):not(.blank) { animation: pulse 1.1s ease-in-out infinite alternate; }
   @keyframes pulse { to { opacity: .45; } }
   .times { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .times[hidden] { display: none; }
   .times .label { display: block; margin-bottom: 12px; }
   .time-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
   .tslot {
@@ -248,12 +258,11 @@
   footer span { font-size: 13px; color: var(--muted); }
   footer a { color: var(--ink); text-decoration: none; font-weight: 500; }
 
-  .embedded header.top { display: none; }
-  .embedded .hero { padding-top: 16px; }
 
   @media (max-width: 960px) {
-    .pick-grid, .order-grid { grid-template-columns: 1fr; }
-    .cal, .summary { position: static; }
+    .order-grid { grid-template-columns: 1fr; }
+    .summary { position: static; }
+    .cal { grid-template-columns: 1fr; grid-template-areas: "info" "dots" "times"; }
   }
   @media (max-width: 720px) {
     .wrap { padding: 0 12px; }
@@ -283,22 +292,13 @@
 </head>
 <body>
 
-<header class="top">
-  <div class="wrap">
-    <a class="logo" href="https://fotostallen.no" aria-label="Fotostallen forside">
-      <img src="https://impro.usercontent.one/appid/oneComWsb/domain/fotostallen.no/media/fotostallen.no/onewebmedia/fs_logo%2Btext_black_rgb.png" alt="Fotostallen">
-    </a>
-    <a class="pill on" href="#bestill">Bestill</a>
-  </div>
-</header>
-
 <section class="hero">
   <div class="wrap">
     <div class="card">
       <nav class="pills" aria-label="Snarveier">
-        <a class="pill on" href="#tjenester">Booking</a>
+        <a class="pill on" href="#dato">Booking</a>
+        <a class="pill" href="#tjenester">Tjenester</a>
         <a class="pill" href="#fotografer">Fotografer</a>
-        <a class="pill" href="#dato">Kalender</a>
         <a class="round" href="#bestill" aria-label="Gå til bestilling">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </a>
@@ -307,15 +307,53 @@
       <div class="hero-date">
         <div class="big" id="heroDate"></div>
         <div class="facts">
-          <div><strong>Book fotograf</strong><span>til neste boligsalg</span></div>
+          <div><strong>Book fotograf</strong><span>Bolig, interiør, portrett og mer</span></div>
           <div><strong id="factCount"></strong><span>Velg selv, eller første ledige</span></div>
           <div><strong>4 tjenester</strong><span>Dag, kveld, drone og video</span></div>
         </div>
       </div>
       <div class="steps">
-        <div><b>01</b><span>Velg tjenester</span></div>
-        <div><b>02</b><span>Velg fotograf og dato</span></div>
-        <div><b>03</b><span>Send, så bekrefter vi tidspunkt</span></div>
+        <div><b>01</b><span>Velg dato og tid</span></div>
+        <div><b>02</b><span>Velg tjenester</span></div>
+        <div><b>03</b><span>Velg fotograf og send</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="dato">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="cond">Dato og tid</h2>
+      <p>Når skal vi komme?</p>
+    </div>
+    <div class="card cal" id="calCard">
+      <div class="cal-info">
+        <div class="nav">
+          <span class="m" id="mPrev"></span>
+          <button type="button" id="calPrev" aria-label="Forrige måned">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <span class="m cur" id="mCur"></span>
+          <button type="button" id="calNext" aria-label="Neste måned">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <span class="m" id="mNext"></span>
+        </div>
+        <div class="day none" id="calDay">00</div>
+        <div class="meta">
+          <div><div class="mon" id="calMon"></div><div class="yr" id="calYr"></div></div>
+          <div class="wd" id="calWd"></div>
+        </div>
+        <p class="hint" id="calHint"></p>
+      </div>
+      <div class="cal-dots">
+        <div class="wk" id="calWk"></div>
+        <div class="dots" id="calDots" role="grid" aria-label="Velg dato"></div>
+      </div>
+      <div class="times" id="times" hidden>
+        <span class="label">Tidspunkt</span>
+        <div class="time-row" id="timeRow"></div>
       </div>
     </div>
   </div>
@@ -334,39 +372,13 @@
 <section class="block" id="fotografer">
   <div class="wrap">
     <div class="sec-head">
-      <h2 class="cond">Fotograf og dato</h2>
-      <p>Velg hvem, og når</p>
+      <h2 class="cond">Fotograf</h2>
+      <p>Grå = opptatt på valgt tid</p>
     </div>
-    <div class="pick-grid">
-      <div class="card people">
-        <div class="head"><span class="label">Fotografer</span><span class="label" id="peopleCount"></span></div>
-        <div id="rows"></div>
-      </div>
-      <div class="card cal" id="dato">
-        <div class="nav">
-          <span class="m" id="mPrev"></span>
-          <button type="button" id="calPrev" aria-label="Forrige måned">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-          </button>
-          <span class="m cur" id="mCur"></span>
-          <button type="button" id="calNext" aria-label="Neste måned">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          </button>
-          <span class="m" id="mNext"></span>
-        </div>
-        <div class="day none" id="calDay">00</div>
-        <div class="meta">
-          <div><div class="mon" id="calMon"></div><div class="yr" id="calYr"></div></div>
-          <div class="wd" id="calWd"></div>
-        </div>
-        <p class="hint" id="calHint">Velg ønsket dato for fotografering.</p>
-        <div class="wk" id="calWk"></div>
-        <div class="dots" id="calDots" role="grid" aria-label="Velg dato"></div>
-        <div class="times" id="times" hidden>
-          <span class="label">Tidspunkt</span>
-          <div class="time-row" id="timeRow"></div>
-        </div>
-      </div>
+    <div class="card people">
+      <div class="head"><span class="label" id="peopleHint">Velg dato og tid først for å se hvem som er ledig</span><span class="label" id="peopleCount"></span></div>
+      <p class="people-note" id="peopleNote" hidden></p>
+      <div id="rows"></div>
     </div>
   </div>
 </section>
@@ -403,28 +415,29 @@
           <p class="form-error" id="formError">Fyll ut feltene som er markert.</p>
 
           <div class="group">
-            <h3 class="cond">Megler</h3>
+            <h3 class="cond">Kunde</h3>
             <div class="grid2">
-              <div class="field"><label for="f_megler">Navn og telefon</label><input id="f_megler" name="megler" required autocomplete="name"></div>
-              <div class="field"><label for="f_kontor">Meglerkontor</label><input id="f_kontor" name="kontor" required autocomplete="organization"></div>
-              <div class="field full"><label for="f_epost">E-post</label><input id="f_epost" name="epost" type="email" required autocomplete="email"></div>
+              <div class="field"><label for="f_navn">Fullt navn</label><input id="f_navn" name="navn" required autocomplete="name"></div>
+              <div class="field"><label for="f_tlf">Telefon</label><input id="f_tlf" name="tlf" type="tel" required autocomplete="tel"></div>
+              <div class="field"><label for="f_epost">E-post</label><input id="f_epost" name="epost" type="email" required autocomplete="email"></div>
+              <div class="field"><label for="f_oppdrag">Oppdragsnummer <span class="o">(valgfritt)</span></label><input id="f_oppdrag" name="oppdrag"></div>
+              <div class="field full"><label for="f_faktura">Hvor skal fakturaen? <span class="o">(firma eller navn, adresse eller e-post for faktura)</span></label><textarea id="f_faktura" name="faktura" required></textarea></div>
             </div>
           </div>
 
           <div class="group">
-            <h3 class="cond">Boligen</h3>
+            <h3 class="cond">Stedet</h3>
             <div class="grid2">
               <div class="field full"><label for="f_adresse">Adresse for fotografering</label><input id="f_adresse" name="adresse" required autocomplete="street-address"></div>
-              <div class="field"><label for="f_kvm">Størrelse i kvm</label><input id="f_kvm" name="kvm" inputmode="numeric" required></div>
-              <div class="field"><label for="f_ankomst">Ankomst og etasje</label><input id="f_ankomst" name="ankomst" placeholder="Kode, etasje, heis" required></div>
+              <div class="field"><label for="f_kvm">Størrelse i kvm <span class="o">(valgfritt)</span></label><input id="f_kvm" name="kvm" inputmode="numeric"></div>
+              <div class="field"><label for="f_ankomst">Ankomst og etasje <span class="o">(valgfritt)</span></label><input id="f_ankomst" name="ankomst" placeholder="Kode, etasje, heis"></div>
               <input type="hidden" id="f_dato" name="dato"><input type="hidden" id="f_tid" name="tid">
             </div>
           </div>
 
           <div class="group">
-            <h3 class="cond">Faktura og annet</h3>
+            <h3 class="cond">Annet</h3>
             <div class="grid2">
-              <div class="field full"><label for="f_faktura">Fakturainfo <span class="o">(navn, adresse, telefon, e-post)</span></label><textarea id="f_faktura" name="faktura" required></textarea></div>
               <div class="field full">
                 <span class="lab">Samarbeidspost på Instagram?</span>
                 <div class="yn">
@@ -595,11 +608,13 @@ $("#svcStack").innerHTML = SERVICES.map(s => `
 // Fotografer (trekkspill)
 $("#peopleCount").textContent = `${PHOTOGRAPHERS.length - 1} stk`;
 $("#factCount").textContent = `${PHOTOGRAPHERS.length - 1} fotografer`;
+const chooseLabel = p => p.any ? "Velg første ledige" : `Velg ${p.name.split(" ")[0]}`;
 $("#rows").innerHTML = PHOTOGRAPHERS.map(p => `
   <div class="row" data-id="${p.id}">
     <button type="button" class="row-btn" aria-expanded="false">
       <span class="box">${tick}</span>
       <span class="cond">${esc(p.name)}</span>
+      <span class="busy-tag">Opptatt</span>
       <span class="thumb${p.any ? " any" : ""}">${avatar(p, 18)}</span>
       <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
     </button>
@@ -610,7 +625,7 @@ $("#rows").innerHTML = PHOTOGRAPHERS.map(p => `
           <div class="role">${esc(p.role)}</div>
           ${p.bio ? `<p>${esc(p.bio)}</p>` : ""}
           ${p.tags ? `<div class="tags">${p.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
-          <button type="button" class="choose" data-pick="${p.id}"><span class="lbl">${p.any ? "Velg første ledige" : `Velg ${esc(p.name.split(" ")[0])}`}</span><span class="ic">${arrow}</span></button>
+          <button type="button" class="choose" data-pick="${p.id}"><span class="lbl">${esc(chooseLabel(p))}</span><span class="ic">${arrow}</span></button>
         </div>
         ${p.work ? `<div class="work"><img src="${p.work}" alt="" loading="lazy"><small>Foto: ${esc(p.name)}</small></div>` : ""}
       </div>
@@ -638,27 +653,51 @@ function selectPhotographer(id, scroll) {
     const on = r.dataset.id === id;
     r.classList.toggle("sel", on);
     const q = PHOTOGRAPHERS.find(x => x.id === r.dataset.id);
-    $(".choose .lbl", r).textContent = on ? "Valgt" : (q.any ? "Velg første ledige" : `Velg ${q.name.split(" ")[0]}`);
+    $(".choose .lbl", r).textContent = on ? "Valgt" : r.classList.contains("busy") ? "Opptatt på valgt tid" : chooseLabel(q);
   });
   const av = $("#sumAvatar");
   av.className = "av" + (p.any ? " any" : "");
   av.innerHTML = avatar(p, 18);
   $("#sumName").textContent = p.name;
   $("#sumRole").textContent = p.role;
-  renderCal();
-  if (scroll) $("#dato").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (scroll) $("#bestill").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 document.addEventListener("click", e => {
   const pick = e.target.closest("[data-pick]");
-  if (pick) selectPhotographer(pick.dataset.pick, window.innerWidth < 960);
+  if (pick && !pick.closest(".row.busy")) {
+    $("#peopleNote").hidden = true;
+    selectPhotographer(pick.dataset.pick, window.innerWidth < 960);
+  }
 });
+
+// Gråer ut fotografer som er opptatt på valgt dato og tid.
+function updatePeople() {
+  const date = $("#f_dato").value, time = $("#f_tid").value;
+  const all = availFor(date);
+  const known = date && time && all;
+  document.querySelectorAll(".row").forEach(r => {
+    const free = !known || ((all[r.dataset.id] || {})[date] || []).includes(time);
+    r.classList.toggle("busy", !free);
+  });
+  $("#peopleHint").textContent = known ? `Ledige ${WEEKDAYS[new Date(date + "T12:00").getDay()].toLowerCase()} kl. ${slotLabel(time)}` : "Velg dato og tid først for å se hvem som er ledig";
+  const cur = $(`.row[data-id="${selected}"]`);
+  if (cur && cur.classList.contains("busy")) {
+    const name = PHOTOGRAPHERS.find(x => x.id === selected).name.split(" ")[0];
+    $("#peopleNote").textContent = `${name} er opptatt på valgt tid, så vi har valgt første ledige. Du kan velge en annen fotograf som er ledig.`;
+    $("#peopleNote").hidden = false;
+    selectPhotographer("forste");
+  } else {
+    selectPhotographer(selected);
+  }
+}
 
 /* ---------- Ledige tider ---------- */
 
-// Ledige tider per fotograf og måned: { "2026-10-19": ["08:00", "12:00"], ... }
+// Ledige tider per måned for alle fotografer: { forste: { "2026-10-19": ["08:00", ...] }, glenn: {...}, ... }
 const availCache = {};
 const slotLabel = t => `${t.slice(0, 2)}–${pad(Number(t.slice(0, 2)) + SLOT_HOURS)}`;
+const availFor = date => date ? availCache[date.slice(0, 7)] : null;
 
 // Uten kobling til kalenderen: alle luker på hverdager er ledige (minus de som er for nær i tid).
 function defaultSlots(from, to) {
@@ -672,26 +711,30 @@ function defaultSlots(from, to) {
   return out;
 }
 
-async function monthSlots(pid, y, m) {
-  const key = `${pid}|${y}-${m}`;
+async function monthSlots(y, m) {
+  const key = `${y}-${pad(m + 1)}`;
   if (availCache[key]) return availCache[key];
   const from = iso(new Date(Math.max(new Date(y, m, 1), today)));
   const to = iso(new Date(y, m + 1, 0));
-  let slots = null;
+  let all = null;
   if (AVAILABILITY_URL) {
     try {
-      const r = await fetch(`${AVAILABILITY_URL}?action=slots&photographer=${encodeURIComponent(pid)}&from=${from}&to=${to}`);
+      const r = await fetch(`${AVAILABILITY_URL}?action=slots&photographer=all&from=${from}&to=${to}`);
       const j = await r.json();
-      if (j.ok) slots = j.slots;
+      if (j.ok) all = j.slots;
     } catch (err) { /* faller tilbake til standardluker under */ }
   }
-  return (availCache[key] = slots || defaultSlots(from, to));
+  if (!all) {
+    const def = defaultSlots(from, to);
+    all = Object.fromEntries(PHOTOGRAPHERS.map(p => [p.id, def]));
+  }
+  return (availCache[key] = all);
 }
 
 /* ---------- Kalender ---------- */
 
 let view = new Date(today.getFullYear(), today.getMonth(), 1);
-let currentSlots = null; // null mens ledige tider lastes
+let currentSlots = null; // ledige tider for «første ledige» (minst én fotograf ledig); null mens de lastes
 let renderSeq = 0;
 
 async function renderCal() {
@@ -704,21 +747,21 @@ async function renderCal() {
   $("#calPrev").disabled = y === today.getFullYear() && m === today.getMonth();
   $("#calWk").innerHTML = WK.map((w, i) => `<span class="${(today.getDay() + 6) % 7 === i ? "today" : ""}">${w}</span>`).join("");
 
-  const loaded = availCache[`${selected}|${y}-${m}`];
-  drawDots(loaded || null);
+  const loaded = availCache[`${y}-${pad(m + 1)}`];
+  drawDots(loaded ? loaded.forste : null);
   if (!loaded) {
     $("#calDots").classList.add("loading");
-    const slots = await monthSlots(selected, y, m);
+    const all = await monthSlots(y, m);
     if (seq !== renderSeq) return;
     $("#calDots").classList.remove("loading");
-    drawDots(slots);
+    drawDots(all.forste);
   }
 }
 
 function drawDots(slots) {
   const y = view.getFullYear(), m = view.getMonth();
   currentSlots = slots;
-  // Valgt dato/tid som ikke lenger er ledig (f.eks. etter bytte av fotograf) nullstilles.
+  // Valgt dato/tid som ikke lenger er ledig nullstilles.
   const sel = $("#f_dato").value;
   if (slots && sel && sel.startsWith(`${y}-${pad(m + 1)}`)) {
     const free = slots[sel] || [];
@@ -748,6 +791,7 @@ function drawDots(slots) {
 function showDate() {
   const v = $("#f_dato").value;
   const t = $("#f_tid").value;
+  updatePeople();
   if (!v) {
     $("#calDay").textContent = "00"; $("#calDay").classList.add("none");
     $("#calMon").textContent = MONTHS[view.getMonth()]; $("#calYr").textContent = view.getFullYear(); $("#calWd").textContent = "";
@@ -761,7 +805,7 @@ function showDate() {
   $("#calDay").textContent = pad(d.getDate()); $("#calDay").classList.remove("none");
   $("#calMon").textContent = MONTHS[d.getMonth()]; $("#calYr").textContent = d.getFullYear();
   $("#calWd").textContent = t ? slotLabel(t) : WEEKDAYS[d.getDay()].slice(0, 3);
-  $("#calHint").textContent = t ? "" : "Velg tidspunkt under.";
+  $("#calHint").textContent = t ? "" : "Velg tidspunkt.";
   $("#sumWd").textContent = WEEKDAYS[d.getDay()] + (t ? ` · kl. ${slotLabel(t)}` : " · velg tidspunkt");
   $("#sumBig").innerHTML = `${pad(d.getDate())}.${pad(d.getMonth() + 1)}<br>${MON3[d.getMonth()].toUpperCase()}`;
   $("#sumBig").classList.remove("none");
@@ -788,7 +832,7 @@ $("#timeRow").addEventListener("click", e => {
   const b = e.target.closest(".tslot");
   if (!b) return;
   $("#f_tid").value = b.dataset.time;
-  $("#dato").classList.remove("err");
+  $("#calCard").classList.remove("err");
   showDate();
 });
 $("#calPrev").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCal(); });
@@ -823,7 +867,7 @@ function validate() {
     if (bad) ok = false;
   });
   const noTime = !$("#f_dato").value || !$("#f_tid").value;
-  $("#dato").classList.toggle("err", noTime);
+  $("#calCard").classList.toggle("err", noTime);
   return ok && !noTime;
 }
 form.addEventListener("input", e => { if (e.target.classList.contains("err")) e.target.classList.remove("err"); });
@@ -853,7 +897,7 @@ form.addEventListener("submit", async e => {
   btn.disabled = true;
 
   try {
-    // 1) Legg inn en foreløpig avtale i fotografens bookingkalender (sjekker samtidig at tiden fortsatt er ledig).
+    // 1) Legg bookingen i køen (sjekker samtidig at tiden fortsatt er ledig).
     if (AVAILABILITY_URL) {
       let res = null;
       try {
@@ -862,8 +906,8 @@ form.addEventListener("submit", async e => {
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             action: "book", photographer: p.id, date: v("f_dato"), time: v("f_tid"),
-            address: v("f_adresse"), megler: v("f_megler"), kontor: v("f_kontor"), epost: v("f_epost"),
-            kvm: v("f_kvm"), ankomst: v("f_ankomst"), products, note: v("f_mer"),
+            navn: v("f_navn"), telefon: v("f_tlf"), epost: v("f_epost"), oppdrag: v("f_oppdrag"), faktura: v("f_faktura"),
+            address: v("f_adresse"), kvm: v("f_kvm"), ankomst: v("f_ankomst"), products, note: v("f_mer"),
           }),
         });
         res = await r.json();
@@ -873,16 +917,16 @@ form.addEventListener("submit", async e => {
         $("#f_tid").value = "";
         await renderCal();
         showError("Beklager, det tidspunktet ble nettopp tatt. Velg et annet tidspunkt.");
-        $("#dato").classList.add("err");
-        $("#dato").scrollIntoView({ behavior: "smooth", block: "center" });
+        $("#calCard").classList.add("err");
+        $("#dato").scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
     }
 
-    // 2) Send til Google-skjemaet som før.
+    // 2) Send til Google-skjemaet som før. Skjemaets felt heter fortsatt «megler», men brukes for alle kunder.
     const data = new URLSearchParams();
-    data.append(ENTRY.megler, v("f_megler"));
-    data.append(ENTRY.kontor, v("f_kontor"));
+    data.append(ENTRY.megler, `${v("f_navn")}, ${v("f_tlf")}`);
+    data.append(ENTRY.kontor, v("f_oppdrag") ? `Oppdragsnr. ${v("f_oppdrag")}` : "");
     data.append(ENTRY.epost, v("f_epost"));
     data.append(ENTRY.adresse, v("f_adresse"));
     data.append(ENTRY.faktura, v("f_faktura"));
@@ -896,7 +940,12 @@ form.addEventListener("submit", async e => {
     products.forEach(x => data.append(ENTRY.produkter, x));
     data.append(ENTRY.insta, form.insta.value);
     // Skjemaets datofelt har ikke klokkeslett, så tidspunktet skrives først i "Noe mer?".
-    const extra = [`Tidspunkt: kl. ${tid}`, p.formOption ? "" : `Ønsket fotograf: ${p.name}`, v("f_mer")].filter(Boolean).join("\n");
+    const extra = [
+      `Tidspunkt: kl. ${tid}`,
+      v("f_oppdrag") ? `Oppdragsnr.: ${v("f_oppdrag")}` : "",
+      p.formOption ? "" : `Ønsket fotograf: ${p.name}`,
+      v("f_mer"),
+    ].filter(Boolean).join("\n");
     data.append(ENTRY.mer, extra);
     // Google svarer uten CORS-headere, så vi kan ikke lese svaret, men innsendingen går gjennom.
     await fetch(GOOGLE_FORM, { method: "POST", mode: "no-cors", body: data });
@@ -920,17 +969,20 @@ $("#again").addEventListener("click", () => {
   $("#f_dato").value = "";
   $("#f_tid").value = "";
   $("#sumAddr").textContent = "—";
+  $("#peopleNote").hidden = true;
   Object.keys(availCache).forEach(k => delete availCache[k]);
   syncProducts();
   $("#done").style.display = "none";
   form.style.display = "block";
-  selectPhotographer("forste");
-  $("#tjenester").scrollIntoView({ behavior: "smooth" });
+  selected = "forste";
+  renderCal();
+  $("#dato").scrollIntoView({ behavior: "smooth" });
 });
 
 selectPhotographer("forste");
 toggleRow($(".row"), true);
 syncProducts();
+renderCal();
 
 /* ---------- Innebygging ---------- */
 
