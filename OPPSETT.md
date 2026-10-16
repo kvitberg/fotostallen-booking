@@ -12,7 +12,19 @@ iCloud-kalender (hver fotograf) ──les──▶ Apps Script på Scotts Google
 
 Bookingsiden får aldri se hva avtalene heter, bare om lukene er ledige eller opptatte. Ingen Apple-passord lagres noe sted.
 
-Til nyoppsettet trengs tre ting. Del 1 gjør hver fotograf, del 2 gjør Scott én gang, og del 3 gjør hver fotograf.
+## Kom i gang: bare Scotts kalender
+
+Vi starter med å koble bare Scotts kalender. De andre fotografene viser alle luker på hverdager som ledige til de kobles på senere. Bookinger på dem havner likevel i deres egne bookingkalendere, så samme luke ikke kan bookes to ganger via siden.
+
+1. **Del 1** for deg selv: kopier lenken til jobbkalenderen din i iCloud.
+2. **Del 2**: legg inn bare `ICS_scott` i skriptegenskapene, og gjør resten av stegene som beskrevet.
+3. **Del 3** for deg selv: abonner på «Fotostallen bookinger – Scott» og «Fotostallen bookinger – Første ledige».
+
+Når en ny fotograf skal kobles på: be dem gjøre del 1, legg til `ICS_<navn>` i skriptegenskapene (ingen ny distribusjon trengs), og send dem adressen i del 3.
+
+---
+
+Fullt oppsett har tre deler. Del 1 gjør hver fotograf, del 2 gjør Scott én gang, og del 3 gjør hver fotograf.
 
 ---
 
