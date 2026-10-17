@@ -110,46 +110,42 @@
   .ill svg { display: block; }
 
   /* Hovedtjeneste */
-  .rows { border-top: 1px solid var(--line); }
-  .row { display: flex; align-items: center; gap: 16px; padding: 12px 14px; margin: 6px 0; border-radius: 18px; cursor: pointer; position: relative; transition: background .15s; }
-  .rows { border-top: 0; }
-  .rows .row + .row { margin-top: 0; }
-  .row:hover { background: rgba(18,18,18,.03); }
-  .row:has(input:checked) { background: rgba(18,18,18,.05); }
-  .row .ill { width: 112px; height: 70px; }
+  /* Hovedtjenester og tillegg er samme slags kort: tynn kant, lys flate, rød kant og fylt markør når valgt.
+     Ingen piler: dette er valg, ikke lenker. */
+  .rows { display: grid; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 16px; padding: 12px 18px 12px 14px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); cursor: pointer; position: relative; transition: border-color .15s, background .15s, box-shadow .15s; }
+  .row:hover { border-color: rgba(18,18,18,.45); }
+  .row:has(input:checked) { border-color: var(--accent); background: #fff; box-shadow: inset 0 0 0 1px var(--accent); }
+  .row .ill { width: 96px; height: 64px; }
   .row .txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .row .arr { margin-left: auto; color: var(--ink); flex: 0 0 auto; transition: transform .2s; }
-  .row:hover .arr { transform: translateX(3px); }
   .row input { position: absolute; opacity: 0; pointer-events: none; }
-  .row .dot { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--faint); flex: 0 0 auto; transition: all .15s; }
+  .row .dot { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid rgba(18,18,18,.35); flex: 0 0 auto; transition: border .15s; }
   .row .t { font-size: 18px; font-weight: 500; letter-spacing: -.01em; }
   .row .d { font-size: 14px; color: var(--muted); }
   .row:hover .dot { border-color: var(--ink); }
-  .row:has(input:checked) .dot { border: 6px solid var(--ink); }
+  .row:has(input:checked) .dot { border: 6px solid var(--accent); }
   .row:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
 
   /* Tillegg */
-  .addons { display: flex; flex-wrap: wrap; gap: 10px; }
-  .addons > .addon { flex: 1 1 210px; }
-  .addons > .addon.bundle { flex-basis: 100%; }
-  .addon { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 12px; border: 1px solid rgba(18,18,18,.12); border-radius: 18px; background: var(--surface); cursor: pointer; transition: border-color .15s, background .15s; }
+  .addons { display: grid; gap: 10px; }
+  .addon { position: relative; display: flex; align-items: center; gap: 14px; padding: 10px 18px 10px 14px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s; }
   .addon input { position: absolute; opacity: 0; pointer-events: none; }
   .addon .box { width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid rgba(18,18,18,.35); flex: 0 0 auto; display: grid; place-items: center; transition: all .15s; }
   .addon .ill { width: 56px; height: 44px; border-radius: 10px; }
   .addon .lbl { font-size: 14px; font-weight: 500; line-height: 1.2; }
   .addon .lbl small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 2px; }
-  .addon .arr { margin-left: auto; flex: 0 0 auto; }
-  .addon:hover { border-color: var(--ink); }
-  .addon:not(.bundle):has(input:checked) { border-color: var(--accent); background: #fff; }
+  .addon:hover { border-color: rgba(18,18,18,.45); }
+  .addon:not(.bundle):has(input:checked) { border-color: var(--accent); background: #fff; box-shadow: inset 0 0 0 1px var(--accent); }
   .addon:not(.bundle):has(input:checked) .box { background: var(--accent); border-color: var(--accent); }
   .addon:not(.bundle):has(input:checked) .box::after { content: ""; width: 10px; height: 6px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
   .addon:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
-  .addon.bundle { grid-column: 1 / -1; cursor: default; display: grid; grid-template-columns: auto auto 1fr; align-items: center; column-gap: 12px; }
-  .addon.bundle:hover { border-color: rgba(18,18,18,.12); }
-  .addon.bundle.on { border-color: var(--accent); background: #fff; }
-  .addon.bundle .subs { display: flex; flex-wrap: wrap; gap: 8px; justify-self: end; }
-  .vsub { position: relative; display: flex; align-items: center; gap: 10px; padding: 9px 14px 9px 10px; border: 1px solid rgba(18,18,18,.14); border-radius: 14px; cursor: pointer; background: var(--surface); transition: border-color .15s; }
-  .vsub:hover { border-color: var(--ink); }
+  /* Video-samlingen: ikon og tittel på linje med de andre (innrykk tilsvarer avkrysningsboksen), valgene under. */
+  .addon.bundle { cursor: default; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 14px; row-gap: 10px; padding-left: 48px; }
+  .addon.bundle:hover { border-color: var(--line); }
+  .addon.bundle.on { border-color: var(--accent); background: #fff; box-shadow: inset 0 0 0 1px var(--accent); }
+  .addon.bundle .subs { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .vsub { position: relative; display: flex; align-items: center; gap: 10px; padding: 10px 14px 10px 12px; min-height: 48px; border: 1px solid var(--line); border-radius: 14px; cursor: pointer; background: var(--surface); transition: border-color .15s; }
+  .vsub:hover { border-color: rgba(18,18,18,.45); }
   .vsub input { position: absolute; opacity: 0; pointer-events: none; }
   .vsub .box { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid rgba(18,18,18,.35); display: grid; place-items: center; flex: 0 0 auto; }
   .vsub span:last-child { font-size: 14px; font-weight: 500; line-height: 1.2; }
@@ -418,7 +414,7 @@
     .row .ill { width: 72px; height: 54px; }
     .row { padding: 10px; gap: 12px; }
     .row .t { font-size: 16px; }
-    .addons > .addon { flex-basis: 100%; }
+    .addon.bundle .subs { grid-template-columns: minmax(0, 1fr); }
     .addon.bundle { grid-template-columns: auto 1fr; row-gap: 10px; }
     .addon.bundle .subs { grid-column: 1 / -1; justify-self: stretch; }
     .vsub { flex: 1 1 140px; }
@@ -738,7 +734,7 @@ const state = {
 $("#mainOpts").innerHTML = MAIN.map((m, i) => `
   <label class="row" style="--i:${i}"><input type="radio" name="main" value="${m.id}"><span class="dot"></span>
     <span class="ill">${ICON[m.icon]}</span>
-    <span class="txt"><span class="t">${m.label}</span><span class="d">${m.desc}</span></span>${ARROW}</label>`).join("");
+    <span class="txt"><span class="t">${m.label}</span><span class="d">${m.desc}</span></span></label>`).join("");
 
 function renderScopes() {
   const m = MAIN.find(x => x.id === state.main);
@@ -755,7 +751,7 @@ function renderAddons() {
   const seen = new Set();
   $("#addonOpts").innerHTML = list.map((a, i) => {
     if (!a.group) return `
-    <label class="addon" style="--i:${i + 2}">${box(a)}<span class="ill">${ICON[a.icon]}</span><span class="lbl">${a.label}${a.desc ? `<small>${a.desc}</small>` : ""}</span>${ARROW}</label>`;
+    <label class="addon" style="--i:${i + 2}">${box(a)}<span class="ill">${ICON[a.icon]}</span><span class="lbl">${a.label}${a.desc ? `<small>${a.desc}</small>` : ""}</span></label>`;
     if (seen.has(a.group)) return "";
     seen.add(a.group);
     const g = GROUPS[a.group], items = list.filter(x => x.group === a.group);
@@ -1363,7 +1359,8 @@ $("#stampYear").textContent = today.getFullYear();
 
   function box(k) {
     const pad = small() ? 12 : 22, s = docRect($(`.step[data-step="${k}"]`)), l = landing(k);
-    return { x: s.x - pad, y: s.y - pad, w: s.w + pad * 2, h: s.h + pad * 2 + 12, ox: l.x - s.x + pad, oy: l.y - s.y + pad };
+    const top = pad * 1.6;
+    return { x: s.x - pad, y: s.y - top, w: s.w + pad * 2, h: s.h + top + pad + 12, ox: l.x - s.x + pad, oy: l.y - s.y + top };
   }
   function layoutPaint(el, k) {
     const b = box(k);
