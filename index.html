@@ -307,7 +307,34 @@
   .reveal { animation: reveal .3s ease both; }
   @keyframes open { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
   @keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* Ikonene: strekene tegnes inn når tjenestene vises, og hvert ikon får en liten bevegelse ved hover/valg. */
+  .ill svg * { transform-box: view-box; }
+  .icons-draw .ill svg :is(path, rect, circle) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .9s cubic-bezier(.5, 0, .2, 1) forwards; animation-delay: calc(var(--i, 0) * 90ms + .1s); }
+  :is(.row, .addon:not(.bundle)):is(:hover, :has(input:checked)) .ill svg, .bundle:is(:hover, .on) .ill svg { --run: running; }
+  .ill svg .a-rays { transform-origin: 41px 12px; animation: spin 7s linear infinite var(--run, paused); }
+  .ill svg .a-sun { transform-origin: 41px 12px; animation: pulse 1.6s ease-in-out infinite var(--run, paused); }
+  .ill svg .a-moon { transform-origin: 40px 12px; animation: rock 2.4s ease-in-out infinite var(--run, paused); }
+  .ill svg .a-win { animation: glow 1.8s ease-in-out infinite var(--run, paused); }
+  .ill svg .a-rec { animation: blink 1.1s steps(1) infinite var(--run, paused); }
+  .ill svg .a-lens { transform-origin: 35px 22px; animation: zoom 1.6s ease-in-out infinite var(--run, paused); }
+  .ill svg .a-hover { animation: hover 1.4s ease-in-out infinite var(--run, paused); }
+  .ill svg .a-rotor { transform-box: fill-box; transform-origin: center; animation: rotor .18s linear infinite var(--run, paused); }
+  .ill svg .a-mark { stroke-dasharray: 1; animation: mark 1.8s ease-in-out infinite var(--run, paused); }
+  .ill svg .a-phone { transform-origin: 28px 38px; animation: tilt 2s ease-in-out infinite var(--run, paused); }
+  .ill svg .a-play { transform-origin: 29px 21px; animation: pulse 1.2s ease-in-out infinite var(--run, paused); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 50% { transform: scale(1.15); } }
+  @keyframes rock { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-10deg); } 70% { transform: rotate(8deg); } }
+  @keyframes glow { 50% { fill-opacity: .85; } }
+  @keyframes blink { 50% { opacity: .15; } }
+  @keyframes zoom { 50% { transform: scaleX(1.18); } }
+  @keyframes hover { 50% { transform: translateY(-3px); } }
+  @keyframes rotor { 50% { transform: scaleX(.25); } }
+  @keyframes mark { 0%, 15% { stroke-dashoffset: 0; } 45% { stroke-dashoffset: -1; } 45.1% { stroke-dashoffset: 1; } 80%, 100% { stroke-dashoffset: 0; } }
+  @keyframes tilt { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-9deg); } 60% { transform: rotate(6deg); } }
   @media (prefers-reduced-motion: reduce) {
+    .ill svg, .ill svg * { animation: none !important; stroke-dashoffset: 0 !important; }
     .step.open, .reveal, .cal.build *, .days.build .day, .times.fresh .time, .receipt.play * { animation: none !important; }
     .success .ring { transform: none; } .success .tick { stroke-dashoffset: 0; }
   }
@@ -575,12 +602,12 @@ const PHOTOGRAPHERS = [
 
 // Enkle strektegninger i Fotostallens farger (mørk strek, rød detalj).
 const ICON = {
-  dag: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="41" cy="12" r="5" stroke="#dc384c"/><path d="M41 3v2M41 19v2M32 12h2M48 12h2M35 6l1.4 1.4M45.6 16.6L47 18M35 18l1.4-1.4M45.6 7.4L47 6" stroke="#dc384c"/><path d="M8 38V22l14-10 14 10v16z"/><path d="M18 38v-9h8v9"/><path d="M4 38h48"/></svg>',
-  kveld: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M46 13.5A7 7 0 1 1 38.5 6a5.5 5.5 0 0 0 7.5 7.5z" stroke="#dc384c"/><path d="M8 38V22l14-10 14 10v16z"/><rect x="18" y="25" width="8" height="6" rx="1" fill="#dc384c" fill-opacity=".25"/><path d="M4 38h48"/></svg>',
-  video: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="12" width="26" height="20" rx="3"/><path d="M35 19l11-6v18l-11-6z"/><circle cx="16" cy="18" r="2" fill="#dc384c" stroke="#dc384c"/></svg>',
-  drone: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="18" width="12" height="8" rx="2"/><path d="M22 20l-8-5M34 20l8-5M22 24l-8 5M34 24l8 5"/><path d="M8 15h12M36 15h12M8 29h12M36 29h12"/><circle cx="28" cy="29" r="2" stroke="#dc384c"/></svg>',
-  plantegning: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="7" width="36" height="30" rx="1.5"/><path d="M26 7v12h-6M26 25v12M26 22h20M36 22v-6"/><path d="M14 30h6" stroke="#dc384c"/></svg>',
-  some: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="5" width="16" height="34" rx="3.5"/><path d="M26 34h4"/><path d="M26 17v8l7-4z" fill="#dc384c" stroke="#dc384c"/></svg>',
+  dag: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle pathLength="1" class="a-sun" cx="41" cy="12" r="5" stroke="#dc384c"/><path pathLength="1" class="a-rays" d="M41 3v2M41 19v2M32 12h2M48 12h2M35 6l1.4 1.4M45.6 16.6L47 18M35 18l1.4-1.4M45.6 7.4L47 6" stroke="#dc384c"/><path pathLength="1" d="M8 38V22l14-10 14 10v16z"/><path pathLength="1" d="M18 38v-9h8v9"/><path pathLength="1" d="M4 38h48"/></svg>',
+  kveld: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" class="a-moon" d="M46 13.5A7 7 0 1 1 38.5 6a5.5 5.5 0 0 0 7.5 7.5z" stroke="#dc384c"/><path pathLength="1" d="M8 38V22l14-10 14 10v16z"/><rect pathLength="1" class="a-win" x="18" y="25" width="8" height="6" rx="1" fill="#dc384c" fill-opacity=".25"/><path pathLength="1" d="M4 38h48"/></svg>',
+  video: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect pathLength="1" x="9" y="12" width="26" height="20" rx="3"/><path pathLength="1" class="a-lens" d="M35 19l11-6v18l-11-6z"/><circle pathLength="1" class="a-rec" cx="16" cy="18" r="2" fill="#dc384c" stroke="#dc384c"/></svg>',
+  drone: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g class="a-hover"><rect pathLength="1" x="22" y="18" width="12" height="8" rx="2"/><path pathLength="1" d="M22 20l-8-5M34 20l8-5M22 24l-8 5M34 24l8 5"/><path pathLength="1" class="a-rotor" d="M8 15h12"/><path pathLength="1" class="a-rotor" d="M36 15h12"/><path pathLength="1" class="a-rotor" d="M8 29h12"/><path pathLength="1" class="a-rotor" d="M36 29h12"/><circle pathLength="1" cx="28" cy="29" r="2" stroke="#dc384c"/></g></svg>',
+  plantegning: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect pathLength="1" x="10" y="7" width="36" height="30" rx="1.5"/><path pathLength="1" d="M26 7v12h-6M26 25v12M26 22h20M36 22v-6"/><path pathLength="1" class="a-mark" d="M14 30h6" stroke="#dc384c"/></svg>',
+  some: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g class="a-phone"><rect pathLength="1" x="20" y="5" width="16" height="34" rx="3.5"/><path pathLength="1" d="M26 34h4"/><path pathLength="1" class="a-play" d="M26 17v8l7-4z" fill="#dc384c" stroke="#dc384c"/></g></svg>',
 };
 const ARROW = '<svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
@@ -667,8 +694,8 @@ const state = {
 
 /* ---------- Steg 1: tjenester ---------- */
 
-$("#mainOpts").innerHTML = MAIN.map(m => `
-  <label class="row"><input type="radio" name="main" value="${m.id}"><span class="dot"></span>
+$("#mainOpts").innerHTML = MAIN.map((m, i) => `
+  <label class="row" style="--i:${i}"><input type="radio" name="main" value="${m.id}"><span class="dot"></span>
     <span class="ill">${ICON[m.icon]}</span>
     <span class="txt"><span class="t">${m.label}</span><span class="d">${m.desc}</span></span>${ARROW}</label>`).join("");
 
@@ -685,14 +712,14 @@ function renderAddons() {
   [...state.addons].forEach(id => { if (!list.some(a => a.id === id)) state.addons.delete(id); });
   const box = a => `<input type="checkbox" value="${a.id}"${state.addons.has(a.id) ? " checked" : ""}><span class="box"></span>`;
   const seen = new Set();
-  $("#addonOpts").innerHTML = list.map(a => {
+  $("#addonOpts").innerHTML = list.map((a, i) => {
     if (!a.group) return `
-    <label class="addon">${box(a)}<span class="ill">${ICON[a.icon]}</span><span class="lbl">${a.label}${a.desc ? `<small>${a.desc}</small>` : ""}</span>${ARROW}</label>`;
+    <label class="addon" style="--i:${i + 2}">${box(a)}<span class="ill">${ICON[a.icon]}</span><span class="lbl">${a.label}${a.desc ? `<small>${a.desc}</small>` : ""}</span>${ARROW}</label>`;
     if (seen.has(a.group)) return "";
     seen.add(a.group);
     const g = GROUPS[a.group], items = list.filter(x => x.group === a.group);
     return `
-    <div class="addon bundle${items.some(x => state.addons.has(x.id)) ? " on" : ""}">
+    <div class="addon bundle${items.some(x => state.addons.has(x.id)) ? " on" : ""}" style="--i:${i + 2}">
       <span class="ill">${ICON[g.icon]}</span>
       <span class="lbl">${g.label}<small>${items.length > 1 ? g.desc : "Kan legges til"}</small></span>
       <div class="subs">${items.map(x => `<label class="vsub">${box(x)}<span>${x.label}<small>${x.desc}</small></span></label>`).join("")}</div>
@@ -714,6 +741,8 @@ $("#addonOpts").addEventListener("change", e => {
   update();
 });
 renderAddons();
+document.body.classList.add("icons-draw");
+setTimeout(() => document.body.classList.remove("icons-draw"), 2200);
 
 const needsFilm = () => !!(MAIN.find(m => m.id === state.main) || {}).film || ADDONS.some(a => a.film && state.addons.has(a.id));
 function serviceText() {
