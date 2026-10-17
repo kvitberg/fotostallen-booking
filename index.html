@@ -65,6 +65,18 @@
   .splashed .sec-head h2, .splashed footer, .splashed footer a { color: #fff; }
   .splashed .sec-head p, .splashed footer span { color: rgba(255,255,255,.82); }
   .splashed .err-msg { color: #fff; }
+  /* Palett på den røde bakgrunnen (som i referansen): varme kremkort og terrakotta aksent i stedet for grått og
+     knallrødt. Registrerte variabler, så fargene glir over i hverandre begge veier. */
+  @property --card { syntax: "<color>"; inherits: true; initial-value: #f2f1ee; }
+  @property --surface { syntax: "<color>"; inherits: true; initial-value: #fbfaf8; }
+  @property --bg { syntax: "<color>"; inherits: true; initial-value: #e8e7e4; }
+  @property --muted { syntax: "<color>"; inherits: true; initial-value: #8b8a86; }
+  @property --faint { syntax: "<color>"; inherits: true; initial-value: #b5b4b0; }
+  @property --accent { syntax: "<color>"; inherits: true; initial-value: #dc384c; }
+  .layout { transition: --card .6s, --surface .6s, --bg .6s, --muted .6s, --faint .6s, --accent .6s; }
+  .splashed .layout { --card: #fbf6f2; --surface: #fffaf7; --bg: #f4e7e0; --muted: #9b8980; --faint: #cdb8ae; --accent: #c4504b; --accent-soft: #f8e3de; }
+  .layout .ill svg [stroke="#dc384c"] { stroke: var(--accent); }
+  .layout .ill svg [fill="#dc384c"] { fill: var(--accent); }
   .stamp { position: absolute; z-index: 1; right: 20px; top: 40px; text-align: right; line-height: 1.05; }
   .stamp b { display: block; font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
   .stamp span { font-size: 11px; font-weight: 700; letter-spacing: .16em; }
@@ -1150,6 +1162,8 @@ function goStep(n, scroll = true) {
   if (scroll) (n === 1 ? $(".head") : $(`.step[data-step="${n}"]`)).scrollIntoView({ behavior: "smooth", block: "start" });
 }
 function setCurrent(n) {
+  splashStep = n;
+  if ($(".splash")) splashTo();
   $$("#stepper li").forEach(li => {
     const k = +li.dataset.step;
     li.className = k === n ? "cur" : k <= state.maxStep ? "done" : "";
@@ -1321,13 +1335,17 @@ function placeSplash() {
   splash.style.setProperty("--splash-top", `${r.bottom + window.scrollY - 30}px`);
   splash.style.setProperty("--sx", `${r.left + circle.offsetLeft + circle.offsetWidth / 2}px`);
 }
-let splashed = false;
-function splashTo(sink) {
+// Fargen hører til Tjenester-seksjonen: går kunden videre (eller scroller til neste seksjon), trekker den seg
+// tilbake og de vanlige fargene kommer igjen. var, fordi setCurrent kan kalles før denne blokken har kjørt.
+var splashHit = false, splashSink = 0, splashStep = 1;
+function splashTo(sink = splashSink) {
+  splashSink = sink;
   placeSplash();
-  if (!splashed && sink > .33) splashed = true;
-  else if (splashed && sink < .1) splashed = false;
-  $(".splash").style.setProperty("--splash", splashed ? 1 : 0);
-  document.body.classList.toggle("splashed", splashed);
+  if (!splashHit && sink > .33) splashHit = true;
+  else if (splashHit && sink < .1) splashHit = false;
+  const on = splashHit && splashStep === 1;
+  $(".splash").style.setProperty("--splash", on ? 1 : 0);
+  document.body.classList.toggle("splashed", on);
 }
 placeSplash();
 addEventListener("resize", placeSplash);
