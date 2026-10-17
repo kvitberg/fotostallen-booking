@@ -18,7 +18,7 @@
     --card: #f2f1ee;
     --surface: #fbfaf8;
     --ink: #121212;
-    --muted: #8b8a86;
+    --muted: #666560;   /* ≥ 4.5:1 på kort og bakgrunn (WCAG AA) */
     --faint: #b5b4b0;
     --line: rgba(18,18,18,.12);
     --dot: #c9c8c4;
@@ -71,18 +71,17 @@
   .splash.out { transition: clip-path .45s ease-in; }
   .sec-head h2, .sec-head p { transition: color .4s; }
   .step.painted .sec-head h2 { color: #fff; }
-  .step.painted .sec-head p { color: rgba(255,255,255,.82); }
-  .step.painted .err-msg { color: #fff; }
+  .step.painted .sec-head p, .step.painted .err-msg { color: var(--ink); }
   /* Palett på den røde bakgrunnen (som i referansen): varme kremkort og terrakotta aksent i stedet for grått og
      knallrødt. Registrerte variabler, så fargene glir over i hverandre begge veier. */
   @property --card { syntax: "<color>"; inherits: true; initial-value: #f2f1ee; }
   @property --surface { syntax: "<color>"; inherits: true; initial-value: #fbfaf8; }
   @property --bg { syntax: "<color>"; inherits: true; initial-value: #e8e7e4; }
-  @property --muted { syntax: "<color>"; inherits: true; initial-value: #8b8a86; }
+  @property --muted { syntax: "<color>"; inherits: true; initial-value: #666560; }
   @property --faint { syntax: "<color>"; inherits: true; initial-value: #b5b4b0; }
   @property --accent { syntax: "<color>"; inherits: true; initial-value: #dc384c; }
   .step { transition: --card .6s, --surface .6s, --bg .6s, --muted .6s, --faint .6s, --accent .6s; }
-  .step.painted { --card: #fbf6f2; --surface: #fffaf7; --bg: #f4e7e0; --muted: #9b8980; --faint: #cdb8ae; --accent: #c4504b; --accent-soft: #f8e3de; }
+  .step.painted { --card: #fbf6f2; --surface: #fffaf7; --bg: #f4e7e0; --muted: #74625a; --faint: #cdb8ae; --accent: #c4504b; --accent-soft: #f8e3de; }
   .layout .ill svg [stroke="#dc384c"] { stroke: var(--accent); }
   .layout .ill svg [fill="#dc384c"] { fill: var(--accent); }
   .stamp { position: absolute; z-index: 1; right: 20px; top: 40px; text-align: right; line-height: 1.05; }
@@ -91,7 +90,8 @@
   .head-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .brand { font-size: 15px; font-weight: 500; color: var(--accent); letter-spacing: .01em; }
   .stepper { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
-  .stepper li { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 5px; font-size: 13px; font-weight: 500; color: var(--faint); transition: background .2s, color .2s; }
+  .stepper li { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 5px; font-size: 13px; font-weight: 500; color: var(--muted); transition: background .2s, color .2s; }
+  .stepper li:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   .stepper li .n { font-size: 11px; font-weight: 600; opacity: .7; }
   .stepper li.done { color: var(--ink); cursor: pointer; }
   .stepper li.done:hover { background: rgba(18,18,18,.05); }
@@ -442,7 +442,7 @@
     <div class="head-panel">
     <div class="head-top">
       <span class="brand">Fotostallen</span>
-      <ol class="stepper" id="stepper">
+      <ol class="stepper" id="stepper" aria-label="Steg i bestillingen">
       <li data-step="1"><span class="n">1</span><span class="lbl">Tjenester</span></li>
       <li data-step="2"><span class="n">2</span><span class="lbl">Tid og sted</span></li>
       <li data-step="3"><span class="n">3</span><span class="lbl">Fotograf</span></li>
@@ -1173,6 +1173,11 @@ function setCurrent(n) {
   $$("#stepper li").forEach(li => {
     const k = +li.dataset.step;
     li.className = k === n ? "cur" : k <= state.maxStep ? "done" : "";
+    // Steg man kan gå til, kan også nås med tastaturet (Tab + Enter/mellomrom).
+    const reachable = k <= state.maxStep;
+    li.setAttribute("role", reachable ? "button" : "listitem");
+    li.tabIndex = reachable ? 0 : -1;
+    if (k === n) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
   });
 }
 document.addEventListener("click", e => {
@@ -1180,6 +1185,10 @@ document.addEventListener("click", e => {
   if (go) goStep(+go.dataset.go);
   const li = e.target.closest("#stepper li.done, #stepper li.cur");
   if (li && +li.dataset.step <= state.maxStep) goStep(+li.dataset.step);
+});
+$("#stepper").addEventListener("keydown", e => {
+  const li = e.target.closest("li[role=button]");
+  if (li && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); goStep(+li.dataset.step); }
 });
 // Stegindikatoren følger med når kunden ruller.
 if ("IntersectionObserver" in window) {
