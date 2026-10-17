@@ -560,7 +560,8 @@ const AUTO_ASSIGN_EXCLUDE = ["glenn"]; // Glenn bor i Ålesund: kan velges, men 
 const STALE_MIN = 30; // eldre kalenderdata enn dette regnes som ubekreftet
 
 const IMG = "https://impro.usercontent.one/appid/oneComWsb/domain/fotostallen.no/media/fotostallen.no/onewebmedia/";
-// formOption = nøyaktig tekst på valget i Google-skjemaet. skills: "film" = kan ta video.
+// formOption = nøyaktig tekst på valget i Google-skjemaet (null: finnes ikke der; da sendes «Første ledig»
+// og fotografen skrives i kommentaren). skills: "film" = kan ta video.
 // face = hvor ansiktet er i bildet (x/y i %) og hvor mye avataren zoomer inn.
 const PHOTOGRAPHERS = [
   { id: "glenn", name: "Glenn Pettersen", role: "Film og video", formOption: "Glenn Pettersen", img: IMG + "Image%202%20(5).jpg", skills: ["film"] },
@@ -569,6 +570,7 @@ const PHOTOGRAPHERS = [
   { id: "scott", name: "Scott Kvitberg", role: "Interiør og bolig", formOption: "Scott Kvitberg", img: IMG + "Image%202.jpg", skills: ["film"] },
   { id: "kristine", name: "Kristine Elvemo", role: "Interiør og bolig", formOption: "Kristine Elvsmo", img: IMG + "Kristine,%20Kevin%20Fauske.jpg", face: [63, 31, 2.4], skills: [] },
   { id: "henrik", name: "Henrik Eriksen", role: "Fotograf", formOption: "Henrik Eriksen", skills: [] },
+  { id: "bjorn", name: "Bjørn Wad", role: "Fotograf", formOption: null, skills: [] },
 ];
 
 // Enkle strektegninger i Fotostallens farger (mørk strek, rød detalj).
@@ -1190,7 +1192,7 @@ form.addEventListener("submit", async e => {
     data.append(ENTRY.faktura, faktura);
     data.append(ENTRY.kvm, v("f_kvm"));
     data.append(ENTRY.ankomst, v("f_ankomst"));
-    data.append(ENTRY.fotograf, p ? p.formOption : "Første ledig");
+    data.append(ENTRY.fotograf, p && p.formOption ? p.formOption : "Første ledig");
     const [y, mo, d] = state.date.split("-");
     data.append(ENTRY.dato + "_year", y);
     data.append(ENTRY.dato + "_month", String(Number(mo)));
@@ -1201,6 +1203,7 @@ form.addEventListener("submit", async e => {
       `Tidspunkt: kl. ${tid}${confirmed(state.date) ? "" : " (ønsket, ikke sjekket mot kalender)"}`,
       reserved ? `Referanse: ${res.ref}` : "Ikke reservert automatisk – bekreft manuelt.",
       `Tjenester: ${services}`,
+      p && !p.formOption ? `Fotograf: ${p.name}` : "",
       state.photographer === "forste" && p ? `Første ledige – tildelt ${p.name}` : "",
       v("f_oppdrag") ? `Oppdragsnr.: ${v("f_oppdrag")}` : "",
       note,

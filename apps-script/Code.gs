@@ -38,6 +38,7 @@ const CONFIG = {
     scott: "Scott Kvitberg",
     kristine: "Kristine Elvemo",
     henrik: "Henrik Eriksen",
+    bjorn: "Bjørn Wad",
   },
   // iCloud-kalendernavn per fotograf (samme kalendere som fakturaroboten leser).
   ICLOUD_CALENDARS: {
@@ -47,6 +48,7 @@ const CONFIG = {
     scott: "Scott foto",
     kristine: "Kristine Foto",
     henrik: "Henrik Foto",
+    bjorn: "Bjørn Foto",
   },
   // Tildeles aldri automatisk som «første ledige» (Glenn bor i Ålesund), men kan velges direkte.
   AUTO_ASSIGN_EXCLUDE: ["glenn"],
