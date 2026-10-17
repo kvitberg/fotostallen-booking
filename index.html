@@ -45,13 +45,19 @@
 
   /* Topp: lyst panel med god luft, stor halvsirkel bak panelets høyre kant (som i referansen) */
   .head { position: relative; overflow: hidden; overflow: clip visible; margin: -28px -20px 30px; padding: 40px 20px 56px; }
-  .head-panel { position: relative; z-index: 2; width: calc(100% - 220px); min-height: 300px; display: flex; flex-direction: column; justify-content: space-between; gap: 72px; box-sizing: border-box; padding: 30px 38px 40px; background: var(--card); border-radius: 30px; box-shadow: 0 34px 60px -38px rgba(18,18,18,.28); }
-  .head .deco-circle { position: absolute; z-index: 1; width: 340px; height: 340px; border-radius: 50%; background: #d6726e; left: calc(100% - 410px); top: 28px; }
+  .head-panel { position: relative; z-index: 4; width: calc(100% - 220px); min-height: 300px; display: flex; flex-direction: column; justify-content: space-between; gap: 72px; box-sizing: border-box; padding: 30px 38px 40px; background: var(--card); border-radius: 30px; box-shadow: 0 34px 60px -38px rgba(18,18,18,.28); }
+  .head .deco-circle { position: absolute; z-index: 3; pointer-events: none; width: 340px; height: 340px; border-radius: 50%; background: #d6726e; left: calc(100% - 410px); top: 28px; }
   .head .deco-dot { position: absolute; z-index: 1; border-radius: 50%; background: #d6726e; }
   .head .d1 { width: 10px; height: 10px; right: 30px; bottom: 120px; }
   .head .d2 { width: 18px; height: 18px; right: 54px; bottom: 70px; }
   /* Når man scroller, synker sirkelen (og prikkene, litt saktere) ned bak neste seksjon. --sink: 0–1, settes i skriptet. */
-  .head .deco-circle { transform: translateY(calc(var(--sink, 0) * 400px)); transition: transform .2s linear; animation: circle-in 1.1s cubic-bezier(.2, .8, .2, 1) both; }
+  /* Malingsdråpe: sirkelen strekkes til en dråpe (spiss oppover) mens den faller, og forsvinner i fargen når den
+     treffer seksjonen under (.dropped). rotate(-45deg) gjør hjørnet øverst til høyre til spissen. */
+  .head .deco-circle { --s: var(--sink, 0);
+    transform: translateY(calc(var(--s) * 400px)) scale(calc(1 - var(--s) * .3), calc(1 + var(--s) * .14)) rotate(-45deg);
+    border-top-right-radius: calc(50% - min(var(--s) * 2.2, 1) * 50%);
+    transition: transform .2s linear, border-radius .2s linear, opacity .3s; animation: circle-in 1.1s cubic-bezier(.2, .8, .2, 1) both; }
+  .dropped .head .deco-circle { opacity: 0; }
   .head .d1 { transform: translateY(calc(var(--sink, 0) * 300px)); transition: transform .2s linear; }
   .head .d2 { transform: translateY(calc(var(--sink, 0) * 240px)); transition: transform .2s linear; }
   @keyframes circle-in { from { scale: .6; opacity: 0; } }
@@ -60,7 +66,7 @@
      traff. --sx = sirkelens midtpunkt, --splash = radius (0–1), begge settes i skriptet. */
   body { position: relative; }
   .splash { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; top: var(--splash-top, 100%); background: #d6726e; pointer-events: none;
-    clip-path: circle(calc(var(--splash, 0) * 150%) at var(--sx, 80%) 0); transition: clip-path 1.1s cubic-bezier(.7, 0, .2, 1); }
+    clip-path: circle(var(--sr, 0px) at var(--sx, 80%) var(--sy, 0px)); transition: clip-path 1.2s cubic-bezier(.25, .7, .25, 1); }
   .sec-head h2, .sec-head p, footer, footer span, footer a { transition: color .3s; }
   .splashed .sec-head h2, .splashed footer, .splashed footer a { color: #fff; }
   .splashed .sec-head p, .splashed footer span { color: rgba(255,255,255,.82); }
@@ -371,7 +377,7 @@
   @keyframes rotor { 50% { transform: scaleX(.25); } }
   @keyframes tilt { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-9deg); } 60% { transform: rotate(6deg); } }
   @media (prefers-reduced-motion: reduce) {
-    .head .deco-circle, .head .deco-dot { transform: none !important; animation: none !important; }
+    .head .deco-circle, .head .deco-dot { transform: none !important; animation: none !important; border-radius: 50% !important; }
     .splash { transition: none; }
     .ill svg, .ill svg * { animation: none !important; stroke-dashoffset: 0 !important; }
     .step.open, .reveal, .cal.build *, .days.build .day, .times.fresh .time, .receipt.play * { animation: none !important; }
@@ -1326,26 +1332,49 @@ $("#again").addEventListener("click", () => {
 
 $("#stampYear").textContent = today.getFullYear();
 
-// Splash-fargen starter øverst i seksjonen under toppen, rett under sirkelen. Når sirkelen er en tredjedel
-// nede, fyller fargen hele seksjonen i én bevegelse; den trekker seg tilbake når man scroller helt opp igjen.
-// (Utløser i stedet for scroll-styrt: på korte sider kommer toppen aldri helt ut av syne.)
+// Malingsdråpen: sirkelen faller som en dråpe foran seksjonen under, og når den treffer toppen av
+// Tjenester-kortet, sprer fargen seg derfra, med dråpens egen størrelse som start, så dråpe og farge flyter sammen. Fargen trekker
+// seg tilbake til samme punkt når man scroller helt opp igjen. (Utløser i stedet for scroll-styrt: på korte
+// sider kommer toppen aldri helt ut av syne.)
 function placeSplash() {
   const splash = $(".splash"), head = $(".head"), circle = $(".deco-circle");
   const r = head.getBoundingClientRect();
   splash.style.setProperty("--splash-top", `${r.bottom + window.scrollY - 30}px`);
-  splash.style.setProperty("--sx", `${r.left + circle.offsetLeft + circle.offsetWidth / 2}px`);
+  if (!splashHit) splash.style.setProperty("--sx", `${r.left + circle.offsetLeft + circle.offsetWidth / 2}px`);
 }
 // Fargen hører til Tjenester-seksjonen: går kunden videre (eller scroller til neste seksjon), trekker den seg
 // tilbake og de vanlige fargene kommer igjen. var, fordi setCurrent kan kalles før denne blokken har kjørt.
-var splashHit = false, splashSink = 0, splashStep = 1;
+var splashHit = false, splashOn = false, splashSink = 0, splashStep = 1;
 function splashTo(sink = splashSink) {
   splashSink = sink;
   placeSplash();
-  if (!splashHit && sink > .33) splashHit = true;
-  else if (splashHit && sink < .1) splashHit = false;
+  const splash = $(".splash");
+  let r0 = 0;
+  // Treffet: når dråpens midtpunkt har nådd toppen av Tjenester-kortet. Regnes ut fra der dråpen skal være
+  // (translateY = sink × 400px), ikke der den tegnes, siden bevegelsen har en kort overgang.
+  const circle = $(".deco-circle"), h = $(".head").getBoundingClientRect();
+  const cx = h.left + circle.offsetLeft + circle.offsetWidth / 2;
+  const cy = h.top + circle.offsetTop + circle.offsetHeight / 2 + sink * 400;
+  const landing = $('.step[data-step="1"] .card').getBoundingClientRect().top;
+  if (!splashHit && sink > .1 && cy >= landing) {
+    splashHit = true;
+    const top = parseFloat(splash.style.getPropertyValue("--splash-top"));
+    splash.style.setProperty("--sx", `${cx}px`);
+    splash.style.setProperty("--sy", `${cy + window.scrollY - top}px`);
+    r0 = circle.offsetWidth / 2 * (1 - sink * .3);
+  } else if (splashHit && sink < .1) splashHit = false;
   const on = splashHit && splashStep === 1;
-  $(".splash").style.setProperty("--splash", on ? 1 : 0);
+  if (on && !splashOn && r0) {
+    // Start på dråpens størrelse uten overgang, og la den så vokse.
+    splash.style.transition = "none";
+    splash.style.setProperty("--sr", `${r0}px`);
+    void splash.offsetWidth;
+    splash.style.transition = "";
+  }
+  splash.style.setProperty("--sr", on ? "150%" : "0px");
+  splashOn = on;
   document.body.classList.toggle("splashed", on);
+  document.body.classList.toggle("dropped", splashHit);
 }
 placeSplash();
 addEventListener("resize", placeSplash);
