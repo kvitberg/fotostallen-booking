@@ -55,7 +55,16 @@
   .head .d1 { transform: translateY(calc(var(--sink, 0) * 300px)); transition: transform .2s linear; }
   .head .d2 { transform: translateY(calc(var(--sink, 0) * 240px)); transition: transform .2s linear; }
   @keyframes circle-in { from { scale: .6; opacity: 0; } }
-  .layout { position: relative; z-index: 2; }
+  .layout, footer { position: relative; z-index: 2; }
+  /* Splash: når sirkelen synker ned, fyller fargen seksjonen under, som en sirkel som sprer seg fra der den
+     traff. --sx = sirkelens midtpunkt, --splash = radius (0–1), begge settes i skriptet. */
+  body { position: relative; }
+  .splash { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; top: var(--splash-top, 100%); background: #d6726e; pointer-events: none;
+    clip-path: circle(calc(var(--splash, 0) * 150%) at var(--sx, 80%) 0); transition: clip-path 1.1s cubic-bezier(.7, 0, .2, 1); }
+  .sec-head h2, .sec-head p, footer, footer span, footer a { transition: color .3s; }
+  .splashed .sec-head h2, .splashed footer, .splashed footer a { color: #fff; }
+  .splashed .sec-head p, .splashed footer span { color: rgba(255,255,255,.82); }
+  .splashed .err-msg { color: #fff; }
   .stamp { position: absolute; z-index: 1; right: 20px; top: 40px; text-align: right; line-height: 1.05; }
   .stamp b { display: block; font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
   .stamp span { font-size: 11px; font-weight: 700; letter-spacing: .16em; }
@@ -351,6 +360,7 @@
   @keyframes tilt { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-9deg); } 60% { transform: rotate(6deg); } }
   @media (prefers-reduced-motion: reduce) {
     .head .deco-circle, .head .deco-dot { transform: none !important; animation: none !important; }
+    .splash { transition: none; }
     .ill svg, .ill svg * { animation: none !important; stroke-dashoffset: 0 !important; }
     .step.open, .reveal, .cal.build *, .days.build .day, .times.fresh .time, .receipt.play * { animation: none !important; }
     .success .ring { transform: none; } .success .tick { stroke-dashoffset: 0; }
@@ -404,6 +414,7 @@
 </style>
 </head>
 <body>
+<div class="splash" aria-hidden="true"></div>
 <main class="wrap">
   <header class="head">
     <span class="deco-circle" aria-hidden="true"></span><span class="deco-dot d1" aria-hidden="true"></span><span class="deco-dot d2" aria-hidden="true"></span>
@@ -1301,6 +1312,26 @@ $("#again").addEventListener("click", () => {
 
 $("#stampYear").textContent = today.getFullYear();
 
+// Splash-fargen starter øverst i seksjonen under toppen, rett under sirkelen. Når sirkelen er en tredjedel
+// nede, fyller fargen hele seksjonen i én bevegelse; den trekker seg tilbake når man scroller helt opp igjen.
+// (Utløser i stedet for scroll-styrt: på korte sider kommer toppen aldri helt ut av syne.)
+function placeSplash() {
+  const splash = $(".splash"), head = $(".head"), circle = $(".deco-circle");
+  const r = head.getBoundingClientRect();
+  splash.style.setProperty("--splash-top", `${r.bottom + window.scrollY - 30}px`);
+  splash.style.setProperty("--sx", `${r.left + circle.offsetLeft + circle.offsetWidth / 2}px`);
+}
+let splashed = false;
+function splashTo(sink) {
+  placeSplash();
+  if (!splashed && sink > .33) splashed = true;
+  else if (splashed && sink < .1) splashed = false;
+  $(".splash").style.setProperty("--splash", splashed ? 1 : 0);
+  document.body.classList.toggle("splashed", splashed);
+}
+placeSplash();
+addEventListener("resize", placeSplash);
+
 // Sirkelen i toppen synker ned bak neste seksjon når toppen scrolles ut. IntersectionObserver måler mot
 // det synlige vinduet også når siden ligger i en iframe på fotostallen.no (der scroller bare foreldresiden).
 {
@@ -1312,6 +1343,7 @@ $("#stampYear").textContent = today.getFullYear();
     if (!e.isIntersecting) sink = 1;
     else sink = e.intersectionRect.top > e.boundingClientRect.top + .5 ? (h - e.intersectionRect.height) / h : 0;
     head.style.setProperty("--sink", sink < .03 ? 0 : sink.toFixed(3));
+    splashTo(sink);
   }, { threshold: Array.from({ length: 101 }, (_, i) => i / 100) }).observe(head);
 }
 $("#stampMonth").textContent = MONTHS[today.getMonth()].toUpperCase();
