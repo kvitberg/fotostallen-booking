@@ -9,12 +9,16 @@
 //
 // Bruker samme iCloud-tilgang som fakturaroboten (ICLOUD_BRUKER/ICLOUD_APP_PASSORD i dens .env.local).
 //
-//   node synk/kalendersynk.mjs --dry   Leser bare, og viser antall ledige luker per fotograf. Sender og skriver ingenting.
-//   node synk/kalendersynk.mjs         Vanlig kjøring.
+//   node synk/kalendersynk.mjs --dry                Leser bare, og viser antall ledige luker per fotograf. Sender og skriver ingenting.
+//   node synk/kalendersynk.mjs                      Vanlig kjøring. Fotografen får SMS og e-post om nye bookinger.
+//   node synk/kalendersynk.mjs --varsel-test scott  Sender et testvarsel (SMS + e-post) til én fotograf, og avslutter.
+//
+// VARSEL=av i synk/.env skrur av SMS/e-post til fotografene.
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createDAVClient } from "tsdav";
+import { lagTekster, lesKontakter, sendSms, lagEpostSender } from "./varsel.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const DRY = process.argv.includes("--dry");
@@ -22,7 +26,7 @@ const DRY = process.argv.includes("--dry");
 // Samme kode som Apps Script-en kjører: ICS-tolking, masker og bookingfil.
 const mod = { exports: {} };
 new Function("module", readFileSync(join(here, "..", "apps-script", "Code.gs"), "utf8"))(mod);
-const { busyFromIcs, buildMasks, bookingIcs, pickFree, computeSlots, slotStart, zonedToUtc, ymd, addDays, fmtYmd, CONFIG, ANY } = mod.exports;
+const { busyFromIcs, buildMasks, bookingIcs, pickFree, computeSlots, slotStart, bookingRef, zonedToUtc, ymd, addDays, fmtYmd, CONFIG, ANY } = mod.exports;
 
 function readEnv(path) {
   if (!existsSync(path)) return {};
@@ -35,7 +39,8 @@ function readEnv(path) {
 }
 
 const local = readEnv(join(here, ".env"));
-const icloud = readEnv(local.ICLOUD_ENV || join(here, "..", "..", "fakturaroboten", ".env.local"));
+const fakturaDir = local.FAKTURA_DIR || join(here, "..", "..", "fakturaroboten");
+const icloud = readEnv(local.ICLOUD_ENV || join(fakturaDir, ".env.local"));
 const { ICLOUD_BRUKER, ICLOUD_APP_PASSORD } = icloud;
 const { BOOKING_URL, SYNC_TOKEN } = local;
 
@@ -47,6 +52,36 @@ function fail(msg) {
   process.exit(1);
 }
 const log = msg => console.log(`[${new Date().toISOString()}] ${msg}`);
+
+/* Varsel til fotografen (SMS + e-post). Feil logges, men stopper aldri synken. */
+const VARSEL = (local.VARSEL || "på").toLowerCase() !== "av";
+const kontakter = lesKontakter(here, CONFIG.ICLOUD_CALENDARS, fakturaDir);
+const sendEpost = await lagEpostSender(icloud);
+async function varsle(q, pid) {
+  const k = kontakter[pid] || {};
+  const who = CONFIG.PHOTOGRAPHERS[pid] || pid;
+  const t = lagTekster(q, who, bookingRef(q.id), CONFIG.DURATION_MIN);
+  const sendt = [];
+  if (k.mobil) {
+    try { await sendSms(k.mobil, t.sms); sendt.push("SMS"); } catch (err) { log(`SMS til ${who} feilet: ${err.message}`); }
+  }
+  if (k.epost && sendEpost) {
+    try { await sendEpost({ til: k.epost, emne: t.emne, tekst: t.epost }); sendt.push("e-post"); } catch (err) { log(`E-post til ${who} feilet: ${err.message}`); }
+  }
+  log(sendt.length ? `Varslet ${who} (${sendt.join(" og ")}).` : `Ingen kontaktinfo for ${who}, ingen varsel sendt.`);
+}
+
+// Testvarsel til én fotograf: node synk/kalendersynk.mjs --varsel-test scott
+const testIdx = process.argv.indexOf("--varsel-test");
+if (testIdx > 0) {
+  const pid = process.argv[testIdx + 1];
+  if (!CONFIG.PHOTOGRAPHERS[pid]) fail(`Ukjent fotograf «${pid}». Bruk en av: ${Object.keys(CONFIG.PHOTOGRAPHERS).join(", ")}.`);
+  const tomorrow = fmtYmd(addDays(ymd(new Intl.DateTimeFormat("sv-SE", { timeZone: CONFIG.TZ }).format(new Date())), 1));
+  await varsle({ id: "00000000-test", photographer: pid, date: tomorrow, time: "09:30", duration: CONFIG.DURATION_MIN,
+    services: "TEST – dette er bare en prøve av varselet", address: "Testveien 1, Oslo", navn: "Test Testesen", telefon: "00000000",
+    epost: "test@example.com", note: "Ingen ekte booking." }, pid);
+  process.exit(0);
+}
 
 async function post(body) {
   const r = await fetch(BOOKING_URL, {
@@ -112,6 +147,8 @@ if (!DRY) {
     // 412 = finnes allerede (lagt inn ved en tidligere kjøring som ikke rakk å kvittere).
     if (res.ok || res.status === 412) {
       done.push(q.id);
+      // Varsle bare når avtalen faktisk ble lagt inn nå (412 = allerede lagt inn og varslet tidligere).
+      if (res.ok && VARSEL) await varsle(q, target);
       const s = slotStart(ymd(q.date), q.time);
       (busy[target] = busy[target] || []).push({ start: s, end: s + (q.duration || CONFIG.DURATION_MIN) * 60e3 });
       log(`Booking ${q.date} kl. ${q.time} lagt i «${cals[target].displayName}».`);

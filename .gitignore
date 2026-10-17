@@ -1,4 +1,5 @@
-node_modules/
-synk/node_modules/
-synk/.env
 .DS_Store
+node_modules/
+synk/.env
+synk/kontakter.json
+synk/node_modules/
