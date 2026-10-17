@@ -50,27 +50,21 @@
   .head .deco-dot { position: absolute; z-index: 1; border-radius: 50%; background: #d6726e; }
   .head .d1 { width: 10px; height: 10px; right: 30px; bottom: 120px; }
   .head .d2 { width: 18px; height: 18px; right: 54px; bottom: 70px; }
-  /* Malingsdråpen: når toppen scrolles ut, flyr sirkelen i en bue inn mot midten, krymper og blir en dråpe (spiss
-     oppover) som lander over Tjenester. Senere faller den videre ned til seksjonen man er på. Posisjon og
-     størrelse (--tx, --ty, --scx, --scy, --pt) settes i skriptet; rotate(-45deg) gjør hjørnet til spissen. */
-  .head .deco-circle {
-    transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--scx, 1), var(--scy, 1)) rotate(-45deg);
-    border-top-right-radius: calc(50% - var(--pt, 0) * 50%);
-    transition: transform .15s linear, border-radius .15s linear; animation: circle-in 1.1s cubic-bezier(.2, .8, .2, 1) both; }
-  /* Fritt fall til neste seksjon: starter rolig og akselererer. */
-  .head.falling .deco-circle { transition: transform .75s cubic-bezier(.55, 0, .85, .45), border-radius .3s; }
+  /* Prikken: når toppen scrolles ut, glir sirkelen i en bue ned og krymper til en liten prikk som legger seg som
+     et punktum etter seksjonsoverskriften. Posisjonen settes per bilde i skriptet (fjærdempet). */
+  .head .deco-circle { will-change: transform; transition: background-color .4s; animation: circle-in 1.1s cubic-bezier(.2, .8, .2, 1) both; }
+  .head .deco-circle.landed { background-color: #fbf6f2; }
   .head .d1 { transform: translateY(calc(var(--sink, 0) * 300px)); transition: transform .2s linear; }
   .head .d2 { transform: translateY(calc(var(--sink, 0) * 240px)); transition: transform .2s linear; }
   @keyframes circle-in { from { scale: .6; opacity: 0; } }
   .layout, footer { position: relative; z-index: 2; }
-  /* Den røde fargen bak seksjonen dråpen har landet på: et bånd i full bredde bak seksjonen, som sprer seg som
-     en sirkel fra landingspunktet. Geometri (--bt, --bh, --sx, --sy) og radius (--sr) settes i skriptet. */
+  /* Malingen: et avrundet rødt felt bak seksjonen man står på. Det vokser ut fra prikken (inset-klipp som starter
+     i prikkens punkt) og trekker seg raskere tilbake inn i den når man går videre. Geometri (--ox, --oy) i skriptet. */
   body { position: relative; }
-  .splash { position: absolute; z-index: 1; left: 0; right: 0; top: var(--bt, 0px); height: var(--bh, 0px); background: #d6726e; pointer-events: none;
-    clip-path: circle(var(--sr, 0px) at var(--sx, 50%) var(--sy, 0px)); transition: clip-path 1.1s cubic-bezier(.25, .7, .25, 1); }
-  .splash.out { transition: clip-path .45s ease-in; }
-  .sec-head h2, .sec-head p { transition: color .4s; }
-  .step.painted .sec-head h2 { color: #fff; }
+  .paint { position: absolute; z-index: 1; pointer-events: none; background: #d6726e; border-radius: 36px;
+    clip-path: inset(var(--oy, 0px) calc(100% - var(--ox, 0px)) calc(100% - var(--oy, 0px)) var(--ox, 0px) round 999px);
+    transition: clip-path .3s cubic-bezier(.4, 0, 1, 1); }
+  .paint.on { clip-path: inset(0 0 0 0 round 36px); transition: clip-path .75s cubic-bezier(.22, 1, .36, 1); }
   .step.painted .sec-head p, .step.painted .err-msg { color: var(--ink); }
   /* Palett på den røde bakgrunnen (som i referansen): varme kremkort og terrakotta aksent i stedet for grått og
      knallrødt. Registrerte variabler, så fargene glir over i hverandre begge veier. */
@@ -379,8 +373,8 @@
   @keyframes rotor { 50% { transform: scaleX(.25); } }
   @keyframes tilt { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-9deg); } 60% { transform: rotate(6deg); } }
   @media (prefers-reduced-motion: reduce) {
-    .head .deco-circle, .head .deco-dot { transform: none !important; animation: none !important; border-radius: 50% !important; }
-    .splash { display: none; }
+    .head .deco-circle, .head .deco-dot { transform: none !important; animation: none !important; }
+    .paint { display: none; }
     .ill svg, .ill svg * { animation: none !important; stroke-dashoffset: 0 !important; }
     .step.open, .reveal, .cal.build *, .days.build .day, .times.fresh .time, .receipt.play * { animation: none !important; }
     .success .ring { transform: none; } .success .tick { stroke-dashoffset: 0; }
@@ -434,7 +428,6 @@
 </style>
 </head>
 <body>
-<div class="splash" aria-hidden="true"></div>
 <main class="wrap">
   <header class="head">
     <span class="deco-circle" aria-hidden="true"></span><span class="deco-dot d1" aria-hidden="true"></span><span class="deco-dot d2" aria-hidden="true"></span>
@@ -1341,81 +1334,80 @@ $("#again").addEventListener("click", () => {
 
 $("#stampYear").textContent = today.getFullYear();
 
-// Malingsdråpen. Når toppen scrolles ut (sink 0–1), flyr sirkelen i en bue inn mot midten og blir en dråpe som
-// lander over Tjenester; da blir bakgrunnen bak den seksjonen rød. Scroller kunden videre, får seksjonen man
-// forlater vanlig farge igjen, og dråpen faller videre ned til neste seksjon, som så blir rød.
-// Alt måles med IntersectionObserver, som også virker når siden ligger i en iframe på fotostallen.no (der
-// scroller bare foreldresiden, og rootMargin ignoreres).
+// Prikken og malingen. Når toppen scrolles ut (sink 0–1), glir sirkelen i en bue ned, krymper og legger seg som et
+// punktum etter overskriften til Tjenester; da vokser et avrundet rødt felt ut fra den, bak seksjonen. Går kunden
+// videre, trekker feltet seg inn i prikken igjen, prikken glir ned til neste overskrift, og feltet vokser ut der.
+// Bevegelsen er fjærdempet per bilde (bremser inn mot målet). Alt måles med IntersectionObserver, som også virker
+// når siden ligger i en iframe på fotostallen.no (der scroller bare foreldresiden, og rootMargin ignoreres).
 {
-  const head = $(".head"), circle = $(".deco-circle"), splash = $(".splash");
+  const head = $(".head"), dot = $(".deco-circle");
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const DROP = innerWidth < 600 ? 48 : 64;   // dråpens bredde (px) når den har landet
-  const FALL_MS = 750;      // samme som .head.falling-overgangen
-  let sink = 0, current = 1, at = 0, painted = 0, seq = 0;
-  const visible = new Map();
+  const small = () => innerWidth < 600;
+  let sink = 0, current = 1, painted = 0, raf = 0, last = 0;
+  const pos = { x: 0, y: 0, s: 1 }, visible = new Map(), paints = new Map();
 
   const docRect = el => { const r = el.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height }; };
-  // Landingspunkt: i det ledige rommet ved siden av seksjonsoverskriften (mellom overskriften og hjelpeteksten,
-  // eller ut mot høyre kant når hjelpeteksten er skjult på mobil), midt i høyden på overskriften.
+  const origin = () => { const h = docRect(head); return { x: h.x + dot.offsetLeft + dot.offsetWidth / 2, y: h.y + dot.offsetTop + dot.offsetHeight / 2 }; };
+  const dotSize = () => small() ? 12 : 16;
+  // Landingspunkt: som et punktum rett etter overskriften, på grunnlinjen.
   function landing(k) {
-    const sec = $(`.step[data-step="${k}"]`), s = docRect(sec);
-    const h2 = docRect($(".sec-head h2", sec)), row = docRect($(".sec-head", sec)), hint = $(".sec-head p", sec);
-    const right = hint && hint.offsetParent ? docRect(hint).x : row.x + row.w;
-    return { x: (h2.x + h2.w + right) / 2, y: h2.y + h2.h / 2, s };
+    const h2 = docRect($(`.step[data-step="${k}"] .sec-head h2`)), d = dotSize();
+    return { x: h2.x + h2.w + d * .9, y: h2.y + h2.h * .82 - d / 2 };
   }
-  // p = 0: sirkelen i toppen, p = 1: dråpe over seksjon k. Først ned (ut under panelet), så inn mot midten,
-  // så banen blir en bue.
-  function place(p, k) {
-    const h = docRect(head), l = landing(k);
-    const dx = l.x - (h.x + circle.offsetLeft + circle.offsetWidth / 2);
-    const dy = l.y - (h.y + circle.offsetTop + circle.offsetHeight / 2);
-    const sc = 1 - (1 - DROP / circle.offsetWidth) * p;
-    circle.style.setProperty("--tx", `${dx * p * p}px`);
-    circle.style.setProperty("--ty", `${dy * (1 - (1 - p) ** 2)}px`);
-    circle.style.setProperty("--scx", (sc * (1 - .1 * p)).toFixed(4));
-    circle.style.setProperty("--scy", (sc * (1 + .1 * p)).toFixed(4));
-    circle.style.setProperty("--pt", Math.min(1, p * 1.6).toFixed(3));
+  function target() {
+    const o = origin(), p = Math.min(1, sink / .7), s = dotSize() / dot.offsetWidth;
+    if (current === 1 && p < 1) {   // på vei ned: først ned (ut under panelet), så inn mot overskriften
+      const l = landing(1);
+      return { x: o.x + (l.x - o.x) * p * p, y: o.y + (l.y - o.y) * (1 - (1 - p) ** 2), s: 1 - (1 - s) * p, scrub: true };
+    }
+    const l = landing(current);
+    return { x: l.x, y: l.y, s };
   }
-  function band(k) {
-    const l = landing(k), top = l.y - 60;
-    splash.style.setProperty("--bt", `${top}px`);
-    splash.style.setProperty("--bh", `${l.s.y + l.s.h + 28 - top}px`);
-    splash.style.setProperty("--sx", `${l.x}px`);
-    splash.style.setProperty("--sy", `${l.y - top}px`);
+
+  function box(k) {
+    const pad = small() ? 12 : 22, s = docRect($(`.step[data-step="${k}"]`)), l = landing(k);
+    return { x: s.x - pad, y: s.y - pad, w: s.w + pad * 2, h: s.h + pad * 2 + 12, ox: l.x - s.x + pad, oy: l.y - s.y + pad };
   }
-  function paint(k) {
-    splash.classList.remove("out");
-    splash.style.transition = "none";   // start på dråpens størrelse, og la fargen så vokse utover
-    band(k);
-    splash.style.setProperty("--sr", `${DROP / 2}px`);
-    void splash.offsetWidth;
-    splash.style.transition = "";
-    splash.style.setProperty("--sr", "150%");
+  function layoutPaint(el, k) {
+    const b = box(k);
+    Object.assign(el.style, { left: `${b.x}px`, top: `${b.y}px`, width: `${b.w}px`, height: `${b.h}px` });
+    el.style.setProperty("--ox", `${b.ox}px`);
+    el.style.setProperty("--oy", `${b.oy}px`);
+  }
+  function setPainted(k) {
+    if (k === painted) return;
+    if (painted) paints.get(painted).classList.remove("on");
+    if (k) {
+      let el = paints.get(k);
+      if (!el) { el = document.createElement("div"); el.className = "paint"; el.setAttribute("aria-hidden", "true"); document.body.prepend(el); paints.set(k, el); }
+      layoutPaint(el, k);
+      void el.offsetWidth;
+      el.classList.add("on");
+    }
     $$(".step").forEach(sec => sec.classList.toggle("painted", +sec.dataset.step === k));
+    dot.classList.toggle("landed", !!k);
     painted = k;
   }
-  function unpaint() {
-    if (!painted) return;
-    splash.classList.add("out");
-    splash.style.setProperty("--sr", "0px");
-    $$(".step").forEach(sec => sec.classList.remove("painted"));
-    painted = 0;
+
+  function frame(t) {
+    const dt = Math.min(.05, last ? (t - last) / 1000 : 1 / 60); last = t;
+    const g = target(), o = origin();
+    // Fjærdemping: følger scrollingen tett, men glir rolig mellom seksjonene.
+    const k = 1 - Math.exp(-dt * (g.scrub ? 16 : 7));
+    const py = pos.y;
+    pos.x += (g.x - pos.x) * k; pos.y += (g.y - pos.y) * k; pos.s += (g.s - pos.s) * k;
+    // Litt flytende: prikken strekkes lett i fartsretningen.
+    const st = Math.min(.18, Math.abs(pos.y - py) / dt / 5000);
+    dot.style.transform = `translate(${pos.x - o.x}px, ${pos.y - o.y}px) scale(${pos.s * (1 - st / 2)}, ${pos.s * (1 + st)})`;
+    const dist = Math.hypot(g.x - pos.x, g.y - pos.y);
+    setPainted(!g.scrub && dist < 20 ? current : 0);
+    raf = dist < .3 && Math.abs(g.s - pos.s) < .0005 ? 0 : requestAnimationFrame(frame);
   }
-  function update() {
-    if (reduce) return;
-    const p = Math.min(1, sink / .7);
-    if (current === 1 && p < 1) {          // i luften mellom toppen og Tjenester: følger scrollingen
-      seq++; unpaint(); head.classList.remove("falling");
-      place(p, 1); at = 0;
-      return;
-    }
-    if (current === at) { place(1, at); if (painted === at) band(at); return; }
-    const my = ++seq, falls = at !== 0;    // fra en annen seksjon: fargen går tilbake, dråpen faller videre
-    unpaint();
-    if (falls) head.classList.add("falling");
-    place(1, current); at = current;
-    setTimeout(() => { if (my === seq) { head.classList.remove("falling"); paint(current); } }, falls ? FALL_MS : 120);
+  function kick() {
+    if (painted) layoutPaint(paints.get(painted), painted);
+    if (!raf && !reduce) { last = 0; raf = requestAnimationFrame(frame); }
   }
+  if (!reduce) { const o = origin(); pos.x = o.x; pos.y = o.y; }
 
   // Sink: hvor mye av toppen som er scrollet ut.
   new IntersectionObserver(([e]) => {
@@ -1424,7 +1416,7 @@ $("#stampYear").textContent = today.getFullYear();
     if (!e.isIntersecting) sink = 1;
     else sink = e.intersectionRect.top > e.boundingClientRect.top + .5 ? (h - e.intersectionRect.height) / h : 0;
     head.style.setProperty("--sink", sink < .03 ? 0 : sink.toFixed(3));
-    update();
+    kick();
   }, { threshold: Array.from({ length: 101 }, (_, i) => i / 100) }).observe(head);
 
   // Gjeldende seksjon: den som tar mest plass i vinduet.
@@ -1432,12 +1424,12 @@ $("#stampYear").textContent = today.getFullYear();
     entries.forEach(e => visible.set(+e.target.dataset.step, e.isIntersecting ? e.intersectionRect.height : 0));
     let best = 1, most = -1;
     visible.forEach((v, k) => { if (v > most || (v === most && k > best)) { best = k; most = v; } });
-    if (best !== current) { current = best; update(); }
+    if (best !== current) { current = best; kick(); }
   }, { threshold: Array.from({ length: 21 }, (_, i) => i / 20) });
   $$(".step").forEach(sec => io.observe(sec));
-  // Innholdet endrer høyde (kalender, valg, åpne felt): flytt dråpen og fargebåndet med.
-  new ResizeObserver(() => update()).observe($(".layout"));
-  addEventListener("resize", update);
+  // Innholdet endrer høyde (kalender, valg, åpne felt): flytt prikken og feltet med.
+  new ResizeObserver(kick).observe($(".layout"));
+  addEventListener("resize", kick);
 }
 $("#stampMonth").textContent = MONTHS[today.getMonth()].toUpperCase();
 
