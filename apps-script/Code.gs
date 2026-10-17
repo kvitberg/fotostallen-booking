@@ -23,9 +23,9 @@ const CONFIG = {
   TZ: "Europe/Oslo",
   // Oppdragets varighet i minutter (standard 1,5 t). Endres her og i index.html (DURATION_MIN).
   DURATION_MIN: 90,
-  // Starttider på dagtid. Kveldsfoto får i tillegg én luke per dag som starter litt før solnedgang.
+  // Starttider på dagtid. Kveldsfoto får i tillegg én luke per dag som starter ved solnedgang.
   DAY_SLOTS: ["08:00", "09:30", "11:00", "12:30", "14:00", "15:30"],
-  EVENING: { LAT: 59.91, LON: 10.75, BEFORE_SUNSET_MIN: 30 },
+  EVENING: { LAT: 59.91, LON: 10.75 },
   WORKDAYS: [1, 2, 3, 4, 5], // 0 = søndag
   MIN_LEAD_HOURS: 3,
   MAX_RANGE_DAYS: 62,
@@ -257,13 +257,13 @@ function sunsetUtc(d) {
   return Date.UTC(d.y, d.m - 1, d.d) + UT * 3600e3;
 }
 
-/** Kveldsluken: starter BEFORE_SUNSET_MIN før solnedgang, rundet ned til nærmeste kvarter (lokal tid). */
+/** Kveldsluken: starter ved solnedgang, rundet opp til nærmeste kvarter (lokal tid), aldri før. */
 function eveningKey(d) {
   const ss = sunsetUtc(d);
   if (ss === null) return null;
-  const s = ss - CONFIG.EVENING.BEFORE_SUNSET_MIN * 60e3;
-  const localMin = Math.floor(((s + tzOffsetMs(s, CONFIG.TZ)) % 86400e3) / 60e3);
-  return minKey(Math.floor(localMin / 15) * 15);
+  const localMin = Math.ceil(((ss + tzOffsetMs(ss, CONFIG.TZ)) % 86400e3) / 60e3);
+  const start = Math.ceil(localMin / 15) * 15;
+  return start >= 24 * 60 ? null : minKey(start);
 }
 
 function overlaps(list, s, e) {

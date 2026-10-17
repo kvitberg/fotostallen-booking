@@ -66,16 +66,43 @@
   .group:last-child { margin-bottom: 0; }
   .stack { display: grid; gap: 12px; }
 
+  /* Illustrasjoner */
+  .ill { flex: 0 0 auto; display: grid; place-items: center; background: var(--bg); border-radius: 14px; color: var(--ink); }
+  .ill svg { display: block; }
+
   /* Hovedtjeneste */
   .rows { border-top: 1px solid var(--line); }
-  .row { display: flex; align-items: center; gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--line); cursor: pointer; position: relative; }
+  .row { display: flex; align-items: center; gap: 16px; padding: 12px 14px; margin: 6px 0; border-radius: 18px; cursor: pointer; position: relative; transition: background .15s; }
+  .rows { border-top: 0; }
+  .rows .row + .row { margin-top: 0; }
+  .row:hover { background: rgba(18,18,18,.03); }
+  .row:has(input:checked) { background: rgba(18,18,18,.05); }
+  .row .ill { width: 112px; height: 70px; }
+  .row .txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .row .arr { margin-left: auto; color: var(--ink); flex: 0 0 auto; transition: transform .2s; }
+  .row:hover .arr { transform: translateX(3px); }
   .row input { position: absolute; opacity: 0; pointer-events: none; }
   .row .dot { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--faint); flex: 0 0 auto; transition: all .15s; }
   .row .t { font-size: 18px; font-weight: 500; letter-spacing: -.01em; }
-  .row .d { font-size: 13px; color: var(--muted); margin-left: auto; text-align: right; }
+  .row .d { font-size: 14px; color: var(--muted); }
   .row:hover .dot { border-color: var(--ink); }
-  .row:has(input:checked) .dot { border: 6px solid var(--accent); }
+  .row:has(input:checked) .dot { border: 6px solid var(--ink); }
   .row:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* Tillegg */
+  .addons { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+  .addon { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 12px; border: 1px solid rgba(18,18,18,.12); border-radius: 18px; background: var(--surface); cursor: pointer; transition: border-color .15s, background .15s; }
+  .addon input { position: absolute; opacity: 0; pointer-events: none; }
+  .addon .box { width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid rgba(18,18,18,.35); flex: 0 0 auto; display: grid; place-items: center; transition: all .15s; }
+  .addon .ill { width: 56px; height: 44px; border-radius: 10px; }
+  .addon .lbl { font-size: 14px; font-weight: 500; line-height: 1.2; }
+  .addon .lbl small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+  .addon .arr { margin-left: auto; flex: 0 0 auto; }
+  .addon:hover { border-color: var(--ink); }
+  .addon:has(input:checked) { border-color: var(--accent); background: #fff; }
+  .addon:has(input:checked) .box { background: var(--accent); border-color: var(--accent); }
+  .addon:has(input:checked) .box::after { content: ""; width: 10px; height: 6px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+  .addon:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
 
   /* Valgknapper */
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -128,14 +155,18 @@
   .av { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; background: var(--dot); flex: 0 0 auto; display: grid; place-items: center; font-size: 13px; font-weight: 600; color: #fff; }
   .av img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
   .av.any { background: var(--accent); }
-  .ph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
-  .ph { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; border: 1px solid transparent; border-radius: 999px; background: #fff; text-align: left; }
-  .ph .av { width: 36px; height: 36px; }
-  .ph:hover { border-color: var(--ink); }
-  .ph .nm { font-size: 14px; font-weight: 600; line-height: 1.15; }
-  .ph .st { font-size: 12px; color: var(--muted); }
+  .ph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .ph { display: flex; flex-direction: column; gap: 10px; padding: 10px 10px 14px; border: 1px solid transparent; border-radius: 22px; background: #fff; text-align: left; transition: border-color .15s, transform .2s, opacity .2s; }
+  .ph:hover { transform: translateY(-2px); }
+  .ph .photo { aspect-ratio: 1; border-radius: 16px; overflow: hidden; background: var(--dot); display: grid; place-items: center; color: #fff; font-size: 28px; font-weight: 600; }
+  .ph .photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
+  .ph .photo.any { background: var(--accent); }
+  .ph .nm { font-size: 15px; font-weight: 600; line-height: 1.2; padding: 0 4px; }
+  .ph .st { font-size: 12.5px; color: var(--muted); padding: 0 4px; margin-top: -6px; }
   .ph.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-  .ph.busy { opacity: .45; pointer-events: none; }
+  .ph.sel .st { color: var(--accent); font-weight: 500; }
+  .ph.busy { opacity: .4; pointer-events: none; }
+  .ph.busy .photo img { filter: grayscale(1); }
 
   /* Kalender (som det første designet) */
   .notice { font-size: 13.5px; padding: 12px 16px; border-radius: 18px; background: var(--accent-soft); color: #8e2232; margin: 0 0 12px; }
@@ -193,9 +224,11 @@
   /* Oppsummering */
   .summary { position: sticky; top: 16px; padding: 22px 24px 18px; }
   .pill { display: inline-flex; align-items: center; height: 38px; padding: 0 18px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 14px; font-weight: 500; }
-  .sum-wd { margin: 22px 0 8px; font-size: 15px; color: #3d3d3b; }
-  .sum-big { font-size: 64px; font-weight: 500; letter-spacing: -.055em; line-height: .84; margin-bottom: 18px; }
-  .sum-big.none { color: var(--dot); }
+  .sum-date { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin: 22px 0 18px; }
+  .sum-date .lab { font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .sum-date .val { font-size: 40px; font-weight: 600; letter-spacing: -.035em; line-height: 1.05; margin: 6px 0 6px; }
+  .sum-date .val.none { color: var(--ink); }
+  .sum-date .sub { font-size: 13px; color: var(--muted); }
   .sum-list { margin: 0; }
   .sum-list div { display: grid; grid-template-columns: 78px 1fr; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); font-size: 14px; }
   .sum-list dt { color: var(--muted); font-size: 13px; }
@@ -217,18 +250,47 @@
   footer a { color: var(--ink); text-decoration: none; font-weight: 500; }
 
   /* Animasjoner */
+  .cal.build .nav { animation: slideDown .45s cubic-bezier(.2, .7, .2, 1) both; }
+  .cal.build .bigday { animation: reveal .45s .08s cubic-bezier(.2, .7, .2, 1) both; }
+  .cal.build .meta { animation: reveal .45s .14s cubic-bezier(.2, .7, .2, 1) both; }
+  .cal.build .wk span { animation: reveal .3s both; animation-delay: calc(var(--i) * 25ms); }
+  .days.build .day { animation: dotIn .42s cubic-bezier(.3, 1.45, .55, 1) both; animation-delay: calc(var(--i) * 14ms + 120ms); }
+  @keyframes dotIn { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: none; } }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+  .times.fresh .time { animation: reveal .3s both; animation-delay: calc(var(--i) * 40ms); }
+
+  .success { position: relative; height: 150px; display: grid; place-items: center; margin: -6px 0 6px; }
+  .success .badge { position: relative; z-index: 1; }
+  .success .ring { fill: var(--accent); transform-origin: 60px 60px; transform: scale(0); }
+  .success .tick { fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 70; stroke-dashoffset: 70; }
+  .confetti { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+  .confetti i { position: absolute; width: 9px; height: 9px; border-radius: 50%; left: -4.5px; top: -4.5px; opacity: 0; }
+  .receipt.play .ring { animation: pop .4s .15s cubic-bezier(.3, 1.5, .5, 1) forwards; }
+  .receipt.play .tick { animation: draw .32s .45s ease-out forwards; }
+  .receipt.play .confetti i { animation: burst .75s cubic-bezier(.15, .7, .3, 1) forwards; animation-delay: var(--d); }
+  .receipt.play > :not(.success) { animation: reveal .4s .8s both; }
+  @keyframes pop { to { transform: scale(1); } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes burst {
+    0% { opacity: 1; transform: translate(0, 0) scale(.6); }
+    70% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--x), var(--y)) scale(1); }
+  }
   .step.open { animation: open .45s cubic-bezier(.2, .7, .2, 1) both; }
   .reveal { animation: reveal .3s ease both; }
   @keyframes open { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
   @keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { .step.open, .reveal { animation: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .step.open, .reveal, .cal.build *, .days.build .day, .times.fresh .time, .receipt.play * { animation: none !important; }
+    .success .ring { transform: none; } .success .tick { stroke-dashoffset: 0; }
+  }
 
   .embedded .wrap { padding-top: 16px; }
 
   @media (max-width: 980px) {
     .layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
     .summary { position: static; order: -1; margin-bottom: 26px; padding: 0; }
-    .summary > .pill, .summary > .sum-wd, .summary > .sum-big, .summary > .desk { display: none; }
+    .summary > .pill, .summary > .sum-date, .summary > .desk { display: none; }
     .summary details { display: block; }
     .summary details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; list-style: none; padding: 16px 22px; cursor: pointer; font-size: 14px; }
     .summary details summary::-webkit-details-marker { display: none; }
@@ -254,7 +316,11 @@
     .stepper li.cur .lbl { display: inline; }
     .sec-head p { display: none; }
     .grid2 { grid-template-columns: 1fr; }
-    .row .d { display: none; }
+    .row .ill { width: 72px; height: 54px; }
+    .row { padding: 10px; gap: 12px; }
+    .row .t { font-size: 16px; }
+    .addons { grid-template-columns: 1fr; }
+    .ph-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .times { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
@@ -269,7 +335,8 @@
     <ol class="stepper" id="stepper">
       <li data-step="1"><span class="n">1</span><span class="lbl">Tjenester</span></li>
       <li data-step="2"><span class="n">2</span><span class="lbl">Tid og sted</span></li>
-      <li data-step="3"><span class="n">3</span><span class="lbl">Kontakt</span></li>
+      <li data-step="3"><span class="n">3</span><span class="lbl">Fotograf</span></li>
+      <li data-step="4"><span class="n">4</span><span class="lbl">Kontakt</span></li>
     </ol>
   </header>
 
@@ -290,7 +357,7 @@
           </div>
           <div class="group">
             <div class="glabel">Tillegg <span>(valgfritt)</span></div>
-            <div class="chips" id="addonOpts"></div>
+            <div class="addons" id="addonOpts"></div>
           </div>
           </div>
           <p class="err-msg" id="err1" hidden></p>
@@ -299,7 +366,7 @@
 
         <!-- Steg 2 -->
         <div class="step" data-step="2" hidden>
-          <div class="sec-head"><h2 class="cond">Dato og tid</h2><p>Når skal vi komme?</p></div>
+          <div class="sec-head"><h2 class="cond">Tid og sted</h2><p>Når og hvor skal vi komme?</p></div>
           <div class="stack">
             <div class="card">
               <div class="group">
@@ -308,15 +375,6 @@
                   <input id="f_adresse" autocomplete="off" placeholder="Gate og nummer, sted" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
                   <ul class="suggest" id="suggest" role="listbox" hidden></ul>
                 </div>
-              </div>
-              <div class="group">
-                <span class="glabel">Fotograf</span>
-                <div class="ph-current">
-                  <div class="av any" id="phAv"></div>
-                  <div class="who"><strong id="phName">Første ledige fotograf</strong><small id="phNote">Vi velger en ledig fotograf for deg</small></div>
-                  <button type="button" class="linkbtn" id="phToggle" aria-expanded="false">Velg selv</button>
-                </div>
-                <div class="ph-grid" id="phGrid" hidden></div>
               </div>
             </div>
             <p class="notice" id="availNotice" hidden></p>
@@ -339,7 +397,7 @@
                   <span class="label" id="timeLabel">Tidspunkt</span>
                   <div class="times" id="timeOpts"></div>
                   <p class="hint" id="timeHint"></p>
-                  <p class="advance" id="advanceMsg" hidden>Går videre til kontaktinformasjon …</p>
+                  <p class="advance" id="advanceMsg" hidden>Går videre til fotograf …</p>
                 </div>
               </div>
               <div class="cal-dots">
@@ -354,6 +412,18 @@
 
         <!-- Steg 3 -->
         <div class="step" data-step="3" hidden>
+          <div class="sec-head"><h2 class="cond">Fotograf</h2><p>Velg selv, eller la oss velge</p></div>
+          <div class="card">
+            <div class="ph-grid" id="phGrid"></div>
+            <p class="hint" id="phHint"></p>
+            <p class="advance" id="advanceMsg3" hidden>Går videre til kontakt …</p>
+          </div>
+          <p class="err-msg" id="err3" hidden></p>
+          <div class="actions next"><button type="button" class="btn primary" data-go="4">Fortsett</button></div>
+        </div>
+
+        <!-- Steg 4 -->
+        <div class="step" data-step="4" hidden>
           <div class="sec-head"><h2 class="cond">Kontakt</h2><p>Hvem bestiller?</p></div>
           <div class="card">
           <div class="grid2">
@@ -379,7 +449,7 @@
           <label class="remember"><input type="checkbox" id="f_husk"> Husk kontaktopplysningene mine på denne enheten</label>
           <div class="review"><dl class="sum-list" data-sum></dl></div>
           </div>
-          <p class="err-msg" id="err3" hidden></p>
+          <p class="err-msg" id="err4" hidden></p>
           <div class="actions"><button type="submit" class="btn primary" id="submitBtn">Send bestilling</button></div>
           <p class="hint">Bestillingen er ikke bindende før vi har bekreftet tidspunktet.</p>
         </div>
@@ -387,6 +457,13 @@
 
       <!-- Kvittering -->
       <div class="receipt card" id="receipt" hidden>
+        <div class="success" aria-hidden="true">
+          <div class="confetti" id="confetti"></div>
+          <svg class="badge" viewBox="0 0 120 120" width="112" height="112">
+            <circle class="ring" cx="60" cy="60" r="54"/>
+            <path class="tick" d="M38 61l15 15 30-32"/>
+          </svg>
+        </div>
         <span class="pill" id="rcTitle">Mottatt</span>
         <div class="bigthanks">Takk.</div>
         <p id="rcText"></p>
@@ -397,8 +474,14 @@
 
     <aside class="summary card" aria-label="Din bestilling">
       <span class="pill">Din bestilling</span>
-      <div class="sum-wd" id="sumWd">Dato ikke valgt</div>
-      <div class="sum-big none" id="sumBig">00.00<br>&mdash;</div>
+      <div class="sum-date">
+        <div>
+          <div class="lab">Dato for fotografering</div>
+          <div class="val none" id="sumDate">Velg dato</div>
+          <div class="sub" id="sumSub">Dato og tidspunkt velges i steg 2</div>
+        </div>
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      </div>
       <dl class="sum-list desk" data-sum></dl>
       <details id="sumDetails">
         <summary><b>Din bestilling</b><span id="sumShort">Ingen valg ennå</span></summary>
@@ -429,7 +512,7 @@ const ENTRY = {
 // Må stemme med CONFIG i apps-script/Code.gs.
 const DURATION_MIN = 90;
 const DAY_SLOTS = ["08:00", "09:30", "11:00", "12:30", "14:00", "15:30"];
-const EVENING = { LAT: 59.91, LON: 10.75, BEFORE_SUNSET_MIN: 30 };
+const EVENING = { LAT: 59.91, LON: 10.75 }; // kveldsluken starter ved solnedgang (rundet opp til kvarter)
 const WORKDAYS = [1, 2, 3, 4, 5];
 const MIN_LEAD_HOURS = 3;
 const AUTO_ASSIGN_EXCLUDE = ["glenn"]; // Glenn bor i Ålesund: kan velges, men tildeles ikke automatisk
@@ -447,20 +530,32 @@ const PHOTOGRAPHERS = [
   { id: "henrik", name: "Henrik Eriksen", role: "Fotograf", formOption: "Henrik Eriksen", skills: [] },
 ];
 
-// form = valget i Google-skjemaet (null: står i kommentaren i stedet).
+// Enkle strektegninger i Fotostallens farger (mørk strek, rød detalj).
+const ICON = {
+  dag: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="41" cy="12" r="5" stroke="#dc384c"/><path d="M41 3v2M41 19v2M32 12h2M48 12h2M35 6l1.4 1.4M45.6 16.6L47 18M35 18l1.4-1.4M45.6 7.4L47 6" stroke="#dc384c"/><path d="M8 38V22l14-10 14 10v16z"/><path d="M18 38v-9h8v9"/><path d="M4 38h48"/></svg>',
+  kveld: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M46 13.5A7 7 0 1 1 38.5 6a5.5 5.5 0 0 0 7.5 7.5z" stroke="#dc384c"/><path d="M8 38V22l14-10 14 10v16z"/><rect x="18" y="25" width="8" height="6" rx="1" fill="#dc384c" fill-opacity=".25"/><path d="M4 38h48"/></svg>',
+  video: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="12" width="26" height="20" rx="3"/><path d="M35 19l11-6v18l-11-6z"/><circle cx="16" cy="18" r="2" fill="#dc384c" stroke="#dc384c"/></svg>',
+  drone: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="18" width="12" height="8" rx="2"/><path d="M22 20l-8-5M34 20l8-5M22 24l-8 5M34 24l8 5"/><path d="M8 15h12M36 15h12M8 29h12M36 29h12"/><circle cx="28" cy="29" r="2" stroke="#dc384c"/></svg>',
+  plantegning: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="7" width="36" height="30" rx="1.5"/><path d="M26 7v12h-6M26 25v12M26 22h20M36 22v-6"/><path d="M14 30h6" stroke="#dc384c"/></svg>',
+  some: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="5" width="16" height="34" rx="3.5"/><path d="M26 34h4"/><path d="M26 17v8l7-4z" fill="#dc384c" stroke="#dc384c"/></svg>',
+};
+const ARROW = '<svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+// form = valget i Google-skjemaet (null: står i kommentaren i stedet). film = krever fotograf som filmer.
 const MAIN = [
-  { id: "dag", label: "Dagfotografering", desc: "Lyse bilder av boligen", scopes: [
+  { id: "dag", label: "Dagfotografering", desc: "Lyse bilder av boligen", icon: "dag", scopes: [
     { id: "hel", label: "Hel bolig", form: "Dagbilder helbolig" }, { id: "ti", label: "Opptil 10 bilder", form: "Dagbilder <10bilder" }] },
-  { id: "kveld", label: "Kveldsfotografering", desc: "Rundt solnedgang", scopes: [
+  { id: "kveld", label: "Kveldsfotografering", desc: "Fra solnedgang", icon: "kveld", scopes: [
     { id: "hel", label: "Hel bolig", form: "Kveld helbolig" }, { id: "ti", label: "Opptil 10 bilder", form: "Kveld <10bilder" }] },
-  { id: "video", label: "Video", desc: "Kort film, ca. 1 minutt", film: true, scopes: [
+  { id: "video", label: "Video", desc: "Kort film, ca. 1 minutt", icon: "video", film: true, scopes: [
     { id: "1min", label: "Ca. 1 minutt", form: "Video (1min)" }] },
 ];
 const ADDONS = [
-  { id: "drone", label: "Drone", form: "Drone" },
-  { id: "plantegning", label: "Plantegning", form: null },
-  { id: "kveldsbilder", label: "Kveldsbilder", form: "Kveld <10bilder", when: m => m === "dag" },
-  { id: "video", label: "Video (ca. 1 min)", form: "Video (1min)", film: true, when: m => m !== "video" },
+  { id: "drone", label: "Drone", icon: "drone", form: "Drone" },
+  { id: "plantegning", label: "Plantegning", icon: "plantegning", form: null },
+  { id: "video", label: "Video", desc: "Ca. 1 minutt", icon: "video", form: "Video (1min)", film: true, when: m => m !== "video" },
+  { id: "some", label: "SoMe-video", sum: "SoMe-video", desc: "Vertikal, 15–30 sek", icon: "some", form: null, film: true },
+  { id: "kveldsbilder", label: "Kveldsbilder", desc: "Opptil 10, fra solnedgang", icon: "kveld", form: "Kveld <10bilder", when: m => m === "dag" },
 ];
 
 /* ---------- Hjelpere ---------- */
@@ -482,11 +577,14 @@ const initials = p => p.name.split(" ").map(w => w[0]).join("").slice(0, 2);
 const avatar = p => !p.img ? esc(initials(p)) : p.face
   ? `<img src="${p.img}" alt="" style="object-position:${p.face[0]}% ${p.face[1]}%;transform:scale(${p.face[2]});transform-origin:${p.face[0]}% ${p.face[1]}%">`
   : `<img src="${p.img}" alt="">`;
+const photoTile = p => !p.img ? esc(initials(p)) : p.face
+  ? `<img src="${p.img}" alt="" style="object-position:${p.face[0]}% ${p.face[1]}%;transform:scale(${Math.max(1, p.face[2] * .6)});transform-origin:${p.face[0]}% ${p.face[1]}%">`
+  : `<img src="${p.img}" alt="">`;
 const bolt = s => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>`;
 const today = new Date(); today.setHours(0, 0, 0, 0);
 
-// Solnedgang i Oslo (samme beregning som sunsetUtc i Code.gs). Returnerer lokal tid som «HH:MM».
-function sunsetLocal(date) {
+// Solnedgang i Oslo (samme beregning som sunsetUtc i Code.gs), som lokal tid.
+function sunsetParts(date) {
   const [y, m, d] = date.split("-").map(Number);
   const rad = Math.PI / 180;
   const N = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 0)) / 86400e3);
@@ -499,15 +597,18 @@ function sunsetLocal(date) {
   const cosH = (Math.cos(90.833 * rad) - sinDec * Math.sin(EVENING.LAT * rad)) / (cosDec * Math.cos(EVENING.LAT * rad));
   if (cosH < -1 || cosH > 1) return null;
   const UT = ((Math.acos(cosH) / rad / 15 + RA - 0.06571 * t - 6.622 - lngHour) % 24 + 24) % 24;
-  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Oslo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Oslo", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" })
     .formatToParts(new Date(Date.UTC(y, m - 1, d) + UT * 3600e3));
-  return `${parts.find(p => p.type === "hour").value}:${parts.find(p => p.type === "minute").value}`;
+  const g = t => Number(parts.find(p => p.type === t).value);
+  return { h: g("hour"), m: g("minute"), s: g("second") };
 }
+const sunsetLocal = date => { const t = sunsetParts(date); return t ? `${pad(t.h)}:${pad(t.m)}` : null; };
+// Kveldsluken starter ved solnedgang, rundet opp til nærmeste kvarter (samme regel som Code.gs).
 function eveningKey(date) {
-  const ss = sunsetLocal(date);
-  if (!ss) return null;
-  const m = keyMin(ss) - EVENING.BEFORE_SUNSET_MIN;
-  return minKey(Math.floor(m / 15) * 15);
+  const t = sunsetParts(date);
+  if (!t) return null;
+  const start = Math.ceil((t.h * 60 + t.m + t.s / 60) / 15) * 15;
+  return start >= 24 * 60 ? null : minKey(start);
 }
 
 /* ---------- Tilstand ---------- */
@@ -522,7 +623,9 @@ const state = {
 /* ---------- Steg 1: tjenester ---------- */
 
 $("#mainOpts").innerHTML = MAIN.map(m => `
-  <label class="row"><input type="radio" name="main" value="${m.id}"><span class="dot"></span><span class="t">${m.label}</span><span class="d">${m.desc}</span></label>`).join("");
+  <label class="row"><input type="radio" name="main" value="${m.id}"><span class="dot"></span>
+    <span class="ill">${ICON[m.icon]}</span>
+    <span class="txt"><span class="t">${m.label}</span><span class="d">${m.desc}</span></span>${ARROW}</label>`).join("");
 
 function renderScopes() {
   const m = MAIN.find(x => x.id === state.main);
@@ -536,7 +639,8 @@ function renderAddons() {
   const list = ADDONS.filter(a => !a.when || a.when(state.main));
   [...state.addons].forEach(id => { if (!list.some(a => a.id === id)) state.addons.delete(id); });
   $("#addonOpts").innerHTML = list.map(a => `
-    <label class="chip check"><input type="checkbox" value="${a.id}"${state.addons.has(a.id) ? " checked" : ""}><span>${a.label}</span></label>`).join("");
+    <label class="addon"><input type="checkbox" value="${a.id}"${state.addons.has(a.id) ? " checked" : ""}><span class="box"></span>
+      <span class="ill">${ICON[a.icon]}</span><span class="lbl">${a.label}${a.desc ? `<small>${a.desc}</small>` : ""}</span>${ARROW}</label>`).join("");
 }
 $("#mainOpts").addEventListener("change", e => {
   const before = state.main;
@@ -552,13 +656,13 @@ $("#addonOpts").addEventListener("change", e => {
 });
 renderAddons();
 
-const needsFilm = () => !!(MAIN.find(m => m.id === state.main) || {}).film || state.addons.has("video");
+const needsFilm = () => !!(MAIN.find(m => m.id === state.main) || {}).film || ADDONS.some(a => a.film && state.addons.has(a.id));
 function serviceText() {
   const m = MAIN.find(x => x.id === state.main);
   if (!m) return "";
   const s = m.scopes.find(x => x.id === state.scope);
   return [m.label + (s && m.scopes.length > 1 ? `, ${s.label.toLowerCase()}` : ""),
-    ...ADDONS.filter(a => state.addons.has(a.id)).map(a => a.label.toLowerCase())].join(" + ");
+    ...ADDONS.filter(a => state.addons.has(a.id)).map(a => a.sum || a.label.toLowerCase())].join(" + ");
 }
 
 /* ---------- Ledighet ---------- */
@@ -655,10 +759,10 @@ async function renderCalendar() {
     if (seq !== renderSeq) return;
   }
   $("#calDays").classList.remove("loading");
-  drawDays(true);
+  drawDays(true, true);
 }
 
-function drawDays(ready) {
+function drawDays(ready, build = false) {
   const y = view.getFullYear(), m = view.getMonth();
   const lead = (new Date(y, m, 1).getDay() + 6) % 7;
   const days = new Date(y, m + 1, 0).getDate();
@@ -674,6 +778,12 @@ function drawDays(ready) {
   }
   for (let i = total; i < Math.ceil(total / 7) * 7; i++) html += '<span class="day blank"></span>';
   $("#calDays").innerHTML = html;
+  // Oppbygging: prikkene spretter inn i en bølge fra øvre venstre hjørne.
+  $$("#calDays .day").forEach((el, i) => el.style.setProperty("--i", (i % 7) + Math.floor(i / 7) * 2));
+  $$("#calWk span").forEach((el, i) => el.style.setProperty("--i", i));
+  if (build) {
+    [$("#calCard"), $("#calDays")].forEach(el => { el.classList.remove("build"); void el.offsetWidth; el.classList.add("build"); });
+  } else $("#calDays").classList.remove("build");
   const entry = availCache[ymKey(view)];
   $("#availNotice").hidden = !(ready && entry && entry.status !== "ok");
   $("#availNotice").textContent = "Vi får ikke sjekket kalenderen akkurat nå. Velg ønsket tid, så bekrefter vi den så snart vi kan.";
@@ -696,6 +806,7 @@ function renderDateInfo() {
   $("#calHint").textContent = time ? "" : "Velg tidspunkt.";
 }
 
+let lastTimesDate = null;
 function renderTimes() {
   const date = state.date;
   renderDateInfo();
@@ -707,12 +818,14 @@ function renderTimes() {
     const free = freeFor(state.photographer, date);
     if (state.time && (!free.includes(state.time) || !keys.includes(state.time))) state.time = "";
     $("#timeLabel").textContent = confirmed(date) ? "Ledige tider" : "Ønsket tid";
-    $("#timeOpts").innerHTML = keys.map(k => {
+    $("#timeOpts").classList.toggle("fresh", date !== lastTimesDate);
+    lastTimesDate = date;
+    $("#timeOpts").innerHTML = keys.map((k, i) => {
       const ok = free.includes(k);
-      return `<button type="button" class="time${k === state.time ? " sel" : ""}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}">${k}–${endKey(k)}</button>`;
+      return `<button type="button" class="time${k === state.time ? " sel" : ""}" style="--i:${i}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}">${k}–${endKey(k)}</button>`;
     }).join("");
     $("#timeHint").textContent = state.main === "kveld"
-      ? `Kveldsbildene tas rundt solnedgang (kl. ${sunsetLocal(date)}). Varighet ca. ${hours()} t.`
+      ? `Solnedgang kl. ${sunsetLocal(date)}. Kveldsbildene starter ved solnedgang og varer ca. ${hours()} t.`
       : `Varighet ca. ${hours()} t.`;
   }
   renderPhotographers();
@@ -725,32 +838,24 @@ function renderPhotographers() {
   if (state.photographer !== "forste" && known && !freeFor(state.photographer, date).includes(time)) {
     const p = PHOTOGRAPHERS.find(x => x.id === state.photographer);
     state.photographer = "forste";
-    showErr(2, `${p.name.split(" ")[0]} er opptatt på valgt tid, så vi har valgt første ledige fotograf.`);
+    showErr(3, `${p.name.split(" ")[0]} er opptatt på valgt tid, så vi har valgt første ledige fotograf.`);
   }
   state.assigned = state.photographer === "forste" ? autoAssign() : null;
-
-  const cur = state.photographer === "forste"
-    ? (state.assigned && PHOTOGRAPHERS.find(p => p.id === state.assigned))
-    : PHOTOGRAPHERS.find(p => p.id === state.photographer);
-  $("#phAv").className = "av" + (cur ? "" : " any");
-  $("#phAv").innerHTML = cur ? avatar(cur) : bolt(16);
-  if (state.photographer === "forste") {
-    $("#phName").textContent = cur ? cur.name : "Første ledige fotograf";
-    $("#phNote").textContent = cur ? "Første ledige på valgt tid"
-      : date && time && !confirmed(date) ? "Vi tildeler fotograf når vi bekrefter" : "Vi velger en ledig fotograf for deg";
-  } else {
-    $("#phName").textContent = cur.name;
-    $("#phNote").textContent = "Valgt av deg";
-  }
+  const auto = state.assigned && PHOTOGRAPHERS.find(p => p.id === state.assigned);
 
   const cards = [{ id: "forste", name: "Første ledige", any: true }, ...PHOTOGRAPHERS];
   $("#phGrid").innerHTML = cards.map(p => {
     const busy = known && !p.any && !freeFor(p.id, date).includes(time);
-    const sub = p.any ? "Anbefalt" : busy ? "Opptatt" : p.role;
-    return `<button type="button" class="ph${state.photographer === p.id ? " sel" : ""}${busy ? " busy" : ""}" data-ph="${p.id}"${busy ? ' aria-disabled="true"' : ""}>
-      <span class="av${p.any ? " any" : ""}">${p.any ? bolt(14) : avatar(p)}</span>
-      <span><span class="nm">${esc(p.any ? p.name : p.name.split(" ")[0])}</span><br><span class="st">${esc(sub)}</span></span></button>`;
+    const sel = state.photographer === p.id;
+    const sub = p.any ? (sel && auto ? `Blir ${auto.name.split(" ")[0]}` : "Anbefalt") : busy ? "Opptatt" : sel ? "Valgt" : p.role;
+    return `<button type="button" class="ph${sel ? " sel" : ""}${busy ? " busy" : ""}" data-ph="${p.id}"${busy ? ' aria-disabled="true"' : ""} aria-pressed="${sel}">
+      <span class="photo${p.any ? " any" : ""}">${p.any ? bolt(40) : photoTile(p)}</span>
+      <span class="nm">${esc(p.any ? p.name : p.name.split(" ")[0] + " " + p.name.split(" ").slice(1).join(" "))}</span>
+      <span class="st">${esc(sub)}</span></button>`;
   }).join("");
+  $("#phHint").textContent = !date || !time ? "Velg tid først, så ser du hvem som er ledig."
+    : !confirmed(date) ? "Vi får ikke sjekket kalenderen nå. Vi bekrefter fotograf sammen med tidspunktet."
+    : "Grå = opptatt på valgt tid. «Første ledige» fordeler oppdragene jevnt.";
 }
 
 $("#calDays").addEventListener("click", e => {
@@ -783,18 +888,17 @@ $("#timeOpts").addEventListener("click", e => {
 });
 $("#calPrev").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCalendar(); });
 $("#calNext").addEventListener("click", () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); renderCalendar(); });
-$("#phToggle").addEventListener("click", () => {
-  const open = $("#phGrid").hidden;
-  $("#phGrid").hidden = !open;
-  $("#phToggle").textContent = open ? "Skjul" : "Velg selv";
-  $("#phToggle").setAttribute("aria-expanded", open);
-});
+// Valgt fotograf → videre til kontakt.
 $("#phGrid").addEventListener("click", e => {
   const b = e.target.closest(".ph[data-ph]");
   if (!b || b.classList.contains("busy")) return;
   state.photographer = b.dataset.ph;
-  hideErr(2);
-  drawDays(true); // kalenderen viser valgt fotografs ledighet
+  hideErr(3);
+  renderPhotographers();
+  update();
+  clearTimeout(advanceTimer);
+  $("#advanceMsg3").hidden = false;
+  advanceTimer = setTimeout(() => { if (state.step === 3) goStep(4); }, 600);
 });
 
 /* ---------- Adresseoppslag (Kartverket) ---------- */
@@ -862,13 +966,13 @@ function update() {
   const rows = summaryRows();
   if (state.date) {
     const d = new Date(state.date + "T12:00");
-    $("#sumWd").textContent = WEEKDAYS[d.getDay()].replace(/^./, c => c.toUpperCase()) + (state.time ? ` · kl. ${state.time}` : "");
-    $("#sumBig").innerHTML = `${pad(d.getDate())}.${pad(d.getMonth() + 1)}<br>${MON3[d.getMonth()].toUpperCase()}`;
-    $("#sumBig").classList.remove("none");
+    $("#sumDate").textContent = `${d.getDate()}. ${MONTHS[d.getMonth()]}`;
+    $("#sumDate").classList.remove("none");
+    $("#sumSub").textContent = WEEKDAYS[d.getDay()].replace(/^./, c => c.toUpperCase()) + (state.time ? `, kl. ${state.time}–${endKey(state.time)}` : " – velg tidspunkt");
   } else {
-    $("#sumWd").textContent = "Dato ikke valgt";
-    $("#sumBig").innerHTML = "00.00<br>&mdash;";
-    $("#sumBig").classList.add("none");
+    $("#sumDate").textContent = "Velg dato";
+    $("#sumDate").classList.add("none");
+    $("#sumSub").textContent = "Dato og tidspunkt velges i steg 2";
   }
   $$("[data-sum]").forEach(dl => { dl.innerHTML = rowsHtml(rows); });
   const d = state.date && new Date(state.date + "T12:00");
@@ -890,7 +994,7 @@ function validStep(n) {
     if (!addr.value.trim()) { showErr(2, "Skriv inn adressen for fotograferingen."); addr.classList.add("err"); return false; }
     if (!state.date || !state.time) return showErr(2, "Velg dato og tidspunkt."), false;
   }
-  if (n === 3) {
+  if (n === 4) {
     let first = null;
     ["f_navn", "f_tlf", "f_epost"].forEach(id => {
       const el = $("#" + id), v = el.value.trim();
@@ -898,7 +1002,7 @@ function validStep(n) {
       el.classList.toggle("err", bad);
       if (bad && !first) first = el;
     });
-    if (first) { first.focus(); return showErr(3, "Fyll inn navn, telefon og en gyldig e-postadresse."), false; }
+    if (first) { first.focus(); return showErr(4, "Fyll inn navn, telefon og en gyldig e-postadresse."), false; }
   }
   hideErr(n);
   return true;
@@ -910,7 +1014,7 @@ function goStep(n, scroll = true) {
   for (let i = 1; i < n; i++) if (!validStep(i)) { n = i; break; }
   state.step = n;
   state.maxStep = Math.max(state.maxStep, n);
-  clearTimeout(advanceTimer); $("#advanceMsg").hidden = true;
+  clearTimeout(advanceTimer); $("#advanceMsg").hidden = true; $("#advanceMsg3").hidden = true;
   $$(".step").forEach(sec => {
     const k = +sec.dataset.step;
     const show = k <= state.maxStep;
@@ -918,6 +1022,7 @@ function goStep(n, scroll = true) {
       sec.hidden = false;
       sec.classList.remove("open"); void sec.offsetWidth; sec.classList.add("open");
       if (k === 2) renderCalendar();
+      if (k === 3) renderPhotographers();
     }
     sec.hidden = !show;
     // «Fortsett» trengs ikke når neste seksjon allerede er åpen.
@@ -973,7 +1078,7 @@ function remember() {
 const form = $("#booking");
 form.addEventListener("submit", async e => {
   e.preventDefault();
-  for (const n of [1, 2, 3]) if (!validStep(n)) { if (n !== 3) goStep(n); return; }
+  for (const n of [1, 2, 3, 4]) if (!validStep(n)) { if (n !== 4) goStep(n); return; }
   remember();
 
   const v = id => $("#" + id).value.trim();
@@ -988,12 +1093,13 @@ form.addEventListener("submit", async e => {
   const note = [
     state.photographer === "forste" && p ? "Kunden valgte første ledige." : "",
     addons.some(a => a.id === "plantegning") ? "Ønsker plantegning." : "",
+    addons.some(a => a.id === "some") ? "Ønsker SoMe-video (vertikal, 15–30 sek)." : "",
     v("f_mer"),
   ].filter(Boolean).join(" ");
 
   const btn = $("#submitBtn");
   btn.disabled = true; btn.textContent = "Sender …";
-  hideErr(3);
+  hideErr(4);
   try {
     // 1) Reserver tiden (kø i Apps Script, som sjekker at tiden fortsatt er ledig).
     let res = null;
@@ -1051,15 +1157,27 @@ form.addEventListener("submit", async e => {
       : "Vi fikk ikke reservert tiden automatisk, men forespørselen er sendt. Vi tar kontakt for å bekrefte tid og fotograf.";
     $("#rcSum").innerHTML = rowsHtml(summaryRows());
     form.hidden = true;
-    $("#receipt").hidden = false;
+    playSuccess();
     $$("#stepper li").forEach(li => { li.className = "done"; li.style.pointerEvents = "none"; });
     $(".head").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
-    showErr(3, "Noe gikk galt under innsendingen. Sjekk nettforbindelsen og prøv igjen, eller send oss en e-post på kontakt@fotostallen.no.");
+    showErr(4, "Noe gikk galt under innsendingen. Sjekk nettforbindelsen og prøv igjen, eller send oss en e-post på kontakt@fotostallen.no.");
   } finally {
     btn.disabled = false; btn.textContent = "Send bestilling";
   }
 });
+
+// Ferdig-animasjon: små prikker spruter ut, den røde sirkelen popper opp og haken tegnes (ca. 1,2 s).
+function playSuccess() {
+  const colors = ["#dc384c", "#121212", "#dc384c", "#c9c8c4"];
+  $("#confetti").innerHTML = Array.from({ length: 18 }, (_, i) => {
+    const a = (i / 18) * Math.PI * 2 + (i % 2) * .2, r = 70 + (i % 3) * 18;
+    return `<i style="background:${colors[i % 4]};--x:${Math.round(Math.cos(a) * r)}px;--y:${Math.round(Math.sin(a) * r)}px;--d:${(i % 3) * 30}ms"></i>`;
+  }).join("");
+  const rc = $("#receipt");
+  rc.hidden = false;
+  rc.classList.remove("play"); void rc.offsetWidth; rc.classList.add("play");
+}
 
 $("#again").addEventListener("click", () => {
   Object.assign(state, { step: 1, maxStep: 1, main: null, scope: null, date: "", time: "", photographer: "forste", assigned: null });
@@ -1069,7 +1187,7 @@ $("#again").addEventListener("click", () => {
   $$("#mainOpts input").forEach(i => { i.checked = false; });
   $$("#stepper li").forEach(li => { li.style.pointerEvents = ""; });
   renderScopes(); renderAddons();
-  $("#receipt").hidden = true; form.hidden = false;
+  $("#receipt").hidden = true; $("#receipt").classList.remove("play"); form.hidden = false;
   $$(".step").forEach(sec => { if (+sec.dataset.step > 1) sec.hidden = true; });
   goStep(1);
   loadMonth(view);

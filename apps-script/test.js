@@ -6,7 +6,7 @@ const path = require("node:path");
 
 const mod = { exports: {} };
 new Function("module", fs.readFileSync(path.join(__dirname, "Code.gs"), "utf8"))(mod);
-const { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, slotsOfDay, eveningKey, bookingRef, ymd, zonedToUtc } = mod.exports;
+const { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, slotsOfDay, eveningKey, sunsetUtc, bookingRef, ymd, zonedToUtc } = mod.exports;
 
 const oslo = (date, h, mi = 0) => zonedToUtc({ y: +date.slice(0, 4), m: +date.slice(5, 7), d: +date.slice(8, 10) }, h, mi, "Europe/Oslo");
 const FROM = oslo("2026-10-01", 0), TO = oslo("2026-12-01", 0);
@@ -173,13 +173,16 @@ test("uten synkdata, eller med gammelt format, er alle luker på hverdager ledig
   assert.deepStrictEqual(computeSlots("scott", "2026-10-21", "2026-10-21", old, [], NOW)["2026-10-21"], all("2026-10-21"), "v1-data brukes ikke");
 });
 
-test("kveldsluken følger solnedgang i Oslo", () => {
+test("kveldsluken starter ved solnedgang, rundet opp til kvarter", () => {
   const min = k => Number(k.slice(0, 2)) * 60 + Number(k.slice(3));
-  assert.ok(min(eve("2026-06-21")) >= 21 * 60 + 45 && min(eve("2026-06-21")) <= 22 * 60 + 15, `midtsommer ${eve("2026-06-21")}`);
-  assert.ok(min(eve("2026-12-21")) >= 14 * 60 + 15 && min(eve("2026-12-21")) <= 14 * 60 + 45, `vintersolverv ${eve("2026-12-21")}`);
+  const ssMin = date => { const t = new Date(sunsetUtc(ymd(date))).toLocaleTimeString("nb-NO", { timeZone: "Europe/Oslo", hour: "2-digit", minute: "2-digit" }).split(/[:.]/).map(Number); return t[0] * 60 + t[1]; };
+  assert.strictEqual(eve("2027-05-05"), "21:30", "Scotts eksempel: solnedgang 21:23");
+  for (const d of ["2026-10-19", "2026-12-21", "2027-03-20", "2027-06-21", "2027-05-05"]) {
+    assert.ok(min(eve(d)) >= ssMin(d), `${d}: aldri før solnedgang (${eve(d)})`);
+    assert.ok(min(eve(d)) - ssMin(d) <= 15, `${d}: høyst et kvarter etter`);
+    assert.strictEqual(min(eve(d)) % 15, 0, `${d}: kvarter`);
+  }
   assert.ok(min(eve("2026-10-26")) < min(eve("2026-10-23")) - 50, "sommertid slutter 25. okt: klokka hopper en time");
-  assert.strictEqual(min(eve("2026-10-19")) % 15, 0, "rundet til kvarter");
-  assert.strictEqual(all("2026-12-21").length, 7, "vinter: kveldsluken kommer i tillegg til dagslukene");
 });
 
 test("masker i nytt format: én dag, sju luker", () => {
