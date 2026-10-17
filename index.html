@@ -1334,8 +1334,9 @@ $("#again").addEventListener("click", () => {
 
 $("#stampYear").textContent = today.getFullYear();
 
-// Prikken og malingen. Når toppen scrolles ut (sink 0–1), glir sirkelen i en bue ned, krymper og legger seg som et
-// punktum etter overskriften til Tjenester; da vokser et avrundet rødt felt ut fra den, bak seksjonen. Går kunden
+// Prikken og malingen. Så snart kunden begynner å scrolle toppen ut, glir sirkelen av seg selv i en bue ned, krymper
+// og legger seg som et punktum etter overskriften til Tjenester (utløser med margin, ikke scroll-styrt: da treffer
+// den alltid, også på korte sider, og blafrer ikke om man scroller litt fram og tilbake); da vokser et avrundet rødt felt ut fra den, bak seksjonen. Går kunden
 // videre, trekker feltet seg inn i prikken igjen, prikken glir ned til neste overskrift, og feltet vokser ut der.
 // Bevegelsen er fjærdempet per bilde (bremser inn mot målet). Alt måles med IntersectionObserver, som også virker
 // når siden ligger i en iframe på fotostallen.no (der scroller bare foreldresiden, og rootMargin ignoreres).
@@ -1343,7 +1344,7 @@ $("#stampYear").textContent = today.getFullYear();
   const head = $(".head"), dot = $(".deco-circle");
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const small = () => innerWidth < 600;
-  let sink = 0, current = 1, painted = 0, raf = 0, last = 0;
+  let sink = 0, away = false, current = 1, painted = 0, raf = 0, last = 0;
   const pos = { x: 0, y: 0, s: 1 }, visible = new Map(), paints = new Map();
 
   const docRect = el => { const r = el.getBoundingClientRect(); return { x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height }; };
@@ -1355,13 +1356,9 @@ $("#stampYear").textContent = today.getFullYear();
     return { x: h2.x + h2.w + d * .9, y: h2.y + h2.h * .82 - d / 2 };
   }
   function target() {
-    const o = origin(), p = Math.min(1, sink / .7), s = dotSize() / dot.offsetWidth;
-    if (current === 1 && p < 1) {   // på vei ned: først ned (ut under panelet), så inn mot overskriften
-      const l = landing(1);
-      return { x: o.x + (l.x - o.x) * p * p, y: o.y + (l.y - o.y) * (1 - (1 - p) ** 2), s: 1 - (1 - s) * p, scrub: true };
-    }
+    if (!away) { const o = origin(); return { x: o.x, y: o.y, s: 1 }; }
     const l = landing(current);
-    return { x: l.x, y: l.y, s };
+    return { x: l.x, y: l.y, s: dotSize() / dot.offsetWidth };
   }
 
   function box(k) {
@@ -1392,15 +1389,16 @@ $("#stampYear").textContent = today.getFullYear();
   function frame(t) {
     const dt = Math.min(.05, last ? (t - last) / 1000 : 1 / 60); last = t;
     const g = target(), o = origin();
-    // Fjærdemping: følger scrollingen tett, men glir rolig mellom seksjonene.
-    const k = 1 - Math.exp(-dt * (g.scrub ? 16 : 7));
+    // Fjærdemping som bremser inn mot målet. Loddrett går raskere enn vannrett, så banen blir en bue
+    // (først ned, ut under panelet, så inn mot overskriften).
+    const kx = 1 - Math.exp(-dt * 4.5), ky = 1 - Math.exp(-dt * 8), ks = 1 - Math.exp(-dt * 6);
     const py = pos.y;
-    pos.x += (g.x - pos.x) * k; pos.y += (g.y - pos.y) * k; pos.s += (g.s - pos.s) * k;
+    pos.x += (g.x - pos.x) * kx; pos.y += (g.y - pos.y) * ky; pos.s += (g.s - pos.s) * ks;
     // Litt flytende: prikken strekkes lett i fartsretningen.
     const st = Math.min(.18, Math.abs(pos.y - py) / dt / 5000);
     dot.style.transform = `translate(${pos.x - o.x}px, ${pos.y - o.y}px) scale(${pos.s * (1 - st / 2)}, ${pos.s * (1 + st)})`;
     const dist = Math.hypot(g.x - pos.x, g.y - pos.y);
-    setPainted(!g.scrub && dist < 20 ? current : 0);
+    setPainted(away && dist < 20 ? current : 0);
     raf = dist < .3 && Math.abs(g.s - pos.s) < .0005 ? 0 : requestAnimationFrame(frame);
   }
   function kick() {
@@ -1416,6 +1414,9 @@ $("#stampYear").textContent = today.getFullYear();
     if (!e.isIntersecting) sink = 1;
     else sink = e.intersectionRect.top > e.boundingClientRect.top + .5 ? (h - e.intersectionRect.height) / h : 0;
     head.style.setProperty("--sink", sink < .03 ? 0 : sink.toFixed(3));
+    // Av gårde når en femtedel av toppen er scrollet ut; tilbake først helt øverst.
+    if (!away && sink > .2) away = true;
+    else if (away && sink < .05) away = false;
     kick();
   }, { threshold: Array.from({ length: 101 }, (_, i) => i / 100) }).observe(head);
 
