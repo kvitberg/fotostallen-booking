@@ -43,27 +43,26 @@
   .glabel span { text-transform: none; letter-spacing: 0; }
   .hint { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
 
-  /* Topp (redaksjonell, med dempet halvsirkel som i referansen) */
-  .head { position: relative; overflow: hidden; margin: -28px -20px 34px; padding: 28px 20px 64px; }
-  .head > * { position: relative; z-index: 1; }
-  .head .deco-circle { position: absolute; z-index: 0; width: 190px; height: 190px; border-radius: 50%; background: #d6726e; right: -95px; top: 68px; }
-  .head .deco-dot { position: absolute; z-index: 0; border-radius: 50%; background: #d6726e; }
-  .head .d1 { width: 9px; height: 9px; right: 122px; top: 168px; }
-  .head .d2 { width: 15px; height: 15px; right: 108px; top: 196px; }
+  /* Topp: lyst panel med god luft, stor halvsirkel bak panelets høyre kant (som i referansen) */
+  .head { position: relative; overflow: hidden; margin: -28px -20px 30px; padding: 40px 20px 56px; }
+  .head-panel { position: relative; z-index: 2; width: calc(100% - 220px); min-height: 300px; display: flex; flex-direction: column; justify-content: space-between; gap: 72px; box-sizing: border-box; padding: 30px 38px 40px; background: var(--card); border-radius: 30px; box-shadow: 0 34px 60px -38px rgba(18,18,18,.28); }
+  .head .deco-circle { position: absolute; z-index: 1; width: 340px; height: 340px; border-radius: 50%; background: #d6726e; left: calc(100% - 410px); top: 28px; }
+  .head .deco-dot { position: absolute; z-index: 1; border-radius: 50%; background: #d6726e; }
+  .head .d1 { width: 10px; height: 10px; right: 30px; bottom: 120px; }
+  .head .d2 { width: 18px; height: 18px; right: 54px; bottom: 70px; }
+  .stamp { position: absolute; z-index: 1; right: 20px; top: 40px; text-align: right; line-height: 1.05; }
+  .stamp b { display: block; font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
+  .stamp span { font-size: 11px; font-weight: 700; letter-spacing: .16em; }
   .head-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  .brand { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: -.01em; }
-  .stepper { display: flex; gap: 2px; list-style: none; margin: 0; padding: 4px; border-radius: 10px; background: rgba(255,255,255,.55); }
-  .stepper li { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--faint); transition: background .2s, color .2s; }
+  .brand { font-size: 15px; font-weight: 500; color: var(--accent); letter-spacing: .01em; }
+  .stepper { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+  .stepper li { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 5px; font-size: 13px; font-weight: 500; color: var(--faint); transition: background .2s, color .2s; }
   .stepper li .n { font-size: 11px; font-weight: 600; opacity: .7; }
   .stepper li.done { color: var(--ink); cursor: pointer; }
   .stepper li.done:hover { background: rgba(18,18,18,.05); }
   .stepper li.cur { background: var(--accent); color: #fff; }
-  .head-main { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-top: 54px; padding-right: 150px; }
-  h1 { margin: 0; font-size: clamp(30px, 4vw, 42px); font-weight: 600; letter-spacing: -.025em; line-height: 1.05; }
-  .lead { margin: 10px 0 0; font-size: 15px; color: var(--muted); }
-  .stamp { text-align: right; line-height: 1.05; }
-  .stamp b { display: block; font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
-  .stamp span { font-size: 12px; font-weight: 700; letter-spacing: .14em; }
+  h1 { margin: 0; font-size: clamp(32px, 4vw, 46px); font-weight: 600; letter-spacing: -.025em; line-height: 1.05; }
+  .lead { margin: 12px 0 0; font-size: 15px; color: var(--muted); }
 
   /* Oppsett */
   .layout > * { min-width: 0; }
@@ -375,10 +374,10 @@
   @media (max-width: 600px) {
     .wrap { padding: 20px 12px 36px; }
     .card { padding: 20px 18px; border-radius: 26px; }
-    .head { margin: -20px -12px 26px; padding: 20px 12px 30px; }
-    .head .deco-circle { width: 140px; height: 140px; right: -70px; top: 52px; }
-    .head .d1 { right: 84px; top: 150px; } .head .d2 { right: 74px; top: 170px; }
-    .head-main { margin-top: 40px; padding-right: 90px; }
+    .head { margin: -20px -12px 14px; padding: 22px 12px 30px; }
+    .head-panel { width: calc(100% - 44px); min-height: 0; gap: 56px; padding: 22px 22px 28px; border-radius: 26px; }
+    .head .deco-circle { width: 200px; height: 200px; left: calc(100% - 156px); top: 46px; }
+    .head .d1 { right: 18px; bottom: 40px; } .head .d2 { display: none; }
     .stamp { display: none; }
     .stepper li { padding: 0 9px; }
     .stepper li .lbl { display: none; }
@@ -401,6 +400,8 @@
 <main class="wrap">
   <header class="head">
     <span class="deco-circle" aria-hidden="true"></span><span class="deco-dot d1" aria-hidden="true"></span><span class="deco-dot d2" aria-hidden="true"></span>
+    <div class="stamp" aria-hidden="true"><b id="stampYear"></b><span id="stampMonth"></span></div>
+    <div class="head-panel">
     <div class="head-top">
       <span class="brand">Fotostallen</span>
       <ol class="stepper" id="stepper">
@@ -411,11 +412,9 @@
       </ol>
     </div>
     <div class="head-main">
-      <div>
-        <h1>Bestill fotografering</h1>
-        <p class="lead">Fotografering av bolig og interiør</p>
-      </div>
-      <div class="stamp" aria-hidden="true"><b id="stampYear"></b><span id="stampMonth"></span></div>
+      <h1>Bestill fotografering</h1>
+      <p class="lead">Fotografering av bolig og interiør</p>
+    </div>
     </div>
   </header>
 
