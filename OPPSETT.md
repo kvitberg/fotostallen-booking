@@ -1,6 +1,6 @@
 # Koble bookingsiden til fotografenes kalendere
 
-Bookingsiden viser ledige tider på hverdager: oppdrag på 1,5 time med start 08:00, 09:30, 11:00, 12:30, 14:00 og 15:30, og for kveldsfoto én luke som starter 30 minutter før solnedgang i Oslo. Ledighet hentes fra de samme iCloud-kalenderne som fakturaroboten leser, og hver bestilling legges inn i **fotografens egen kalender**.
+Bookingsiden viser ledige tider på hverdager: oppdrag på 1,5 time med start 08:00, 09:30, 11:00, 12:30, 14:00 og 15:30, og for kveldsfoto én luke som starter ved solnedgang i Oslo (rundet opp til nærmeste kvarter, f.eks. 5. mai 2027: solnedgang 21:23 → 21:30). Ledighet hentes fra de samme iCloud-kalenderne som fakturaroboten leser, og hver bestilling legges inn i **fotografens egen kalender**.
 
 ```
 iCloud: «Glenn Foto», «Scott foto», …  ◀──les og skriv (CalDAV)──  synkjobb på Scotts Mac (hvert 5. min)
