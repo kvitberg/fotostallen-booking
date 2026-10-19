@@ -229,3 +229,40 @@ test("første ledige i synkjobben: første ledige fotograf, men aldri Glenn", ()
 test("referansenummer", () => {
   assert.strictEqual(bookingRef("9225d5a2-84cd-4809-8603-257551e80d39"), "FS-9225D5A2");
 });
+
+const { summarizeForecast } = mod.exports;
+// Oslo-tid for tester (UTC+2 i oktober): «yyyy-MM-dd HH:mm».
+const osloLocal = t => new Date(Date.parse(t) + 2 * 3600e3).toISOString().slice(0, 16).replace("T", " ");
+const entry = (time, temp, n1, n6) => ({ time, data: { instant: { details: { air_temperature: temp } },
+  ...(n1 && { next_1_hours: { summary: { symbol_code: n1[0] }, details: { precipitation_amount: n1[1] } } }),
+  ...(n6 && { next_6_hours: { summary: { symbol_code: n6[0] }, details: { precipitation_amount: n6[1] } } }) } });
+
+test("værvarsel: bare valgt dato i Oslo-tid, timesnedbør summeres", () => {
+  const ts = [
+    entry("2026-10-19T21:00:00Z", 6, ["cloudy", 0.5]),            // 23:00 den 19. – annen dato
+    entry("2026-10-19T22:00:00Z", 5, ["rain", 0.4]),              // 00:00 den 20.
+    entry("2026-10-20T10:00:00Z", 11, ["partlycloudy_day", 0.1], ["rain", 3]),
+    entry("2026-10-20T21:00:00Z", 7, ["clearsky_night", 0]),      // 23:00 den 20.
+  ];
+  const s = summarizeForecast(ts, "2026-10-20", osloLocal);
+  assert.deepStrictEqual(s.points.map(p => p.t), ["00:00", "12:00", "23:00"]);
+  assert.strictEqual(s.points[1].symbol, "partlycloudy_day", "timessymbol foran seks-timers");
+  assert.strictEqual(s.precip, 0.5);
+});
+
+test("værvarsel: seks-timersverdier lenger fram telles uten overlapp", () => {
+  const ts = ["T04:00", "T10:00", "T16:00", "T22:00"].map((h, i) => entry(`2026-10-25${h}:00Z`, 8, null, ["lightrain", [1, 2, 0, 4][i]]));
+  const s = summarizeForecast(ts, "2026-10-25", osloLocal);   // 06, 12, 18 lokal (00:00 den 26. faller utenfor)
+  assert.strictEqual(s.points.length, 3);
+  assert.strictEqual(s.precip, 3);
+  assert.deepStrictEqual(summarizeForecast(ts, "2026-11-30", osloLocal), { points: [], precip: 0 });
+});
+
+test("kalendernotatet tar med selger, nøkkel og usikker kvm", () => {
+  const q = { id: "abc", date: "2026-10-20", time: "09:30", duration: 90, photographer: "scott", navn: "Kari", telefon: "1", epost: "k@x.no",
+    faktura: "Kari", address: "Gata 1", kvm: "", kvmUsikker: true, nokkel: true, etasje: "3", leilighet: "H0301",
+    selgerKontakt: true, selgerNavn: "Ola", selgerTlf: "91234567", selgerEpost: "", selgerBekreftelse: "sms" };
+  const text = bookingIcs(q, NOW, "scott").replace(/\r\n /g, "").replace(/\\n/g, "\n").replace(/\\,/g, ",");
+  for (const s of ["Størrelse: usikker", "Nøkkeloppdrag, etasje 3, leil. H0301", "Kontakt selger for å avtale tidspunkt.", "Selger: Ola, 91234567", "Bekreftelse til selger: SMS"])
+    assert.ok(text.includes(s), s);
+});

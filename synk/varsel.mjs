@@ -10,6 +10,7 @@ import { join } from "node:path";
 
 const execFileP = promisify(execFile);
 const WEEKDAYS = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
+const MONTHS = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
 const pad = n => String(n).padStart(2, "0");
 
 /** «+47XXXXXXXX» for norske mobilnumre, ellers uendret +-nummer (samme regel som fakturaroboten). */
@@ -37,6 +38,8 @@ export function lagTekster(q, who, ref, durationMin) {
     `Ny booking${viaForste ? " (første ledige)" : ""}: ${dato} ${tid}, ${q.address}.`,
     tjenester ? `${tjenester.charAt(0).toUpperCase()}${tjenester.slice(1)}.` : "",
     `Kunde: ${q.navn}, ${q.telefon}.`,
+    q.selgerKontakt ? `Avtal tid med selger${q.selgerNavn || q.selgerTlf ? `: ${[q.selgerNavn, q.selgerTlf].filter(Boolean).join(", ")}` : ""}.` : "",
+    q.nokkel ? "Nøkkeloppdrag." : "",
     `Ref. ${ref}`,
   ].filter(Boolean).join(" ");
   const emne = `Ny booking ${dato} ${tid} – ${q.address}`;
@@ -54,7 +57,10 @@ export function lagTekster(q, who, ref, durationMin) {
     `E-post: ${q.epost}`,
     q.oppdrag ? `Oppdragsnr.: ${q.oppdrag}` : null,
     q.faktura ? `Faktura til: ${q.faktura}` : null,
-    q.kvm ? `Størrelse: ${q.kvm} kvm` : null,
+    q.kvmUsikker ? "Størrelse: usikker" : q.kvm ? `Størrelse: ${q.kvm} kvm` : null,
+    q.nokkel ? `Nøkkeloppdrag${[q.etasje && `etasje ${q.etasje}`, q.leilighet && `leil. ${q.leilighet}`].filter(Boolean).map(x => `, ${x}`).join("")}` : null,
+    q.selgerKontakt ? "Selger skal kontaktes for å avtale tidspunkt." : null,
+    q.selgerNavn || q.selgerTlf || q.selgerEpost ? `Selger: ${[q.selgerNavn, q.selgerTlf, q.selgerEpost].filter(Boolean).join(", ")}` : null,
     q.ankomst ? `Ankomst: ${q.ankomst}` : null,
     q.note ? `Kommentar: ${q.note}` : null,
     "",
@@ -62,6 +68,63 @@ export function lagTekster(q, who, ref, durationMin) {
     "Tidspunktet må bekreftes med kunden.",
   ].filter(x => x !== null).join("\n");
   return { sms, emne, epost };
+}
+
+/**
+ * Bekreftelser til den som bestilte (alltid SMS og e-post) og til selger (kanal etter valget i skjemaet).
+ * Skal vi avtale tid med selger, får selger beskjed om at datoen er satt av og at vi kommer tilbake med
+ * tidspunkt; ellers står tidspunktet i meldingen.
+ */
+export function lagBekreftelser(q, ref, durationMin) {
+  const d = new Date(q.date + "T12:00");
+  const dato = `${WEEKDAYS[d.getDay()]} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
+  const tid = `kl. ${q.time}–${endTime(q.time, q.duration || durationMin)}`;
+  const tjenester = q.services || (q.products || []).join(", ");
+  const kontakt = !!q.selgerKontakt;
+  const fornavn = navn => (navn || "").trim().split(/\s+/)[0];
+  const neste = kontakt
+    ? "Vi tar kontakt med selger i løpet av dagen for å avtale tidspunkt."
+    : "Vi bekrefter tidspunktet så snart vi kan.";
+
+  const innsender = {
+    sms: `Takk! Bestillingen av fotografering i ${q.address} er registrert (ref. ${ref}). Ønsket tid: ${dato} ${tid}. ${neste} Hilsen Fotostallen`,
+    emne: `Bestilling registrert – ${q.address}`,
+    epost: [
+      `Hei ${fornavn(q.navn)},`,
+      "",
+      `Takk for bestillingen. Den er registrert hos oss. ${neste}`,
+      "",
+      `Adresse: ${q.address}`,
+      `Ønsket tid: ${dato} ${tid}`,
+      `Tjenester: ${tjenester || "–"}`,
+      q.nokkel ? `Nøkkeloppdrag${[q.etasje && `etasje ${q.etasje}`, q.leilighet && `leil. ${q.leilighet}`].filter(Boolean).map(x => `, ${x}`).join("")}` : null,
+      q.selgerNavn || q.selgerTlf ? `Selger: ${[q.selgerNavn, q.selgerTlf].filter(Boolean).join(", ")}` : null,
+      q.oppdrag ? `Oppdragsnr.: ${q.oppdrag}` : null,
+      `Referanse: ${ref}`,
+      "",
+      "Bestillingen er ikke bindende før vi har bekreftet tidspunktet.",
+      "",
+      "Hilsen Fotostallen",
+      "kontakt@fotostallen.no",
+    ].filter(x => x !== null).join("\n"),
+  };
+
+  let selger = null;
+  if (q.selgerBekreftelse && q.selgerBekreftelse !== "ingen") {
+    const hei = q.selgerNavn ? `Hei ${fornavn(q.selgerNavn)}!` : "Hei!";
+    const hva = `${q.navn} har bestilt fotografering av boligen i ${q.address} hos Fotostallen.`;
+    const nar = kontakt
+      ? `Vi har satt av ${dato}, og kommer tilbake til deg med tidspunkt.`
+      : `Fotografen kommer ${dato} ${tid}.`;
+    selger = {
+      sms: `${hei} ${hva} ${nar} Hilsen Fotostallen`,
+      emne: `Fotografering av boligen – ${dato}`,
+      epost: [hei, "", hva, nar, "", "Har du spørsmål, svar på denne e-posten eller skriv til kontakt@fotostallen.no.", "", "Hilsen Fotostallen"].join("\n"),
+      sendSms: q.selgerBekreftelse === "sms" || q.selgerBekreftelse === "begge",
+      sendEpost: q.selgerBekreftelse === "epost" || q.selgerBekreftelse === "begge",
+    };
+  }
+  return { innsender, selger };
 }
 
 /** Kontaktinfo per fotograf: kontakter.json først, ellers fakturarobotens kalenderkonfig. */

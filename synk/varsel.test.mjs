@@ -4,7 +4,7 @@ import assert from "node:assert";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { lagTekster, normaliserNummer, lesKontakter } from "./varsel.mjs";
+import { lagTekster, lagBekreftelser, normaliserNummer, lesKontakter } from "./varsel.mjs";
 
 const q = {
   id: "9225d5a2-84cd", photographer: "kristine", date: "2026-10-20", time: "09:30", duration: 90,
@@ -48,4 +48,23 @@ test("kontakter.json går foran fakturarobotens kalenderkonfig", () => {
   writeFileSync(join(fk, "config.lokal", "kalendere.json"), JSON.stringify({ "Glenn Foto": { epost: "g@x.no", mobil: "49999999" }, "Scott foto": { epost: "s@x.no" } }));
   const k = lesKontakter(synk, { glenn: "Glenn Foto", scott: "Scott foto", kevin: "Kevin Foto" }, fk);
   assert.deepStrictEqual(k, { glenn: { epost: "g@x.no", mobil: "41111111" }, scott: { epost: "s@x.no", mobil: "" }, kevin: { epost: "", mobil: "" } });
+});
+
+test("innsender får bekreftelse; skal selger kontaktes, står det i meldingen", () => {
+  const b = lagBekreftelser({ ...q, selgerKontakt: true, selgerBekreftelse: "ingen" }, "FS-1", 90);
+  assert.ok(b.innsender.sms.includes("er registrert (ref. FS-1)"));
+  assert.ok(b.innsender.sms.includes("Vi tar kontakt med selger i løpet av dagen"));
+  assert.ok(b.innsender.epost.startsWith("Hei Kari,"));
+  assert.strictEqual(b.selger, null, "ingen bekreftelse til selger valgt");
+});
+
+test("selger: dato og «kommer tilbake med tidspunkt» når tiden skal avtales, ellers tidspunktet", () => {
+  const base = { ...q, selgerNavn: "Ola Hansen", selgerTlf: "91234567", selgerEpost: "ola@example.com" };
+  const avtales = lagBekreftelser({ ...base, selgerKontakt: true, selgerBekreftelse: "sms" }, "FS-1", 90).selger;
+  assert.strictEqual(avtales.sms, "Hei Ola! Kari Nordmann har bestilt fotografering av boligen i Torggata 1, 0181 Oslo hos Fotostallen. Vi har satt av tirsdag 20. oktober, og kommer tilbake til deg med tidspunkt. Hilsen Fotostallen");
+  assert.deepStrictEqual([avtales.sendSms, avtales.sendEpost], [true, false]);
+  const fast = lagBekreftelser({ ...base, selgerKontakt: false, selgerBekreftelse: "begge" }, "FS-1", 90).selger;
+  assert.ok(fast.sms.includes("Fotografen kommer tirsdag 20. oktober kl. 09:30–11:00."));
+  assert.deepStrictEqual([fast.sendSms, fast.sendEpost], [true, true]);
+  assert.ok(!lagBekreftelser({ ...base, selgerKontakt: false }, "FS-1", 90).innsender.sms.includes("selger"));
 });

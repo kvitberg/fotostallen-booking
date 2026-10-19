@@ -178,6 +178,19 @@
   .field input.err, .field textarea.err { border-bottom-color: var(--accent); }
   .field:has(.err) label { color: var(--accent); }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+  /* Værvarsel på valgt dato */
+  .wx { display: flex; gap: 12px; align-items: flex-start; margin: 14px 0 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .wx svg { flex: 0 0 auto; margin-top: 2px; }
+  .wx b { display: block; font-size: 15px; font-weight: 600; }
+  .wx span { display: block; font-size: 13px; color: var(--muted); }
+  .wx small { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .wx .wx-note { font-size: 13px; color: var(--muted); }
+  .subgroup { margin-top: 28px; }
+  .subgroup .q { margin: 4px 0 10px; font-size: 15px; font-weight: 500; }
+  .subgroup .chips + .q { margin-top: 18px; }
+  .inline-check { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; color: var(--muted); cursor: pointer; }
+  .inline-check input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .field input:disabled { opacity: .45; }
   .grid2 .full { grid-column: 1 / -1; }
   .grid2 .field { padding-top: 14px; }
   details.more { border-top: 1px solid var(--line); margin-top: 18px; }
@@ -498,6 +511,7 @@
                   <div class="wd" id="calWd"></div>
                 </div>
                 <p class="hint" id="calHint"></p>
+                <div class="wx" id="wx" aria-live="polite" hidden></div>
                 <div class="times-wrap" id="timeGroup" hidden>
                   <span class="label" id="timeLabel">Tidspunkt</span>
                   <div class="times" id="timeOpts"></div>
@@ -536,6 +550,40 @@
             <div class="field"><label for="f_tlf">Telefon</label><input id="f_tlf" type="tel" autocomplete="tel" required></div>
             <div class="field"><label for="f_epost">E-post</label><input id="f_epost" type="email" autocomplete="email" required></div>
           </div>
+          <p class="hint">Du får en bekreftelse på SMS og e-post når bestillingen er registrert.</p>
+
+          <div class="subgroup">
+            <div class="glabel">Selger</div>
+            <p class="q" id="qSelger">Skal vi kontakte selger for å avtale tidspunkt?</p>
+            <div class="chips" role="radiogroup" aria-labelledby="qSelger">
+              <label class="chip"><input type="radio" name="selgerKontakt" value="ja"><span>Ja, kontakt selger</span></label>
+              <label class="chip"><input type="radio" name="selgerKontakt" value="nei"><span>Nei</span></label>
+            </div>
+            <p class="q" id="qBekreft">Skal selger få bekreftelse på oppdraget?</p>
+            <div class="chips" role="radiogroup" aria-labelledby="qBekreft">
+              <label class="chip"><input type="radio" name="selgerBekreftelse" value="ingen" checked><span>Nei</span></label>
+              <label class="chip"><input type="radio" name="selgerBekreftelse" value="sms"><span>SMS</span></label>
+              <label class="chip"><input type="radio" name="selgerBekreftelse" value="epost"><span>E-post</span></label>
+              <label class="chip"><input type="radio" name="selgerBekreftelse" value="begge"><span>Begge</span></label>
+            </div>
+            <div class="grid2" id="selgerFields" hidden>
+              <div class="field full"><label for="f_snavn">Selgers navn</label><input id="f_snavn" autocomplete="off"></div>
+              <div class="field" id="fieldStlf"><label for="f_stlf">Selgers mobil</label><input id="f_stlf" type="tel" autocomplete="off"></div>
+              <div class="field" id="fieldSepost"><label for="f_sepost">Selgers e-post</label><input id="f_sepost" type="email" autocomplete="off"></div>
+            </div>
+          </div>
+
+          <div class="subgroup">
+            <div class="glabel">Oppdraget</div>
+            <div class="chips">
+              <label class="chip check"><input type="checkbox" id="f_nokkel"><span>Nøkkeloppdrag</span></label>
+            </div>
+            <div class="grid2" id="nokkelFields" hidden>
+              <div class="field"><label for="f_etasje">Etasje <span class="o">(valgfritt)</span></label><input id="f_etasje" autocomplete="off"></div>
+              <div class="field"><label for="f_leil">Leilighetsnummer <span class="o">(valgfritt)</span></label><input id="f_leil" autocomplete="off" placeholder="F.eks. H0301"></div>
+            </div>
+          </div>
+
           <details class="more" id="moreFaktura">
             <summary>Faktura og oppdragsnummer</summary>
             <div class="inner">
@@ -546,7 +594,8 @@
           <details class="more last">
             <summary>Detaljer om eiendommen</summary>
             <div class="inner grid2">
-              <div class="field"><label for="f_kvm">Størrelse <span class="o">(kvm)</span></label><input id="f_kvm" inputmode="numeric"></div>
+              <div class="field"><label for="f_kvm">Størrelse <span class="o">(kvm)</span></label><input id="f_kvm" inputmode="numeric">
+                <label class="inline-check"><input type="checkbox" id="f_kvmUsikker"> Usikker på kvm</label></div>
               <div class="field"><label for="f_ankomst">Ankomst og etasje</label><input id="f_ankomst" placeholder="Kode, etasje, heis"></div>
             </div>
           </details>
@@ -929,6 +978,66 @@ function renderDateInfo() {
   $("#calMon").textContent = MONTHS[d.getMonth()]; $("#calYr").textContent = d.getFullYear();
   $("#calWd").textContent = time ? `${time}–${endKey(time)}` : WEEKDAYS[d.getDay()].slice(0, 3).replace(/^./, c => c.toUpperCase());
   $("#calHint").textContent = time ? "" : "Velg tidspunkt.";
+  renderWeather();
+}
+
+/* ---------- Værvarsel (Yr) ---------- */
+// Varsel fra MET Norway via Apps Script (som mellomlagrer). Finnes ca. 9 dager fram. Stedet er adressen kunden
+// valgte fra forslagene; ellers brukes Oslo sentrum.
+const OSLO = { lat: 59.91, lon: 10.75, name: "Oslo" };
+const WX_DAYS = 9;
+let geo = null;
+const wxCache = {};
+const WX_LABEL = { clearsky: "Klarvær", fair: "Lettskyet", partlycloudy: "Delvis skyet", cloudy: "Skyet", fog: "Tåke",
+  lightrain: "Lett regn", rain: "Regn", heavyrain: "Kraftig regn", lightrainshowers: "Lette regnbyger", rainshowers: "Regnbyger",
+  heavyrainshowers: "Kraftige regnbyger", lightsleet: "Lett sludd", sleet: "Sludd", heavysleet: "Kraftig sludd",
+  lightsleetshowers: "Sluddbyger", sleetshowers: "Sluddbyger", heavysleetshowers: "Sluddbyger",
+  lightsnow: "Lett snø", snow: "Snø", heavysnow: "Kraftig snø", lightsnowshowers: "Snøbyger", snowshowers: "Snøbyger", heavysnowshowers: "Snøbyger" };
+function wxInfo(code) {
+  const base = (code || "").replace(/_(day|night|polartwilight)$/, "");
+  const thunder = base.includes("andthunder"), key = base.replace("andthunder", "");
+  const kind = /snow/.test(key) ? "snow" : /rain|sleet/.test(key) ? "rain" : key === "fog" ? "fog"
+    : key === "cloudy" ? "cloud" : key === "partlycloudy" ? "partly" : "sun";
+  return { label: (WX_LABEL[key] || "Ukjent") + (thunder ? " og torden" : ""), kind };
+}
+// Enkle strekikoner i samme stil som tjenesteikonene.
+function wxIcon(kind) {
+  const sun = '<circle cx="12" cy="11" r="4.5" stroke="#dc384c"/><path d="M12 3v1.6M12 17.4V19M4 11h1.6M18.4 11H20M6.3 5.3l1.1 1.1M16.6 15.6l1.1 1.1M6.3 16.7l1.1-1.1M16.6 6.4l1.1-1.1" stroke="#dc384c"/>';
+  const cloud = '<path d="M9 21h12a4 4 0 0 0 .3-8 6 6 0 0 0-11.5-1.4A4.5 4.5 0 0 0 9 21z"/>';
+  const body = { sun, partly: '<g transform="translate(-2 -3) scale(.8)">' + sun + '</g>' + cloud, cloud,
+    rain: cloud + '<path d="M12 24l-1 3M17 24l-1 3M22 24l-1 3" stroke="#dc384c"/>',
+    snow: cloud + '<path d="M12 25.5h.01M17 26.5h.01M22 25.5h.01" stroke="#dc384c" stroke-width="3"/>',
+    fog: '<path d="M6 13h20M8 18h18M6 23h16"/>' }[kind];
+  return `<svg width="32" height="30" viewBox="0 0 30 30" fill="none" stroke="#121212" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+}
+async function renderWeather() {
+  const box = $("#wx"), { date } = state;
+  if (!date) { box.hidden = true; return; }
+  box.hidden = false;
+  const days = Math.round((new Date(date + "T12:00") - new Date(iso(today) + "T12:00")) / 864e5);
+  if (days > WX_DAYS) { box.innerHTML = `<span class="wx-note">Værvarsel fra Yr kommer ca. ${WX_DAYS} dager før datoen.</span>`; return; }
+  const g = geo || OSLO, key = `${g.lat.toFixed(2)},${g.lon.toFixed(2)},${date}`;
+  let w = wxCache[key];
+  if (!w) {
+    box.innerHTML = '<span class="wx-note">Henter værvarsel …</span>';
+    try {
+      w = await (await fetch(`${AVAILABILITY_URL}?action=weather&lat=${g.lat.toFixed(2)}&lon=${g.lon.toFixed(2)}&date=${date}`)).json();
+      if (w.ok) wxCache[key] = w;
+    } catch (err) { w = null; }
+    if (state.date !== date || (geo || OSLO) !== g) return;   // kunden har valgt noe annet i mellomtiden
+  }
+  if (!w || !w.ok || !w.points.length) { box.innerHTML = '<span class="wx-note">Fant ikke værvarsel for denne datoen.</span>'; return; }
+  // Været rundt valgt tid; uten tid kl. 12 (kveld: solnedgangsluken).
+  const want = state.time || (state.main === "kveld" && eveningKey(date)) || "12:00";
+  const min = t => +t.slice(0, 2) * 60 + +t.slice(3, 5);
+  const withSym = w.points.filter(p => p.symbol);
+  if (!withSym.length) { box.innerHTML = '<span class="wx-note">Fant ikke værvarsel for denne datoen.</span>'; return; }
+  const pt = withSym.reduce((a, b) => Math.abs(min(b.t) - min(want)) < Math.abs(min(a.t) - min(want)) ? b : a);
+  const temps = w.points.map(p => Math.round(p.temp)), info = wxInfo(pt.symbol);
+  const mm = String(w.precip).replace(".", ",");
+  box.innerHTML = `${wxIcon(info.kind)}<div><b>${info.label}, ${Math.round(pt.temp)}° rundt kl. ${pt.t.slice(0, 2)}</b>`
+    + `<span>${esc(g.name)}${geo ? "" : " (velg adresse for lokalt varsel)"} · ${Math.min(...temps)}–${Math.max(...temps)}° · ${mm} mm nedbør i løpet av dagen</span>`
+    + `<small>Varsel fra Yr (MET Norway). Det kan endre seg fram mot datoen.</small></div>`;
 }
 
 let lastTimesDate = null;
@@ -1032,6 +1141,7 @@ const addr = $("#f_adresse");
 let sugTimer = null, sugItems = [], sugIdx = -1;
 const titleCase = s => String(s || "").toLowerCase().replace(/(^|[\s-])\S/g, c => c.toUpperCase());
 addr.addEventListener("input", () => {
+  geo = null;   // egen tekst: værvarselet bruker Oslo til en adresse er valgt fra forslagene
   update();
   clearTimeout(sugTimer);
   const q = addr.value.trim();
@@ -1043,7 +1153,8 @@ addr.addEventListener("input", () => {
       if (addr.value.trim() !== q) return;
       sugItems = (j.adresser || []).map(a => {
         const sub = `${a.postnummer} ${titleCase(a.poststed)}`;
-        return { text: `${a.adressetekst}, ${sub}`, main: a.adressetekst, sub };
+        const pt = a.representasjonspunkt || {};
+        return { text: `${a.adressetekst}, ${sub}`, main: a.adressetekst, sub, lat: pt.lat, lon: pt.lon, place: titleCase(a.poststed) };
       });
       sugIdx = -1;
       drawSuggest();
@@ -1058,7 +1169,9 @@ function drawSuggest() {
 }
 function closeSuggest() { $("#suggest").hidden = true; addr.setAttribute("aria-expanded", "false"); sugItems = []; }
 function pickSuggest(i) {
-  addr.value = sugItems[i].text; addr.classList.remove("err"); closeSuggest(); update();
+  const s = sugItems[i];
+  geo = isFinite(s.lat) && isFinite(s.lon) ? { lat: s.lat, lon: s.lon, name: s.place } : null;
+  addr.value = s.text; addr.classList.remove("err"); closeSuggest(); update(); renderWeather();
   if (state.step === 2 && state.date && state.time && !$("#err2").hidden) { hideErr(2); $("#advanceMsg").hidden = false; advanceTimer = setTimeout(() => goStep(3), 650); }
 }
 $("#suggest").addEventListener("mousedown", e => { const li = e.target.closest("li"); if (li) { e.preventDefault(); pickSuggest(+li.dataset.i); } });
@@ -1084,7 +1197,16 @@ function summaryRows() {
     ["Tid", tid + (state.date && state.time && !confirmed(state.date) ? " (ønsket)" : "")],
     ["Varighet", state.main ? `ca. ${hours()} t` : ""],
     ["Fotograf", p],
+    ...selgerRows(),
   ];
+}
+// Bare med når de er valgt (i sammendraget før innsending og på kvitteringen).
+function selgerRows() {
+  const k = radioVal("selgerKontakt"), bek = selgerBek(), rows = [];
+  if (k) rows.push(["Selger", (k === "ja" ? "Vi avtaler tid med selger" : "Kontaktes ikke")
+    + (bek !== "ingen" ? `, bekreftelse på ${{ sms: "SMS", epost: "e-post", begge: "SMS og e-post" }[bek]}` : "")]);
+  if ($("#f_nokkel").checked) rows.push(["Nøkkel", ["Nøkkeloppdrag", $("#f_etasje").value.trim() && `etasje ${$("#f_etasje").value.trim()}`, $("#f_leil").value.trim() && `leil. ${$("#f_leil").value.trim()}`].filter(Boolean).join(", ")]);
+  return rows;
 }
 const rowsHtml = rows => rows.map(([k, v]) => `<div><dt>${k}</dt><dd class="${v ? "" : "empty"}">${v ? esc(v) : "–"}</dd></div>`).join("");
 function update() {
@@ -1110,6 +1232,23 @@ function update() {
 function showErr(n, msg) { const el = $(`#err${n}`); el.textContent = msg; el.hidden = false; }
 function hideErr(n) { $(`#err${n}`).hidden = true; }
 
+/* ---------- Steg 4: selger, nøkkel og kvm ---------- */
+
+const radioVal = name => ($("#booking").querySelector(`input[name="${name}"]:checked`) || {}).value || "";
+const selgerKontakt = () => radioVal("selgerKontakt") === "ja";
+const selgerBek = () => radioVal("selgerBekreftelse") || "ingen";
+// Selgerfeltene vises når vi skal kontakte selger eller selger skal få bekreftelse; e-post bare når den trengs.
+function updateKontakt() {
+  const bek = selgerBek();
+  $("#selgerFields").hidden = !(selgerKontakt() || bek !== "ingen");
+  $("#fieldSepost").hidden = !(bek === "epost" || bek === "begge");
+  $("#nokkelFields").hidden = !$("#f_nokkel").checked;
+  $("#f_kvm").disabled = $("#f_kvmUsikker").checked;
+}
+$("#booking").addEventListener("change", e => {
+  if (e.target.matches('[name="selgerKontakt"], [name="selgerBekreftelse"], #f_nokkel, #f_kvmUsikker')) { updateKontakt(); update(); }
+});
+
 function validStep(n) {
   if (n === 1) {
     if (!state.main) return showErr(1, "Velg en hovedtjeneste."), false;
@@ -1128,6 +1267,14 @@ function validStep(n) {
       if (bad && !first) first = el;
     });
     if (first) { first.focus(); return showErr(4, "Fyll inn navn, telefon og en gyldig e-postadresse."), false; }
+    if (!radioVal("selgerKontakt")) { $('[name="selgerKontakt"]').focus(); return showErr(4, "Velg om vi skal kontakte selger."), false; }
+    const bek = selgerBek(), tlf = $("#f_stlf"), ep = $("#f_sepost");
+    const needTlf = selgerKontakt() || bek === "sms" || bek === "begge", needEpost = bek === "epost" || bek === "begge";
+    const badTlf = needTlf && tlf.value.replace(/\D/g, "").length < 8;
+    const badEpost = needEpost && !/^\S+@\S+\.\S+$/.test(ep.value.trim());
+    tlf.classList.toggle("err", badTlf); ep.classList.toggle("err", badEpost);
+    if (badTlf) { tlf.focus(); return showErr(4, "Fyll inn selgers mobilnummer."), false; }
+    if (badEpost) { ep.focus(); return showErr(4, "Fyll inn en gyldig e-postadresse til selger."), false; }
   }
   hideErr(n);
   return true;
@@ -1224,6 +1371,9 @@ form.addEventListener("submit", async e => {
   const services = serviceText();
   const tid = `${state.time}–${endKey(state.time)}`;
   const faktura = v("f_faktura") || `${v("f_navn")}, ${v("f_epost")}`;
+  const kontakt = selgerKontakt(), bek = selgerBek(), nokkel = $("#f_nokkel").checked, kvmUsikker = $("#f_kvmUsikker").checked;
+  const nokkelTekst = nokkel ? ["Nøkkeloppdrag", v("f_etasje") && `etasje ${v("f_etasje")}`, v("f_leil") && `leil. ${v("f_leil")}`].filter(Boolean).join(", ") : "";
+  const selgerTekst = [v("f_snavn"), v("f_stlf"), v("f_sepost")].filter(Boolean).join(", ");
   const note = [
     state.photographer === "forste" && p ? "Kunden valgte første ledige." : "",
     addons.some(a => a.id === "plantegning") ? "Ønsker plantegning." : "",
@@ -1243,7 +1393,9 @@ form.addEventListener("submit", async e => {
         body: JSON.stringify({
           action: "book", photographer: booked || "forste", date: state.date, time: state.time,
           services, products: formProducts, navn: v("f_navn"), telefon: v("f_tlf"), epost: v("f_epost"),
-          oppdrag: v("f_oppdrag"), faktura, address: addr.value.trim(), kvm: v("f_kvm"), ankomst: v("f_ankomst"), note,
+          oppdrag: v("f_oppdrag"), faktura, address: addr.value.trim(), kvm: kvmUsikker ? "" : v("f_kvm"), kvmUsikker, ankomst: v("f_ankomst"), note,
+          selgerKontakt: kontakt, selgerNavn: v("f_snavn"), selgerTlf: v("f_stlf"), selgerEpost: v("f_sepost"), selgerBekreftelse: bek,
+          nokkel, etasje: nokkel ? v("f_etasje") : "", leilighet: nokkel ? v("f_leil") : "",
         }),
       });
       res = await r.json();
@@ -1265,7 +1417,7 @@ form.addEventListener("submit", async e => {
     data.append(ENTRY.epost, v("f_epost"));
     data.append(ENTRY.adresse, addr.value.trim());
     data.append(ENTRY.faktura, faktura);
-    data.append(ENTRY.kvm, v("f_kvm"));
+    data.append(ENTRY.kvm, kvmUsikker ? "Usikker" : v("f_kvm"));
     data.append(ENTRY.ankomst, v("f_ankomst"));
     data.append(ENTRY.fotograf, p && p.formOption ? p.formOption : "Første ledig");
     const [y, mo, d] = state.date.split("-");
@@ -1281,6 +1433,10 @@ form.addEventListener("submit", async e => {
       p && !p.formOption ? `Fotograf: ${p.name}` : "",
       state.photographer === "forste" && p ? `Første ledige – tildelt ${p.name}` : "",
       v("f_oppdrag") ? `Oppdragsnr.: ${v("f_oppdrag")}` : "",
+      `Kontakt selger for å avtale tid: ${kontakt ? "Ja" : "Nei"}`,
+      selgerTekst ? `Selger: ${selgerTekst}` : "",
+      bek !== "ingen" ? `Bekreftelse til selger: ${{ sms: "SMS", epost: "e-post", begge: "SMS og e-post" }[bek]}` : "",
+      nokkelTekst,
       note,
     ].filter(Boolean).join("\n"));
     try { await fetch(GOOGLE_FORM, { method: "POST", mode: "no-cors", body: data }); } catch (err) { /* reservasjonen er hovedkanalen */ }
@@ -1288,7 +1444,7 @@ form.addEventListener("submit", async e => {
     // 3) Kvittering
     $("#rcTitle").textContent = reserved ? "Bestilling mottatt" : "Forespørsel mottatt";
     $("#rcText").innerHTML = reserved
-      ? `Referanse <span class="ref">${esc(res.ref)}</span>. Vi har satt av tiden og bekrefter så snart vi kan.${res.emailed ? ` En bekreftelse er sendt til ${esc(v("f_epost"))}.` : ""}`
+      ? `Referanse <span class="ref">${esc(res.ref)}</span>. Vi har satt av tiden, og du får en bekreftelse på SMS og e-post. ${kontakt ? "Vi tar kontakt med selger i løpet av dagen for å avtale tidspunkt." : "Vi bekrefter tidspunktet så snart vi kan."}`
       : "Vi fikk ikke reservert tiden automatisk, men forespørselen er sendt. Vi tar kontakt for å bekrefte tid og fotograf.";
     $("#rcSum").innerHTML = rowsHtml(summaryRows());
     form.hidden = true;
@@ -1318,7 +1474,11 @@ $("#again").addEventListener("click", () => {
   Object.assign(state, { step: 1, maxStep: 1, main: null, scope: null, date: "", time: "", photographer: "forste", assigned: null });
   state.addons.clear();
   Object.keys(availCache).forEach(k => delete availCache[k]);
-  ["f_adresse", "f_mer", "f_kvm", "f_ankomst", "f_oppdrag"].forEach(id => { $("#" + id).value = ""; });
+  ["f_adresse", "f_mer", "f_kvm", "f_ankomst", "f_oppdrag", "f_snavn", "f_stlf", "f_sepost", "f_etasje", "f_leil"].forEach(id => { $("#" + id).value = ""; });
+  $$('[name="selgerKontakt"]').forEach(i => { i.checked = false; });
+  $('[name="selgerBekreftelse"][value="ingen"]').checked = true;
+  $("#f_nokkel").checked = false; $("#f_kvmUsikker").checked = false; geo = null;
+  updateKontakt();
   $$("#mainOpts input").forEach(i => { i.checked = false; });
   $$("#stepper li").forEach(li => { li.style.pointerEvents = ""; });
   renderScopes(); renderAddons();

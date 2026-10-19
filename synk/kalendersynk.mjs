@@ -18,7 +18,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createDAVClient } from "tsdav";
-import { lagTekster, lesKontakter, sendSms, lagEpostSender } from "./varsel.mjs";
+import { lagTekster, lagBekreftelser, lesKontakter, sendSms, lagEpostSender } from "./varsel.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const DRY = process.argv.includes("--dry");
@@ -69,6 +69,17 @@ async function varsle(q, pid) {
     try { await sendEpost({ til: k.epost, emne: t.emne, tekst: t.epost }); sendt.push("e-post"); } catch (err) { log(`E-post til ${who} feilet: ${err.message}`); }
   }
   log(sendt.length ? `Varslet ${who} (${sendt.join(" og ")}).` : `Ingen kontaktinfo for ${who}, ingen varsel sendt.`);
+}
+
+// Bekreftelser til den som bestilte og eventuelt selger. Feil logges, men stopper ikke synken.
+async function bekreft(q) {
+  const ref = bookingRef(q.id), b = lagBekreftelser(q, ref, CONFIG.DURATION_MIN), sendt = [];
+  const prov = async (hva, fn) => { try { await fn(); sendt.push(hva); } catch (err) { log(`${hva} feilet (${ref}): ${err.message}`); } };
+  if (q.telefon) await prov("SMS til innsender", () => sendSms(q.telefon, b.innsender.sms));
+  if (q.epost && sendEpost) await prov("e-post til innsender", () => sendEpost({ til: q.epost, emne: b.innsender.emne, tekst: b.innsender.epost }));
+  if (b.selger?.sendSms && q.selgerTlf) await prov("SMS til selger", () => sendSms(q.selgerTlf, b.selger.sms));
+  if (b.selger?.sendEpost && q.selgerEpost && sendEpost) await prov("e-post til selger", () => sendEpost({ til: q.selgerEpost, emne: b.selger.emne, tekst: b.selger.epost }));
+  log(sendt.length ? `Bekreftet ${ref}: ${sendt.join(", ")}.` : `Ingen bekreftelse sendt for ${ref}.`);
 }
 
 // Testvarsel til én fotograf: node synk/kalendersynk.mjs --varsel-test scott
@@ -148,7 +159,7 @@ if (!DRY) {
     if (res.ok || res.status === 412) {
       done.push(q.id);
       // Varsle bare når avtalen faktisk ble lagt inn nå (412 = allerede lagt inn og varslet tidligere).
-      if (res.ok && VARSEL) await varsle(q, target);
+      if (res.ok && VARSEL) { await varsle(q, target); await bekreft(q); }
       const s = slotStart(ymd(q.date), q.time);
       (busy[target] = busy[target] || []).push({ start: s, end: s + (q.duration || CONFIG.DURATION_MIN) * 60e3 });
       log(`Booking ${q.date} kl. ${q.time} lagt i «${cals[target].displayName}».`);

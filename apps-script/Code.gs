@@ -54,6 +54,8 @@ const CONFIG = {
   AUTO_ASSIGN_EXCLUDE: ["glenn"],
   // Bekreftelse til kunden sendes fra denne adressen når den er lagt inn som alias i Gmail.
   CONFIRM_FROM: "booking@fotostallen.no",
+  // Værvarsel fra MET Norway (Yr). Vilkårene krever at appen identifiserer seg; svaret mellomlagres i 30 min.
+  MET_USER_AGENT: "fotostallen-booking/1.0 https://fotostallen.no",
 };
 const ANY = "forste"; // «Første ledige»
 
@@ -62,6 +64,7 @@ const ANY = "forste"; // «Første ledige»
 function doGet(e) {
   try {
     const p = e.parameter || {};
+    if (p.action === "weather") return weather(p);
     if (p.action !== "slots") return json({ ok: false, error: "unknown_action" });
     const id = p.photographer;
     if (id !== "all" && id !== ANY && !CONFIG.PHOTOGRAPHERS[id]) return json({ ok: false, error: "unknown_photographer" });
@@ -111,7 +114,11 @@ function book(b) {
       services: clean(b.services, 300),
       navn: clean(b.navn, 200), telefon: clean(b.telefon, 40), epost: clean(b.epost, 200),
       oppdrag: clean(b.oppdrag, 60), faktura: clean(b.faktura, 500),
-      address: clean(b.address, 200), kvm: clean(b.kvm, 40), ankomst: clean(b.ankomst, 300),
+      address: clean(b.address, 200), kvm: clean(b.kvm, 40), kvmUsikker: !!b.kvmUsikker, ankomst: clean(b.ankomst, 300),
+      // Selger: skal vi avtale tid med selger, og skal selger få bekreftelse (ingen/sms/epost/begge)?
+      selgerKontakt: !!b.selgerKontakt, selgerNavn: clean(b.selgerNavn, 200), selgerTlf: clean(b.selgerTlf, 40),
+      selgerEpost: clean(b.selgerEpost, 200), selgerBekreftelse: ["sms", "epost", "begge"].indexOf(b.selgerBekreftelse) >= 0 ? b.selgerBekreftelse : "ingen",
+      nokkel: !!b.nokkel, etasje: clean(b.etasje, 40), leilighet: clean(b.leilighet, 40),
       products: Array.isArray(b.products) ? b.products.slice(0, 10).map(x => clean(x, 60)) : [],
       note: clean(b.note, 1000),
     };
@@ -119,7 +126,8 @@ function book(b) {
     writeQueue(queue);
     countBooking();
     const ref = bookingRef(q.id);
-    return json({ ok: true, ref, emailed: sendConfirmation(q, ref) });
+    // Bekreftelser til innsender og selger sendes fra synkjobben (SMS og e-post) når bookingen legges i kalenderen.
+    return json({ ok: true, ref, emailed: false });
   } catch (err) {
     console.error(err);
     return json({ ok: false, error: "server" });
@@ -294,8 +302,12 @@ function bookingIcs(q, nowMs, assigned) {
     q.oppdrag ? `Oppdragsnr.: ${q.oppdrag}` : null,
     `Faktura til: ${q.faktura}`,
     `Adresse: ${q.address}`,
-    q.kvm ? `Størrelse: ${q.kvm} kvm` : null,
+    q.kvmUsikker ? "Størrelse: usikker" : q.kvm ? `Størrelse: ${q.kvm} kvm` : null,
     q.ankomst ? `Ankomst: ${q.ankomst}` : null,
+    q.nokkel ? `Nøkkeloppdrag${[q.etasje && `etasje ${q.etasje}`, q.leilighet && `leil. ${q.leilighet}`].filter(Boolean).map(x => `, ${x}`).join("")}` : null,
+    q.selgerKontakt ? "Kontakt selger for å avtale tidspunkt." : null,
+    q.selgerNavn || q.selgerTlf || q.selgerEpost ? `Selger: ${[q.selgerNavn, q.selgerTlf, q.selgerEpost].filter(Boolean).join(", ")}` : null,
+    q.selgerBekreftelse && q.selgerBekreftelse !== "ingen" ? `Bekreftelse til selger: ${{ sms: "SMS", epost: "e-post", begge: "SMS og e-post" }[q.selgerBekreftelse]}` : null,
     q.services ? `Tjenester: ${q.services}` : `Produkter: ${(q.products || []).join(", ") || "–"}`,
     q.note ? `Notat: ${q.note}` : null,
   ].filter(x => x !== null).join("\n");
@@ -338,6 +350,45 @@ function bookingRef(id) {
  * Sender bekreftelse til kunden fra CONFIRM_FROM, med kopi til samme adresse. Gjør ingenting før
  * adressen er lagt inn som «Send e-post som»-alias i Gmail, så det aldri sendes fra en privat adresse.
  */
+/**
+ * Værvarsel for én dato og ett sted (MET Norway locationforecast, compact). Gir punkter for datoen
+ * (lokal tid: klokkeslett, temperatur, symbol) og samlet nedbør. Datoer utenfor varselet gir points: [].
+ */
+function weather(p) {
+  const lat = Math.round(Number(p.lat) * 100) / 100, lon = Math.round(Number(p.lon) * 100) / 100;
+  if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180 || !isDate(p.date)) return json({ ok: false, error: "bad_params" });
+  const cache = CacheService.getScriptCache(), key = `met:${lat}:${lon}`;
+  let body = cache.get(key);
+  if (!body) {
+    const r = UrlFetchApp.fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`,
+      { headers: { "User-Agent": CONFIG.MET_USER_AGENT }, muteHttpExceptions: true });
+    if (r.getResponseCode() !== 200) return json({ ok: false, error: "met" });
+    body = r.getContentText();
+    try { cache.put(key, body, 1800); } catch (err) { /* for stort for mellomlageret: hentes på nytt neste gang */ }
+  }
+  const ts = JSON.parse(body).properties.timeseries;
+  return json(Object.assign({ ok: true, date: p.date }, summarizeForecast(ts, p.date, t => Utilities.formatDate(new Date(t), CONFIG.TZ, "yyyy-MM-dd HH:mm"))));
+}
+
+/** Plukker ut én dato fra MET-tidsserien. local(t) gir «yyyy-MM-dd HH:mm» i Oslo-tid. */
+function summarizeForecast(ts, date, local) {
+  const points = [];
+  let precip = 0, coveredUntil = 0;
+  ts.forEach(e => {
+    const [d, hm] = local(e.time).split(" ");
+    if (d !== date) return;
+    const n1 = e.data.next_1_hours, n6 = e.data.next_6_hours;
+    const sym = (n1 || n6 || {}).summary;
+    points.push({ t: hm, temp: e.data.instant.details.air_temperature, symbol: sym ? sym.symbol_code : null });
+    // Nedbør uten dobbelttelling: timesverdier der de finnes, ellers seks-timersverdier.
+    const ms = Date.parse(e.time);
+    if (ms < coveredUntil) return;
+    if (n1 && n1.details) { precip += n1.details.precipitation_amount || 0; coveredUntil = ms + 3600e3; }
+    else if (n6 && n6.details) { precip += n6.details.precipitation_amount || 0; coveredUntil = ms + 6 * 3600e3; }
+  });
+  return { points, precip: Math.round(precip * 10) / 10 };
+}
+
 function sendConfirmation(q, ref) {
   try {
     if (!/^\S+@\S+\.\S+$/.test(q.epost)) return false;
@@ -616,4 +667,4 @@ function json(obj) {
 }
 
 // Gjør funksjonene tilgjengelige for testene i node (ignoreres i Apps Script).
-if (typeof module !== "undefined") module.exports = { busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, slotsOfDay, eveningKey, sunsetUtc, slotStart, bookingRef, zonedToUtc, fmtYmd, addDays, ymd, CONFIG, ANY };
+if (typeof module !== "undefined") module.exports = { summarizeForecast, busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, slotsOfDay, eveningKey, sunsetUtc, slotStart, bookingRef, zonedToUtc, fmtYmd, addDays, ymd, CONFIG, ANY };
