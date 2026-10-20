@@ -179,12 +179,25 @@
   .field:has(.err) label { color: var(--accent); }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
   /* Værvarsel på valgt dato */
-  .wx { display: flex; gap: 12px; align-items: flex-start; margin: 14px 0 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
-  .wx svg { flex: 0 0 auto; margin-top: 2px; }
+  .wx { margin: 14px 0 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .wx-main { display: flex; gap: 12px; align-items: flex-start; }
+  .wx .ic { flex: 0 0 auto; color: var(--ink); }
+  .ic.warm { color: var(--accent); }
   .wx b { display: block; font-size: 15px; font-weight: 600; }
-  .wx span { display: block; font-size: 13px; color: var(--muted); }
-  .wx small { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .wx-main span { display: block; font-size: 13px; color: var(--muted); }
+  .wx small { display: block; margin-top: 8px; font-size: 12px; color: var(--muted); }
   .wx .wx-note { font-size: 13px; color: var(--muted); }
+  .wx-sun { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: 13.5px; }
+  .wx-sun .ic { color: var(--ink); }
+  .wx-sun .ic.warm { color: var(--accent); }
+  .orient { margin-top: 18px; }
+  .orient .lab { display: block; margin-bottom: 10px; font-size: 11.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .orient .lab .o { text-transform: none; letter-spacing: 0; }
+  .chips.compact { gap: 6px; }
+  .chips.compact .chip span { height: 36px; padding: 0 13px; font-size: 13.5px; }
+  .time { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .time .ic { color: var(--accent); }
+  .time.sel .ic { color: #fff; }
   .subgroup { margin-top: 28px; }
   .subgroup .q { margin: 4px 0 10px; font-size: 15px; font-weight: 500; }
   .subgroup .chips + .q { margin-top: 18px; }
@@ -493,6 +506,21 @@
                   <input id="f_adresse" autocomplete="off" placeholder="Gate og nummer, sted" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
                   <ul class="suggest" id="suggest" role="listbox" hidden></ul>
                 </div>
+                <div class="orient">
+                  <span class="lab" id="qOrient">Hvilken vei vender balkongen eller stua? <span class="o">(valgfritt)</span></span>
+                  <div class="chips compact" id="orientOpts" role="radiogroup" aria-labelledby="qOrient">
+                    <label class="chip"><input type="radio" name="orient" value="N"><span>N</span></label>
+                    <label class="chip"><input type="radio" name="orient" value="NØ"><span>NØ</span></label>
+                    <label class="chip"><input type="radio" name="orient" value="Ø"><span>Ø</span></label>
+                    <label class="chip"><input type="radio" name="orient" value="SØ"><span>SØ</span></label>
+                    <label class="chip"><input type="radio" name="orient" value="S"><span>S</span></label>
+                    <label class="chip"><input type="radio" name="orient" value="SV"><span>SV</span></label>
+                    <label class="chip"><input type="radio" name="orient" value="V"><span>V</span></label>
+                    <label class="chip"><input type="radio" name="orient" value="NV"><span>NV</span></label>
+                    <label class="chip"><input type="radio" name="orient" value="" checked><span>Vet ikke</span></label>
+                  </div>
+                  <p class="hint">Da viser vi når det er sol på balkongen, så du kan velge tid med best lys.</p>
+                </div>
               </div>
             </div>
             <p class="notice" id="availNotice" hidden></p>
@@ -774,7 +802,7 @@ function eveningKey(date) {
 const state = {
   step: 1, maxStep: 1,
   main: null, scope: null, addons: new Set(),
-  date: "", time: "",
+  date: "", time: "", orient: null,
   photographer: "forste", assigned: null,
 };
 
@@ -981,64 +1009,158 @@ function renderDateInfo() {
   renderWeather();
 }
 
-/* ---------- Værvarsel (Yr) ---------- */
-// Varsel fra MET Norway via Apps Script (som mellomlagrer). Finnes ca. 9 dager fram. Stedet er adressen kunden
-// valgte fra forslagene; ellers brukes Oslo sentrum.
+/* ---------- Værvarsel (Yr) og sol på balkongen ---------- */
+// Varselet hentes rett fra MET Norway (Yr) så snart siden lastes, først for Oslo og så for adressen kunden velger,
+// så det er klart når en dato trykkes. Svarer ikke MET, brukes Apps Script (som mellomlagrer) for den datoen.
 const OSLO = { lat: 59.91, lon: 10.75, name: "Oslo" };
-const WX_DAYS = 9;
 let geo = null;
-const wxCache = {};
+const forecastData = {}, forecastLoad = {}, wxFallback = {};
+const placeKey = g => `${g.lat.toFixed(2)},${g.lon.toFixed(2)}`;
+function loadForecast(g) {
+  const key = placeKey(g);
+  if (!forecastLoad[key]) forecastLoad[key] = fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${g.lat.toFixed(2)}&lon=${g.lon.toFixed(2)}`)
+    .then(r => r.ok ? r.json() : null).then(j => j ? j.properties.timeseries : null).catch(() => null)
+    .then(ts => { forecastData[key] = ts; return ts; });
+  return forecastLoad[key];
+}
+const osloLocal = t => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(t));
+// Samme utvalg som summarizeForecast i Code.gs: punktene for datoen og nedbør uten dobbelttelling.
+function summarizeDay(ts, date) {
+  const points = [];
+  let precip = 0, coveredUntil = 0;
+  ts.forEach(e => {
+    const [d, hm] = osloLocal(e.time).split(" ");
+    if (d !== date) return;
+    const n1 = e.data.next_1_hours, n6 = e.data.next_6_hours, sym = (n1 || n6 || {}).summary;
+    points.push({ t: hm, temp: e.data.instant.details.air_temperature, symbol: sym ? sym.symbol_code : null });
+    const ms = Date.parse(e.time);
+    if (ms < coveredUntil) return;
+    if (n1 && n1.details) { precip += n1.details.precipitation_amount || 0; coveredUntil = ms + 3600e3; }
+    else if (n6 && n6.details) { precip += n6.details.precipitation_amount || 0; coveredUntil = ms + 6 * 3600e3; }
+  });
+  return { points, precip: Math.round(precip * 10) / 10 };
+}
+
+// Ikoner fra Lucide (samme bibliotek som shadcn/ui, ISC-lisens): tynne strekikoner som passer tjenesteikonene.
+const LUCIDE = {
+  "cloud-drizzle": '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M8 19v1" /><path d="M8 14v1" /><path d="M16 19v1" /><path d="M16 14v1" /><path d="M12 21v1" /><path d="M12 16v1" />',
+  "cloud-fog": '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M16 17H7" /><path d="M17 21H9" />',
+  "cloud-lightning": '<path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973" /><path d="m13 12-3 5h4l-3 5" />',
+  "cloud-moon": '<path d="M10.188 8.5A6 6 0 0 1 16 4a1 1 0 0 0 6 6 6 6 0 0 1-3 5.197" /><path d="M13 16a3 3 0 1 1 0 6H7a5 5 0 1 1 4.9-6Z" />',
+  "cloud-rain": '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M16 14v6" /><path d="M8 14v6" /><path d="M12 16v6" />',
+  "cloud-snow": '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M8 15h.01" /><path d="M8 19h.01" /><path d="M12 17h.01" /><path d="M12 21h.01" /><path d="M16 15h.01" /><path d="M16 19h.01" />',
+  "cloud-sun": '<path d="M12 2v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="M20 12h2" /><path d="m19.07 4.93-1.41 1.41" /><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128" /><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z" />',
+  "cloud": '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />',
+  "compass": '<path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /><circle cx="12" cy="12" r="10" />',
+  "moon": '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />',
+  "sun": '<circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />',
+  "sunset": '<path d="M12 10V2" /><path d="m4.93 10.93 1.41 1.41" /><path d="M2 18h2" /><path d="M20 18h2" /><path d="m19.07 10.93-1.41 1.41" /><path d="M22 22H2" /><path d="m16 6-4 4-4-4" /><path d="M16 18a4 4 0 0 0-8 0" />',
+};
 const WX_LABEL = { clearsky: "Klarvær", fair: "Lettskyet", partlycloudy: "Delvis skyet", cloudy: "Skyet", fog: "Tåke",
   lightrain: "Lett regn", rain: "Regn", heavyrain: "Kraftig regn", lightrainshowers: "Lette regnbyger", rainshowers: "Regnbyger",
   heavyrainshowers: "Kraftige regnbyger", lightsleet: "Lett sludd", sleet: "Sludd", heavysleet: "Kraftig sludd",
   lightsleetshowers: "Sluddbyger", sleetshowers: "Sluddbyger", heavysleetshowers: "Sluddbyger",
   lightsnow: "Lett snø", snow: "Snø", heavysnow: "Kraftig snø", lightsnowshowers: "Snøbyger", snowshowers: "Snøbyger", heavysnowshowers: "Snøbyger" };
 function wxInfo(code) {
-  const base = (code || "").replace(/_(day|night|polartwilight)$/, "");
+  const night = /_night$/.test(code || ""), base = (code || "").replace(/_(day|night|polartwilight)$/, "");
   const thunder = base.includes("andthunder"), key = base.replace("andthunder", "");
-  const kind = /snow/.test(key) ? "snow" : /rain|sleet/.test(key) ? "rain" : key === "fog" ? "fog"
-    : key === "cloudy" ? "cloud" : key === "partlycloudy" ? "partly" : "sun";
-  return { label: (WX_LABEL[key] || "Ukjent") + (thunder ? " og torden" : ""), kind };
+  const icon = thunder ? "cloud-lightning" : /snow/.test(key) ? "cloud-snow" : /^light(rain|sleet)/.test(key) ? "cloud-drizzle"
+    : /rain|sleet/.test(key) ? "cloud-rain" : key === "fog" ? "cloud-fog" : key === "cloudy" ? "cloud"
+    : key === "partlycloudy" ? (night ? "cloud-moon" : "cloud-sun") : (night ? "moon" : "sun");
+  return { label: (WX_LABEL[key] || "Ukjent") + (thunder ? " og torden" : ""), icon, sunny: /^(sun|moon|cloud-sun|cloud-moon)$/.test(icon) };
 }
-// Enkle strekikoner i samme stil som tjenesteikonene.
-function wxIcon(kind) {
-  const sun = '<circle cx="12" cy="11" r="4.5" stroke="#dc384c"/><path d="M12 3v1.6M12 17.4V19M4 11h1.6M18.4 11H20M6.3 5.3l1.1 1.1M16.6 15.6l1.1 1.1M6.3 16.7l1.1-1.1M16.6 6.4l1.1-1.1" stroke="#dc384c"/>';
-  const cloud = '<path d="M9 21h12a4 4 0 0 0 .3-8 6 6 0 0 0-11.5-1.4A4.5 4.5 0 0 0 9 21z"/>';
-  const body = { sun, partly: '<g transform="translate(-2 -3) scale(.8)">' + sun + '</g>' + cloud, cloud,
-    rain: cloud + '<path d="M12 24l-1 3M17 24l-1 3M22 24l-1 3" stroke="#dc384c"/>',
-    snow: cloud + '<path d="M12 25.5h.01M17 26.5h.01M22 25.5h.01" stroke="#dc384c" stroke-width="3"/>',
-    fog: '<path d="M6 13h20M8 18h18M6 23h16"/>' }[kind];
-  return `<svg width="32" height="30" viewBox="0 0 30 30" fill="none" stroke="#121212" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+const lucide = (name, size = 30, cls = "") => `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LUCIDE[name]}</svg>`;
+
+// Solens posisjon (asimut fra nord med klokka, høyde over horisonten), forenklet NOAA-modell.
+function sunPos(ms, lat, lon) {
+  const r = Math.PI / 180, d = ms / 864e5 - 10957.5;
+  const g = (357.529 + 0.98560028 * d) * r, q = 280.459 + 0.98564736 * d;
+  const L = (q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * r, e = (23.439 - 0.00000036 * d) * r;
+  const ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L)), dec = Math.asin(Math.sin(e) * Math.sin(L));
+  const gmst = ((18.697374558 + 24.06570982441908 * d) % 24 + 24) % 24;
+  const H = (gmst * 15 + lon) * r - ra, phi = lat * r;
+  const el = Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H));
+  const az = Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi));
+  return { az: (az / r + 540) % 360, el: el / r };
 }
+const ORIENT = { N: 0, "NØ": 45, "Ø": 90, "SØ": 135, S: 180, SV: 225, V: 270, NV: 315 };
+const ORIENT_NAME = { N: "nord", "NØ": "nordøst", "Ø": "øst", "SØ": "sørøst", S: "sør", SV: "sørvest", V: "vest", NV: "nordvest" };
+// Sol på balkongen: solen er over horisonten (litt margin for terreng) og står foran fasaden (innenfor ±75°).
+function sunOnFacade(date, hm, g = geo || OSLO) {
+  if (!state.orient) return false;
+  const p = sunPos(new Date(`${date}T${hm}`).getTime(), g.lat, g.lon);
+  const diff = Math.abs(((p.az - ORIENT[state.orient]) % 360 + 540) % 360 - 180);
+  return p.el > 3 && diff < 75;
+}
+const minutes = t => +t.slice(0, 2) * 60 + +t.slice(3, 5);
+const hhmm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+// Andel av luken (hvert 10. minutt) med sol på balkongen.
+function slotSun(date, start) {
+  let hits = 0, n = 0;
+  for (let m = minutes(start); m < minutes(start) + DURATION_MIN; m += 10, n++) if (sunOnFacade(date, hhmm(m % 1440))) hits++;
+  return hits / n;
+}
+// Tidsrom med sol på balkongen en dag, f.eks. ["14:10–17:40"].
+function sunWindows(date) {
+  const out = [];
+  let from = null;
+  for (let m = 0; m <= 1440; m += 10) {
+    const on = m < 1440 && sunOnFacade(date, hhmm(m));
+    if (on && from === null) from = m;
+    if (!on && from !== null) { out.push(`${hhmm(from)}–${hhmm(Math.min(m, 1430))}`); from = null; }
+  }
+  return out;
+}
+
 async function renderWeather() {
   const box = $("#wx"), { date } = state;
   if (!date) { box.hidden = true; return; }
   box.hidden = false;
-  const days = Math.round((new Date(date + "T12:00") - new Date(iso(today) + "T12:00")) / 864e5);
-  if (days > WX_DAYS) { box.innerHTML = `<span class="wx-note">Værvarsel fra Yr kommer ca. ${WX_DAYS} dager før datoen.</span>`; return; }
-  const g = geo || OSLO, key = `${g.lat.toFixed(2)},${g.lon.toFixed(2)},${date}`;
-  let w = wxCache[key];
-  if (!w) {
+  const g = geo || OSLO, key = placeKey(g), place = esc(g.name) + (geo ? "" : " (velg adresse for lokalt varsel)");
+  let ts = forecastData[key];
+  if (ts === undefined) {
     box.innerHTML = '<span class="wx-note">Henter værvarsel …</span>';
-    try {
-      w = await (await fetch(`${AVAILABILITY_URL}?action=weather&lat=${g.lat.toFixed(2)}&lon=${g.lon.toFixed(2)}&date=${date}`)).json();
-      if (w.ok) wxCache[key] = w;
-    } catch (err) { w = null; }
+    ts = await loadForecast(g);
     if (state.date !== date || (geo || OSLO) !== g) return;   // kunden har valgt noe annet i mellomtiden
   }
-  if (!w || !w.ok || !w.points.length) { box.innerHTML = '<span class="wx-note">Fant ikke værvarsel for denne datoen.</span>'; return; }
+  let w = null;
+  if (ts) {
+    const last = osloLocal(ts[ts.length - 1].time).slice(0, 10);
+    if (date > last) return showTooFar(box, last);
+    w = summarizeDay(ts, date);
+  } else {
+    const fk = `${key},${date}`;
+    if (!wxFallback[fk]) {
+      box.innerHTML = '<span class="wx-note">Henter værvarsel …</span>';
+      try { const j = await (await fetch(`${AVAILABILITY_URL}?action=weather&lat=${g.lat.toFixed(2)}&lon=${g.lon.toFixed(2)}&date=${date}`)).json(); if (j.ok) wxFallback[fk] = j; } catch (err) { /* vises som manglende varsel */ }
+      if (state.date !== date || (geo || OSLO) !== g) return;
+    }
+    w = wxFallback[fk];
+    if (w && !w.points.length) return showTooFar(box, null);
+  }
+  const withSym = w ? w.points.filter(p => p.symbol) : [];
+  if (!withSym.length) { box.innerHTML = '<span class="wx-note">Fant ikke værvarsel for denne datoen.</span>' + sunLine(date, null); return; }
   // Været rundt valgt tid; uten tid kl. 12 (kveld: solnedgangsluken).
   const want = state.time || (state.main === "kveld" && eveningKey(date)) || "12:00";
-  const min = t => +t.slice(0, 2) * 60 + +t.slice(3, 5);
-  const withSym = w.points.filter(p => p.symbol);
-  if (!withSym.length) { box.innerHTML = '<span class="wx-note">Fant ikke værvarsel for denne datoen.</span>'; return; }
-  const pt = withSym.reduce((a, b) => Math.abs(min(b.t) - min(want)) < Math.abs(min(a.t) - min(want)) ? b : a);
+  const pt = withSym.reduce((a, b) => Math.abs(minutes(b.t) - minutes(want)) < Math.abs(minutes(a.t) - minutes(want)) ? b : a);
   const temps = w.points.map(p => Math.round(p.temp)), info = wxInfo(pt.symbol);
-  const mm = String(w.precip).replace(".", ",");
-  box.innerHTML = `${wxIcon(info.kind)}<div><b>${info.label}, ${Math.round(pt.temp)}° rundt kl. ${pt.t.slice(0, 2)}</b>`
-    + `<span>${esc(g.name)}${geo ? "" : " (velg adresse for lokalt varsel)"} · ${Math.min(...temps)}–${Math.max(...temps)}° · ${mm} mm nedbør i løpet av dagen</span>`
-    + `<small>Varsel fra Yr (MET Norway). Det kan endre seg fram mot datoen.</small></div>`;
+  box.innerHTML = `<div class="wx-main">${lucide(info.icon, 30, info.sunny ? "warm" : "")}<div><b>${info.label}, ${Math.round(pt.temp)}° rundt kl. ${pt.t.slice(0, 2)}</b>`
+    + `<span>${place} · ${Math.min(...temps)}–${Math.max(...temps)}° · ${String(w.precip).replace(".", ",")} mm nedbør i løpet av dagen</span></div></div>`
+    + sunLine(date, info) + '<small>Varsel fra Yr (MET Norway). Det kan endre seg fram mot datoen.</small>';
 }
+function showTooFar(box, last) {
+  const til = last ? ` Yr varsler omtrent ${Math.round((new Date(last + "T12:00") - new Date(iso(today) + "T12:00")) / 864e5)} dager fram, til og med ${fmtDate(last)}.` : "";
+  box.innerHTML = `<div class="wx-main">${lucide("cloud", 30)}<div><b>For langt fram i tid for værvarsel</b><span>Vi kan ikke si noe om været på denne datoen ennå.${til}</span></div></div>` + sunLine(state.date, null);
+}
+// Linje om sol på balkongen for valgt dato (bare når kunden har oppgitt retning).
+function sunLine(date, info) {
+  if (!state.orient) return "";
+  const w = sunWindows(date), retning = ORIENT_NAME[state.orient];
+  if (!w.length) return `<p class="wx-sun">${lucide("sunset", 18)}Balkongen mot ${retning} får ikke direkte sol denne dagen.</p>`;
+  const sky = info && !info.sunny ? ` (men det er meldt ${info.label.toLowerCase()})` : "";
+  return `<p class="wx-sun">${lucide("sun", 18, "warm")}Sol på balkongen mot ${retning} ca. ${w.join(" og ")}${sky}.</p>`;
+}
+loadForecast(OSLO);   // med en gang siden lastes, så værvarselet er klart når kunden velger dato
 
 let lastTimesDate = null;
 function renderTimes() {
@@ -1055,12 +1177,13 @@ function renderTimes() {
     $("#timeOpts").classList.toggle("fresh", date !== lastTimesDate);
     lastTimesDate = date;
     $("#timeOpts").innerHTML = keys.map((k, i) => {
-      const ok = free.includes(k);
-      return `<button type="button" class="time${k === state.time ? " sel" : ""}" style="--i:${i}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}">${k}–${endKey(k)}</button>`;
+      const ok = free.includes(k), sun = ok && state.orient && slotSun(date, k) >= .5;
+      return `<button type="button" class="time${k === state.time ? " sel" : ""}" style="--i:${i}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}${sun ? ", sol på balkongen" : ""}">${sun ? lucide("sun", 15) : ""}${k}–${endKey(k)}</button>`;
     }).join("");
     $("#timeHint").textContent = state.main === "kveld"
       ? `Solnedgang kl. ${sunsetLocal(date)}. Kveldsbildene starter ved solnedgang og varer ca. ${hours()} t.`
       : `Varighet ca. ${hours()} t.`;
+    if (state.orient) $("#timeHint").textContent += " Solmerket viser tider med sol på balkongen.";
   }
   renderPhotographers();
   update();
@@ -1171,6 +1294,8 @@ function closeSuggest() { $("#suggest").hidden = true; addr.setAttribute("aria-e
 function pickSuggest(i) {
   const s = sugItems[i];
   geo = isFinite(s.lat) && isFinite(s.lon) ? { lat: s.lat, lon: s.lon, name: s.place } : null;
+  if (geo) loadForecast(geo);
+  renderTimes();   // solmerkene regnes ut for stedet
   addr.value = s.text; addr.classList.remove("err"); closeSuggest(); update(); renderWeather();
   if (state.step === 2 && state.date && state.time && !$("#err2").hidden) { hideErr(2); $("#advanceMsg").hidden = false; advanceTimer = setTimeout(() => goStep(3), 650); }
 }
@@ -1205,6 +1330,7 @@ function selgerRows() {
   const k = radioVal("selgerKontakt"), bek = selgerBek(), rows = [];
   if (k) rows.push(["Selger", (k === "ja" ? "Vi avtaler tid med selger" : "Kontaktes ikke")
     + (bek !== "ingen" ? `, bekreftelse på ${{ sms: "SMS", epost: "e-post", begge: "SMS og e-post" }[bek]}` : "")]);
+  if (state.orient) rows.push(["Balkong", `Mot ${ORIENT_NAME[state.orient]}`]);
   if ($("#f_nokkel").checked) rows.push(["Nøkkel", ["Nøkkeloppdrag", $("#f_etasje").value.trim() && `etasje ${$("#f_etasje").value.trim()}`, $("#f_leil").value.trim() && `leil. ${$("#f_leil").value.trim()}`].filter(Boolean).join(", ")]);
   return rows;
 }
@@ -1231,6 +1357,8 @@ function update() {
 
 function showErr(n, msg) { const el = $(`#err${n}`); el.textContent = msg; el.hidden = false; }
 function hideErr(n) { $(`#err${n}`).hidden = true; }
+
+$("#orientOpts").addEventListener("change", e => { state.orient = e.target.value || null; renderTimes(); });
 
 /* ---------- Steg 4: selger, nøkkel og kvm ---------- */
 
@@ -1378,6 +1506,7 @@ form.addEventListener("submit", async e => {
     state.photographer === "forste" && p ? "Kunden valgte første ledige." : "",
     addons.some(a => a.id === "plantegning") ? "Ønsker plantegning." : "",
     addons.some(a => a.id === "some") ? "Ønsker SoMe-video (vertikal, 15–30 sek)." : "",
+    state.orient ? `Balkong/stue mot ${ORIENT_NAME[state.orient]}${slotSun(state.date, state.time) >= .5 ? " (sol på balkongen på valgt tid)" : ""}.` : "",
     v("f_mer"),
   ].filter(Boolean).join(" ");
 
@@ -1478,6 +1607,7 @@ $("#again").addEventListener("click", () => {
   $$('[name="selgerKontakt"]').forEach(i => { i.checked = false; });
   $('[name="selgerBekreftelse"][value="ingen"]').checked = true;
   $("#f_nokkel").checked = false; $("#f_kvmUsikker").checked = false; geo = null;
+  state.orient = null; $('[name="orient"][value=""]').checked = true;
   updateKontakt();
   $$("#mainOpts input").forEach(i => { i.checked = false; });
   $$("#stepper li").forEach(li => { li.style.pointerEvents = ""; });
