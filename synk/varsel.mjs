@@ -82,17 +82,18 @@ export function lagBekreftelser(q, ref, durationMin) {
   const tjenester = q.services || (q.products || []).join(", ");
   const kontakt = !!q.selgerKontakt;
   const fornavn = navn => (navn || "").trim().split(/\s+/)[0];
+  // Tiden er en forespørsel, ikke endelig: den kan endres om noe uforutsett krasjer.
   const neste = kontakt
     ? "Vi tar kontakt med selger i løpet av dagen for å avtale tidspunkt."
-    : "Vi bekrefter tidspunktet så snart vi kan.";
+    : "Tidspunktet er ikke endelig. Vi bekrefter det, og gir beskjed hvis noe uforutsett gjør at det må endres.";
 
   const innsender = {
-    sms: `Takk! Bestillingen av fotografering i ${q.address} er registrert (ref. ${ref}). Ønsket tid: ${dato} ${tid}. ${neste} Hilsen Fotostallen`,
-    emne: `Bestilling registrert – ${q.address}`,
+    sms: `Takk! Forespørselen om fotografering i ${q.address} er registrert (ref. ${ref}). Ønsket tid: ${dato} ${tid}. ${neste} Hilsen Fotostallen`,
+    emne: `Forespørsel registrert – ${q.address}`,
     epost: [
       `Hei ${fornavn(q.navn)},`,
       "",
-      `Takk for bestillingen. Den er registrert hos oss. ${neste}`,
+      `Takk for forespørselen. Den er registrert hos oss. ${neste}`,
       "",
       `Adresse: ${q.address}`,
       `Ønsket tid: ${dato} ${tid}`,
@@ -102,7 +103,7 @@ export function lagBekreftelser(q, ref, durationMin) {
       q.oppdrag ? `Oppdragsnr.: ${q.oppdrag}` : null,
       `Referanse: ${ref}`,
       "",
-      "Bestillingen er ikke bindende før vi har bekreftet tidspunktet.",
+      "Tidspunktet er en forespørsel og ikke endelig. Vi bekrefter det, og gir beskjed hvis noe uforutsett gjør at vi må foreslå en annen tid.",
       "",
       "Hilsen Fotostallen",
       "kontakt@fotostallen.no",
@@ -115,7 +116,7 @@ export function lagBekreftelser(q, ref, durationMin) {
     const hva = `${q.navn} har bestilt fotografering av boligen i ${q.address} hos Fotostallen.`;
     const nar = kontakt
       ? `Vi har satt av ${dato}, og kommer tilbake til deg med tidspunkt.`
-      : `Fotografen kommer ${dato} ${tid}.`;
+      : `Foreløpig tid er ${dato} ${tid}. Vi gir beskjed hvis tiden må endres.`;
     selger = {
       sms: `${hei} ${hva} ${nar} Hilsen Fotostallen`,
       emne: `Fotografering av boligen – ${dato}`,

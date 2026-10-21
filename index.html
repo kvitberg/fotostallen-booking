@@ -578,7 +578,7 @@
             <div class="field"><label for="f_tlf">Telefon</label><input id="f_tlf" type="tel" autocomplete="tel" required></div>
             <div class="field"><label for="f_epost">E-post</label><input id="f_epost" type="email" autocomplete="email" required></div>
           </div>
-          <p class="hint">Du får en bekreftelse på SMS og e-post når bestillingen er registrert.</p>
+          <p class="hint">Du får en bekreftelse på SMS og e-post når forespørselen er registrert.</p>
 
           <div class="subgroup">
             <div class="glabel">Selger</div>
@@ -632,8 +632,8 @@
           <div class="review"><dl class="sum-list" data-sum></dl></div>
           </div>
           <p class="err-msg" id="err4" hidden></p>
-          <div class="actions"><button type="submit" class="btn primary" id="submitBtn">Send bestilling</button></div>
-          <p class="hint">Bestillingen er ikke bindende før vi har bekreftet tidspunktet.</p>
+          <div class="actions"><button type="submit" class="btn primary" id="submitBtn">Send forespørsel</button></div>
+          <p class="hint">Tidspunktet er en forespørsel og ikke endelig. Vi bekrefter det, og gir beskjed hvis noe uforutsett gjør at vi må foreslå en annen tid.</p>
         </div>
       </form>
 
@@ -650,7 +650,7 @@
         <div class="bigthanks">Takk.</div>
         <p id="rcText"></p>
         <div class="review"><dl class="sum-list" id="rcSum"></dl></div>
-        <button type="button" class="btn" id="again">Ny bestilling</button>
+        <button type="button" class="btn" id="again">Ny forespørsel</button>
       </div>
     </section>
 
@@ -658,7 +658,7 @@
       <span class="pill">Din bestilling</span>
       <div class="sum-date">
         <div>
-          <div class="lab">Dato for fotografering</div>
+          <div class="lab">Ønsket dato</div>
           <div class="val none" id="sumDate">Velg dato</div>
           <div class="sub" id="sumSub">Dato og tidspunkt velges i steg 2</div>
         </div>
@@ -1183,6 +1183,7 @@ function renderTimes() {
     $("#timeHint").textContent = state.main === "kveld"
       ? `Solnedgang kl. ${sunsetLocal(date)}. Kveldsbildene starter ved solnedgang og varer ca. ${hours()} t.`
       : `Varighet ca. ${hours()} t.`;
+    $("#timeHint").textContent += " Tiden du velger er en forespørsel, ikke endelig.";
     if (state.orient) $("#timeHint").textContent += " Solmerket viser tider med sol på balkongen.";
   }
   renderPhotographers();
@@ -1319,7 +1320,7 @@ function summaryRows() {
   return [
     ["Tjeneste", serviceText()],
     ["Adresse", addr.value.trim()],
-    ["Tid", tid + (state.date && state.time && !confirmed(state.date) ? " (ønsket)" : "")],
+    ["Ønsket tid", tid],
     ["Varighet", state.main ? `ca. ${hours()} t` : ""],
     ["Fotograf", p],
     ...selgerRows(),
@@ -1571,9 +1572,9 @@ form.addEventListener("submit", async e => {
     try { await fetch(GOOGLE_FORM, { method: "POST", mode: "no-cors", body: data }); } catch (err) { /* reservasjonen er hovedkanalen */ }
 
     // 3) Kvittering
-    $("#rcTitle").textContent = reserved ? "Bestilling mottatt" : "Forespørsel mottatt";
+    $("#rcTitle").textContent = "Forespørsel mottatt";
     $("#rcText").innerHTML = reserved
-      ? `Referanse <span class="ref">${esc(res.ref)}</span>. Vi har satt av tiden, og du får en bekreftelse på SMS og e-post. ${kontakt ? "Vi tar kontakt med selger i løpet av dagen for å avtale tidspunkt." : "Vi bekrefter tidspunktet så snart vi kan."}`
+      ? `Referanse <span class="ref">${esc(res.ref)}</span>. Vi har holdt av ønsket tid, men den er ikke endelig. Du får en bekreftelse på SMS og e-post, og vi gir beskjed hvis tiden må endres. ${kontakt ? "Vi tar kontakt med selger i løpet av dagen for å avtale tidspunkt." : ""}`
       : "Vi fikk ikke reservert tiden automatisk, men forespørselen er sendt. Vi tar kontakt for å bekrefte tid og fotograf.";
     $("#rcSum").innerHTML = rowsHtml(summaryRows());
     form.hidden = true;
@@ -1583,7 +1584,7 @@ form.addEventListener("submit", async e => {
   } catch (err) {
     showErr(4, "Noe gikk galt under innsendingen. Sjekk nettforbindelsen og prøv igjen, eller send oss en e-post på kontakt@fotostallen.no.");
   } finally {
-    btn.disabled = false; btn.textContent = "Send bestilling";
+    btn.disabled = false; btn.textContent = "Send forespørsel";
   }
 });
 

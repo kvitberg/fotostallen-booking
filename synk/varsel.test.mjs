@@ -52,7 +52,7 @@ test("kontakter.json går foran fakturarobotens kalenderkonfig", () => {
 
 test("innsender får bekreftelse; skal selger kontaktes, står det i meldingen", () => {
   const b = lagBekreftelser({ ...q, selgerKontakt: true, selgerBekreftelse: "ingen" }, "FS-1", 90);
-  assert.ok(b.innsender.sms.includes("er registrert (ref. FS-1)"));
+  assert.ok(b.innsender.sms.includes("Forespørselen om fotografering i Torggata 1, 0181 Oslo er registrert (ref. FS-1)"));
   assert.ok(b.innsender.sms.includes("Vi tar kontakt med selger i løpet av dagen"));
   assert.ok(b.innsender.epost.startsWith("Hei Kari,"));
   assert.strictEqual(b.selger, null, "ingen bekreftelse til selger valgt");
@@ -64,7 +64,9 @@ test("selger: dato og «kommer tilbake med tidspunkt» når tiden skal avtales, 
   assert.strictEqual(avtales.sms, "Hei Ola! Kari Nordmann har bestilt fotografering av boligen i Torggata 1, 0181 Oslo hos Fotostallen. Vi har satt av tirsdag 20. oktober, og kommer tilbake til deg med tidspunkt. Hilsen Fotostallen");
   assert.deepStrictEqual([avtales.sendSms, avtales.sendEpost], [true, false]);
   const fast = lagBekreftelser({ ...base, selgerKontakt: false, selgerBekreftelse: "begge" }, "FS-1", 90).selger;
-  assert.ok(fast.sms.includes("Fotografen kommer tirsdag 20. oktober kl. 09:30–11:00."));
+  assert.ok(fast.sms.includes("Foreløpig tid er tirsdag 20. oktober kl. 09:30–11:00. Vi gir beskjed hvis tiden må endres."));
   assert.deepStrictEqual([fast.sendSms, fast.sendEpost], [true, true]);
-  assert.ok(!lagBekreftelser({ ...base, selgerKontakt: false }, "FS-1", 90).innsender.sms.includes("selger"));
+  const uten = lagBekreftelser({ ...base, selgerKontakt: false }, "FS-1", 90).innsender.sms;
+  assert.ok(!uten.includes("selger"));
+  assert.ok(uten.includes("Tidspunktet er ikke endelig"), "innsender får vite at tiden ikke er endelig");
 });
