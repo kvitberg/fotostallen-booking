@@ -753,7 +753,7 @@ const pad = n => String(n).padStart(2, "0");
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const keyMin = k => Number(k.slice(0, 2)) * 60 + Number(k.slice(3, 5));
 const minKey = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
-const endKey = k => minKey(keyMin(k) + DURATION_MIN);
+const endKey = k => minKey((keyMin(k) + DURATION_MIN) % 1440);   // over midnatt: 22:45–00:15
 const hours = () => String(DURATION_MIN / 60).replace(".", ",");
 const MONTHS = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
 const WEEKDAYS = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
