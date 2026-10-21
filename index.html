@@ -207,6 +207,8 @@
   .err-summary:focus { outline: 2px solid var(--ink); outline-offset: 2px; }
   .rows.err .row, .chips.err .chip span { border-color: var(--accent-dark); }
   .req { color: var(--accent-dark); }
+  .subgroup .field-err + .q { margin-top: 18px; }
+  .req-note { margin: 0 0 4px; font-size: 13px; color: var(--muted); }
   .subgroup { margin-top: 28px; }
   .subgroup .q { margin: 4px 0 10px; font-size: 15px; font-weight: 500; }
   .subgroup .chips + .q { margin-top: 18px; }
@@ -582,6 +584,7 @@
         <div class="step" data-step="4" hidden>
           <div class="sec-head"><h2 class="cond">Kontakt</h2><p>Hvem bestiller?</p></div>
           <div class="card">
+          <p class="req-note"><span class="req" aria-hidden="true">*</span> må fylles ut</p>
           <div class="grid2">
             <div class="field full"><label for="f_navn">Fullt navn <span class="req" aria-hidden="true">*</span></label><input id="f_navn" autocomplete="name" required></div>
             <div class="field"><label for="f_tlf">Telefon <span class="req" aria-hidden="true">*</span></label><input id="f_tlf" type="tel" autocomplete="tel" required></div>
@@ -1451,7 +1454,8 @@ function validStep(n) {
   const list = problems(n);
   tried.add(n);
   const box = markProblems(n, list);
-  if (list.length) { box.scrollIntoView({ behavior: "smooth", block: "center" }); box.focus({ preventScroll: true }); return false; }
+  // Hopp til det første feltet som mangler; oversikten øverst viser resten.
+  if (list.length) { const f = list[0].field; f.scrollIntoView({ behavior: "smooth", block: "center" }); f.focus({ preventScroll: true }); return false; }
   return true;
 }
 function recheck() { tried.forEach(n => { if (n !== 3) markProblems(n, problems(n)); }); }
@@ -1461,7 +1465,7 @@ document.addEventListener("change", recheck);
 // Én side: seksjonene åpnes etter tur og blir liggende. goStep(n) åpner seksjon n (hvis de foregående
 // er gyldige), lar den gli inn og ruller dit.
 function goStep(n, scroll = true) {
-  for (let i = 1; i < n; i++) if (!validStep(i)) { n = i; break; }
+  for (let i = 1; i < n; i++) if (!validStep(i)) { n = i; scroll = false; break; }   // validStep har hoppet til feltet
   state.step = n;
   state.maxStep = Math.max(state.maxStep, n);
   clearTimeout(advanceTimer); $("#advanceMsg").hidden = true; $("#advanceMsg3").hidden = true;
@@ -1537,7 +1541,7 @@ function remember() {
 const form = $("#booking");
 form.addEventListener("submit", async e => {
   e.preventDefault();
-  for (const n of [1, 2, 3, 4]) if (!validStep(n)) { if (n !== 4) goStep(n); return; }
+  for (const n of [1, 2, 3, 4]) if (!validStep(n)) { if (n !== 4) goStep(n, false); return; }
   remember();
 
   const v = id => $("#" + id).value.trim();
