@@ -198,6 +198,15 @@
   .time { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
   .time .ic { color: var(--accent); }
   .time.sel .ic { color: #fff; }
+  .field-err { display: flex; gap: 6px; align-items: center; margin: 8px 0 0; font-size: 13.5px; font-weight: 500; color: var(--accent-dark); }
+  .field-err svg { flex: 0 0 auto; }
+  .err-summary { margin: 0 0 18px; padding: 14px 16px; border: 1.5px solid var(--accent-dark); border-radius: 16px; background: #fff; }
+  .err-summary b { display: flex; gap: 8px; align-items: center; color: var(--accent-dark); font-size: 15px; }
+  .err-summary ul { margin: 8px 0 0; padding-left: 24px; }
+  .err-summary button { background: none; border: 0; padding: 3px 0; font: inherit; font-size: 14px; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; }
+  .err-summary:focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .rows.err .row, .chips.err .chip span { border-color: var(--accent-dark); }
+  .req { color: var(--accent-dark); }
   .subgroup { margin-top: 28px; }
   .subgroup .q { margin: 4px 0 10px; font-size: 15px; font-weight: 500; }
   .subgroup .chips + .q { margin-top: 18px; }
@@ -502,8 +511,8 @@
             <div class="card">
               <div class="group">
                 <div class="field">
-                  <label for="f_adresse">Adresse for fotografering</label>
-                  <input id="f_adresse" autocomplete="off" placeholder="Gate og nummer, sted" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
+                  <label for="f_adresse">Adresse for fotografering <span class="req" aria-hidden="true">*</span></label>
+                  <input id="f_adresse" aria-required="true" autocomplete="off" placeholder="Gate og nummer, sted" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
                   <ul class="suggest" id="suggest" role="listbox" hidden></ul>
                 </div>
                 <div class="orient">
@@ -574,9 +583,9 @@
           <div class="sec-head"><h2 class="cond">Kontakt</h2><p>Hvem bestiller?</p></div>
           <div class="card">
           <div class="grid2">
-            <div class="field full"><label for="f_navn">Fullt navn</label><input id="f_navn" autocomplete="name" required></div>
-            <div class="field"><label for="f_tlf">Telefon</label><input id="f_tlf" type="tel" autocomplete="tel" required></div>
-            <div class="field"><label for="f_epost">E-post</label><input id="f_epost" type="email" autocomplete="email" required></div>
+            <div class="field full"><label for="f_navn">Fullt navn <span class="req" aria-hidden="true">*</span></label><input id="f_navn" autocomplete="name" required></div>
+            <div class="field"><label for="f_tlf">Telefon <span class="req" aria-hidden="true">*</span></label><input id="f_tlf" type="tel" autocomplete="tel" required></div>
+            <div class="field"><label for="f_epost">E-post <span class="req" aria-hidden="true">*</span></label><input id="f_epost" type="email" autocomplete="email" required></div>
           </div>
           <p class="hint">Du får en bekreftelse på SMS og e-post når forespørselen er registrert.</p>
 
@@ -1337,6 +1346,7 @@ function selgerRows() {
 }
 const rowsHtml = rows => rows.map(([k, v]) => `<div><dt>${k}</dt><dd class="${v ? "" : "empty"}">${v ? esc(v) : "–"}</dd></div>`).join("");
 function update() {
+  if (typeof recheck === "function" && tried.size) recheck();
   const rows = summaryRows();
   if (state.date) {
     const d = new Date(state.date + "T12:00");
@@ -1378,36 +1388,75 @@ $("#booking").addEventListener("change", e => {
   if (e.target.matches('[name="selgerKontakt"], [name="selgerBekreftelse"], #f_nokkel, #f_kvmUsikker')) { updateKontakt(); update(); }
 });
 
-function validStep(n) {
+// Alt som mangler i et steg: melding, feltet som får fokus og stedet meldingen vises.
+function problems(n) {
+  const out = [], add = (msg, field, anchor = field) => out.push({ msg, field, anchor });
+  const v = id => $("#" + id).value.trim(), okMail = x => /^\S+@\S+\.\S+$/.test(x), digits = x => x.replace(/\D/g, "").length;
   if (n === 1) {
-    if (!state.main) return showErr(1, "Velg en hovedtjeneste."), false;
-    if (!state.scope) return showErr(1, "Velg omfang."), false;
+    if (!state.main) add("Velg en hovedtjeneste.", $("#mainOpts input"), $("#mainOpts"));
+    else if (!state.scope) add("Velg omfang.", $("#scopeOpts input"), $("#scopeOpts"));
   }
   if (n === 2) {
-    if (!addr.value.trim()) { showErr(2, "Skriv inn adressen for fotograferingen."); addr.classList.add("err"); return false; }
-    if (!state.date || !state.time) return showErr(2, "Velg dato og tidspunkt."), false;
+    if (!addr.value.trim()) add("Skriv inn adressen for fotograferingen.", addr);
+    if (!state.date) add("Velg en dato i kalenderen.", $("#calDays .day:not([disabled]):not(.blank)") || $("#calCard"), $("#calCard"));
+    else if (!state.time) add("Velg et tidspunkt.", $("#timeOpts .time:not([disabled])") || $("#timeOpts"), $("#timeOpts"));
   }
   if (n === 4) {
-    let first = null;
-    ["f_navn", "f_tlf", "f_epost"].forEach(id => {
-      const el = $("#" + id), v = el.value.trim();
-      const bad = !v || (id === "f_epost" && !/^\S+@\S+\.\S+$/.test(v)) || (id === "f_tlf" && v.replace(/\D/g, "").length < 8);
-      el.classList.toggle("err", bad);
-      if (bad && !first) first = el;
-    });
-    if (first) { first.focus(); return showErr(4, "Fyll inn navn, telefon og en gyldig e-postadresse."), false; }
-    if (!radioVal("selgerKontakt")) { $('[name="selgerKontakt"]').focus(); return showErr(4, "Velg om vi skal kontakte selger."), false; }
-    const bek = selgerBek(), tlf = $("#f_stlf"), ep = $("#f_sepost");
-    const needTlf = selgerKontakt() || bek === "sms" || bek === "begge", needEpost = bek === "epost" || bek === "begge";
-    const badTlf = needTlf && tlf.value.replace(/\D/g, "").length < 8;
-    const badEpost = needEpost && !/^\S+@\S+\.\S+$/.test(ep.value.trim());
-    tlf.classList.toggle("err", badTlf); ep.classList.toggle("err", badEpost);
-    if (badTlf) { tlf.focus(); return showErr(4, "Fyll inn selgers mobilnummer."), false; }
-    if (badEpost) { ep.focus(); return showErr(4, "Fyll inn en gyldig e-postadresse til selger."), false; }
+    if (!v("f_navn")) add("Skriv inn fullt navn.", $("#f_navn"));
+    if (digits(v("f_tlf")) < 8) add(v("f_tlf") ? "Telefonnummeret må ha minst 8 sifre." : "Skriv inn telefonnummeret ditt.", $("#f_tlf"));
+    if (!okMail(v("f_epost"))) add(v("f_epost") ? "E-postadressen ser ikke riktig ut." : "Skriv inn e-postadressen din.", $("#f_epost"));
+    const k = $('[name="selgerKontakt"]');
+    if (!radioVal("selgerKontakt")) add("Velg om vi skal kontakte selger.", k, k.closest(".chips"));
+    const bek = selgerBek();
+    if ((selgerKontakt() || bek === "sms" || bek === "begge") && digits(v("f_stlf")) < 8) add("Skriv inn selgers mobilnummer.", $("#f_stlf"));
+    if ((bek === "epost" || bek === "begge") && !okMail(v("f_sepost"))) add("Skriv inn selgers e-postadresse.", $("#f_sepost"));
   }
-  hideErr(n);
+  return out;
+}
+const ALERT_IC = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>';
+const tried = new Set();
+let errSeq = 0;
+// Viser feilene: melding under hvert felt (koblet med aria-describedby) og en oversikt øverst i steget med
+// lenker til feltene. Etter første forsøk oppdateres alt mens kunden fyller ut.
+function markProblems(n, list) {
+  const sec = $(`.step[data-step="${n}"]`);
+  $$(".field-err", sec).forEach(e => e.remove());
+  $$("[aria-invalid]", sec).forEach(e => { e.removeAttribute("aria-invalid"); e.removeAttribute("aria-describedby"); });
+  $$(".err", sec).forEach(e => e.classList.remove("err"));
+  list.forEach(p => {
+    const id = `ferr${++errSeq}`, msg = document.createElement("p");
+    msg.className = "field-err"; msg.id = id; msg.innerHTML = ALERT_IC + esc(p.msg);
+    const host = p.anchor.closest(".field");
+    if (host) host.append(msg); else p.anchor.after(msg);
+    p.anchor.classList.add("err");
+    if (p.field.matches("input, textarea")) { p.field.setAttribute("aria-invalid", "true"); p.field.setAttribute("aria-describedby", id); }
+  });
+  let box = $(".err-summary", sec);
+  if (!box) {
+    box = document.createElement("div"); box.className = "err-summary"; box.tabIndex = -1; box.setAttribute("role", "alert");
+    $(".card", sec).prepend(box);
+    box.addEventListener("click", e => {
+      const b = e.target.closest("[data-fix]"); if (!b) return;
+      const f = box._list[+b.dataset.fix].field;
+      f.scrollIntoView({ behavior: "smooth", block: "center" }); f.focus({ preventScroll: true });
+    });
+  }
+  box._list = list;
+  box.hidden = !list.length;
+  box.innerHTML = list.length ? `<b>${ALERT_IC}${list.length === 1 ? "Én ting mangler" : `${list.length} ting mangler`}</b><ul>${list.map((p, i) => `<li><button type="button" data-fix="${i}">${esc(p.msg)}</button></li>`).join("")}</ul>` : "";
+  if (list.length) showErr(n, `${list.length === 1 ? "Ett felt mangler" : `${list.length} felt mangler`}. Se markeringene over.`); else hideErr(n);
+  return box;
+}
+function validStep(n) {
+  const list = problems(n);
+  tried.add(n);
+  const box = markProblems(n, list);
+  if (list.length) { box.scrollIntoView({ behavior: "smooth", block: "center" }); box.focus({ preventScroll: true }); return false; }
   return true;
 }
+function recheck() { tried.forEach(n => { if (n !== 3) markProblems(n, problems(n)); }); }
+document.addEventListener("input", recheck);
+document.addEventListener("change", recheck);
 
 // Én side: seksjonene åpnes etter tur og blir liggende. goStep(n) åpner seksjon n (hvis de foregående
 // er gyldige), lar den gli inn og ruller dit.
