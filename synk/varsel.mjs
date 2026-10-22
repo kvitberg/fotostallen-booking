@@ -31,14 +31,16 @@ function endTime(time, minutes) {
 export function lagTekster(q, who, ref, durationMin) {
   const d = new Date(q.date + "T12:00");
   const dato = `${WEEKDAYS[d.getDay()]} ${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
-  const tid = `kl. ${q.time}–${endTime(q.time, q.duration || durationMin)}`;
+  const tid = q.duration === 540 ? "hele dagen (08:00–17:00)" : `kl. ${q.time}–${endTime(q.time, q.duration || durationMin)}`;
   const tjenester = q.services || (q.products || []).join(", ");
+  const selger = [q.selgerNavn, q.selgerTlf].filter(Boolean).join(", ");
   const viaForste = q.photographer === "forste" || /første ledige/i.test(q.note || "");
   const sms = [
     `Ny booking${viaForste ? " (første ledige)" : ""}: ${dato} ${tid}, ${q.address}.`,
     tjenester ? `${tjenester.charAt(0).toUpperCase()}${tjenester.slice(1)}.` : "",
-    `Kunde: ${q.navn}, ${q.telefon}.`,
-    q.selgerKontakt ? `Avtal tid med selger${q.selgerNavn || q.selgerTlf ? `: ${[q.selgerNavn, q.selgerTlf].filter(Boolean).join(", ")}` : ""}.` : "",
+    `Megler: ${[q.navn, q.telefon].filter(Boolean).join(", ")}.`,
+    selger ? `${q.selgerKontakt ? "Avtal tid med selger" : "Selger"}: ${selger}.` : q.selgerKontakt ? "Avtal tid med selger." : "",
+    q.buffer ? "Utenfor Oslo (reisevei)." : "",
     q.nokkel ? "Nøkkeloppdrag." : "",
     `Ref. ${ref}`,
   ].filter(Boolean).join(" ");
@@ -52,12 +54,13 @@ export function lagTekster(q, who, ref, durationMin) {
     `Adresse: ${q.address}`,
     `Tjenester: ${tjenester || "–"}`,
     "",
-    `Kunde: ${q.navn}`,
-    `Telefon: ${q.telefon}`,
-    `E-post: ${q.epost}`,
+    `Megler: ${q.navn}`,
+    q.telefon ? `Telefon: ${q.telefon}` : null,
+    q.epost ? `E-post: ${q.epost}` : null,
     q.oppdrag ? `Oppdragsnr.: ${q.oppdrag}` : null,
     q.faktura ? `Faktura til: ${q.faktura}` : null,
-    q.kvmUsikker ? "Størrelse: usikker" : q.kvm ? `Størrelse: ${q.kvm} kvm` : null,
+    q.kvmUsikker ? "Størrelse: usikker" : q.kvm ? `Størrelse: ${q.kvm} kvm${q.duration === 120 ? " (satt av ca. 2 timer)" : ""}` : null,
+    q.buffer ? `Utenfor Oslo: ca. ${q.buffer} min reisevei før og etter.` : null,
     q.nokkel ? `Nøkkeloppdrag${[q.etasje && `etasje ${q.etasje}`, q.leilighet && `leil. ${q.leilighet}`].filter(Boolean).map(x => `, ${x}`).join("")}` : null,
     q.selgerKontakt ? "Selger skal kontaktes for å avtale tidspunkt." : null,
     q.selgerNavn || q.selgerTlf || q.selgerEpost ? `Selger: ${[q.selgerNavn, q.selgerTlf, q.selgerEpost].filter(Boolean).join(", ")}` : null,
@@ -78,7 +81,7 @@ export function lagTekster(q, who, ref, durationMin) {
 export function lagBekreftelser(q, ref, durationMin) {
   const d = new Date(q.date + "T12:00");
   const dato = `${WEEKDAYS[d.getDay()]} ${d.getDate()}. ${MONTHS[d.getMonth()]}`;
-  const tid = `kl. ${q.time}–${endTime(q.time, q.duration || durationMin)}`;
+  const tid = q.duration === 540 ? "hele dagen (08:00–17:00)" : `kl. ${q.time}–${endTime(q.time, q.duration || durationMin)}`;
   const tjenester = q.services || (q.products || []).join(", ");
   const kontakt = !!q.selgerKontakt;
   const fornavn = navn => (navn || "").trim().split(/\s+/)[0];

@@ -458,6 +458,59 @@
     .ph-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .times { grid-template-columns: repeat(2, 1fr); }
   }
+
+  /* ---- Kontakt-steget: faktura, megler, selger, detaljer og vilkår ---- */
+  .q-first { margin-top: 22px !important; }
+  .field .inline-check { text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--ink); }
+  .step.painted > .hint { color: var(--ink); }
+  .blk-h { margin: 0 0 4px; font-size: 15.5px; font-weight: 500; letter-spacing: -.005em; }
+  .sub-h { margin: 26px 0 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+  .blk { padding-bottom: 8px; }
+  .blk + .blk { padding-top: 30px; margin-top: 0; }
+  .seg { display: inline-grid; grid-auto-flow: column; gap: 4px; padding: 4px; border-radius: 14px; background: var(--bg); }
+  .seg label { position: relative; cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; }
+  .seg span { display: block; padding: 10px 18px; border-radius: 10px; font-size: 14.5px; font-weight: 500; color: var(--muted); transition: all .15s; }
+  .seg input:checked + span { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(18,18,18,.12); }
+  .seg input:focus-visible + span { outline: 2px solid var(--ink); }
+  .switch { display: flex; align-items: center; gap: 12px; cursor: pointer; text-transform: none !important; letter-spacing: 0 !important; color: var(--ink) !important; font-size: 15px !important; }
+  .switch input { position: absolute; opacity: 0; }
+  .switch .track { flex: 0 0 auto; width: 44px; height: 26px; border-radius: 999px; background: rgba(18,18,18,.2); position: relative; transition: background .15s; }
+  .switch .track::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .15s; }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track::after { transform: translateX(18px); }
+  .switch .sw-txt b { display: block; font-weight: 500; }
+  .switch .sw-txt small { display: block; font-size: 13px; color: var(--muted); }
+  .ehf { padding-top: 18px; }
+  .blk-h .o { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .ehf-row { margin-top: 20px; }
+  .time.wide { grid-column: 1 / -1; }
+  .travel-note { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--bg); font-size: 13.5px; color: var(--ink); }
+  .hint.full { grid-column: 1 / -1; margin: 12px 0 0; }
+  .opt-card { margin-top: 22px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); transition: border-color .15s; }
+  .opt-card:hover { border-color: rgba(18,18,18,.45); }
+  .opt-card summary { list-style: none; display: flex; align-items: center; gap: 14px; padding: 14px 16px; cursor: pointer; }
+  .opt-card summary::-webkit-details-marker { display: none; }
+  .oc-ic { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--bg); color: var(--ink); flex: 0 0 auto; }
+  .oc-txt { flex: 1; min-width: 0; }
+  .oc-txt b { display: block; font-size: 15.5px; font-weight: 500; }
+  .oc-txt small { display: block; font-size: 13px; color: var(--muted); }
+  .oc-tag { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: var(--bg); color: var(--muted); }
+  .oc-chev { display: grid; transition: transform .2s; color: var(--ink); }
+  .opt-card[open] .oc-chev { transform: rotate(180deg); }
+  .opt-card[open] { border-color: rgba(18,18,18,.3); background: #fff; }
+  .oc-body { padding: 0 16px 18px; }
+  .opt-card summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 18px; }
+  .terms { margin-top: 24px; padding: 16px 18px; border-radius: 16px; background: var(--bg); font-size: 13.5px; line-height: 1.55; }
+  .terms p { margin: 6px 0 0; color: var(--ink); }
+  .terms .accept { margin-top: 14px; color: var(--ink); font-weight: 500; font-size: 14.5px; }
+  @media (max-width: 600px) { .seg { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: row; width: 100%; } .seg span { text-align: center; padding: 10px 8px; } .oc-tag { display: none; } }
+  /* Hytta: røyken stiger fra pipa og stjernene blinker (hover/valgt), som de andre ikonene. */
+  .ill svg .a-smoke { transform-box: fill-box; transform-origin: center bottom; animation: smoke 2.6s ease-in-out infinite var(--run, paused); }
+  .ill svg .a-star { transform-box: fill-box; transform-origin: center; animation: twinkle 1.6s ease-in-out infinite var(--run, paused); }
+  .ill svg .a-star.s2 { animation-delay: .8s; }
+  @keyframes smoke { 0% { opacity: 1; transform: none; } 55% { opacity: 0; transform: translateY(-5px) scaleY(1.15); } 56% { opacity: 0; transform: translateY(3px); } 100% { opacity: 1; transform: none; } }
+  @keyframes twinkle { 50% { opacity: .25; transform: scale(.6); } }
 </style>
 </head>
 <body>
@@ -516,9 +569,10 @@
                   <label for="f_adresse">Adresse for fotografering <span class="req" aria-hidden="true">*</span></label>
                   <input id="f_adresse" aria-required="true" autocomplete="off" placeholder="Gate og nummer, sted" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest">
                   <ul class="suggest" id="suggest" role="listbox" hidden></ul>
+                  <p class="travel-note" id="travelNote" hidden></p>
                 </div>
                 <div class="orient">
-                  <span class="lab" id="qOrient">Hvilken vei vender balkongen eller stua? <span class="o">(valgfritt)</span></span>
+                  <span class="lab" id="qOrient">Hvilken vei vender balkongen, uteplassen, hagen eller boligen? <span class="o">(valgfritt)</span></span>
                   <div class="chips compact" id="orientOpts" role="radiogroup" aria-labelledby="qOrient">
                     <label class="chip"><input type="radio" name="orient" value="N"><span>N</span></label>
                     <label class="chip"><input type="radio" name="orient" value="NØ"><span>NØ</span></label>
@@ -585,19 +639,44 @@
           <div class="sec-head"><h2 class="cond">Kontakt</h2><p>Hvem bestiller?</p></div>
           <div class="card">
           <p class="req-note"><span class="req" aria-hidden="true">*</span> må fylles ut</p>
-          <div class="grid2">
-            <div class="field full"><label for="f_navn">Fullt navn <span class="req" aria-hidden="true">*</span></label><input id="f_navn" autocomplete="name" required></div>
-            <div class="field"><label for="f_tlf">Telefon <span class="req" aria-hidden="true">*</span></label><input id="f_tlf" type="tel" autocomplete="tel" required></div>
-            <div class="field"><label for="f_epost">E-post <span class="req" aria-hidden="true">*</span></label><input id="f_epost" type="email" autocomplete="email" required></div>
-          </div>
-          <p class="hint">Du får en bekreftelse på SMS og e-post når forespørselen er registrert.</p>
 
-          <div class="subgroup">
-            <div class="glabel">Selger</div>
-            <p class="q" id="qSelger">Skal vi kontakte selger for å avtale tidspunkt?</p>
+          <section class="blk" id="moreFaktura">
+            <h3 class="blk-h">Faktura</h3>
+            <p class="q" id="qFaktura">Hvem skal fakturaen til?</p>
+            <div class="chips" role="radiogroup" aria-labelledby="qFaktura">
+              <label class="chip"><input type="radio" name="fakturaTil" value="kontor" checked><span>Kontoret</span></label>
+              <label class="chip"><input type="radio" name="fakturaTil" value="kunde"><span>Kunden (selger)</span></label>
+            </div>
+            <div class="grid2" id="fakKontor">
+              <div class="field full"><label for="f_firma">Meglerkontor / firma <span class="req" aria-hidden="true">*</span></label><input id="f_firma" autocomplete="organization"></div>
+              <div class="field"><label for="f_orgnr">Organisasjonsnummer <span class="o" id="orgnrO">(valgfritt)</span><span class="req" id="orgnrR" aria-hidden="true" hidden>*</span></label><input id="f_orgnr" inputmode="numeric" placeholder="9 siffer"></div>
+              <div class="field"><label for="f_oppdrag">Oppdragsnummer <span class="o">(valgfritt)</span></label><input id="f_oppdrag"></div>
+              <div class="field full" id="fakEpostKontor" hidden><label for="f_faktura">Fakturaadresse eller e-post</label><textarea id="f_faktura"></textarea></div>
+            </div>
+            <div id="fakKunde" hidden>
+              <p class="hint">Fakturaen sendes til selger, til navnet og e-posten under «Kontaktinfo selger».</p>
+            </div>
+          </section>
+
+          <section class="blk subgroup" id="blkMegler">
+            <h3 class="blk-h">Kontaktinfo megler</h3>
+            <div class="grid2">
+              <div class="field full"><label for="f_navn">Fullt navn <span class="req" aria-hidden="true">*</span></label><input id="f_navn" autocomplete="name" required></div>
+            </div>
+            <label class="switch ehf-row" id="ehfRow"><input type="checkbox" id="f_ehf" checked><span class="track" aria-hidden="true"></span><span class="sw-txt"><b>Send fakturaen som EHF</b><small>Elektronisk faktura til organisasjonsnummeret</small></span></label>
+          </section>
+
+          <section class="blk subgroup" id="blkSelger">
+            <h3 class="blk-h">Kontaktinfo selger</h3>
+            <div class="grid2" id="selgerFields">
+              <div class="field full"><label for="f_snavn">Navn <span class="req" aria-hidden="true">*</span></label><input id="f_snavn" autocomplete="off"></div>
+              <div class="field" id="fieldStlf"><label for="f_stlf">Mobil <span class="req" aria-hidden="true">*</span></label><input id="f_stlf" type="tel" autocomplete="off"></div>
+              <div class="field" id="fieldSepost"><label for="f_sepost">E-post <span class="req" aria-hidden="true">*</span></label><input id="f_sepost" type="email" autocomplete="off"></div>
+            </div>
+            <p class="q q-first" id="qSelger">Skal vi kontakte selger for å avtale tidspunkt?</p>
             <div class="chips" role="radiogroup" aria-labelledby="qSelger">
+              <label class="chip"><input type="radio" name="selgerKontakt" value="nei" checked><span>Nei</span></label>
               <label class="chip"><input type="radio" name="selgerKontakt" value="ja"><span>Ja, kontakt selger</span></label>
-              <label class="chip"><input type="radio" name="selgerKontakt" value="nei"><span>Nei</span></label>
             </div>
             <p class="q" id="qBekreft">Skal selger få bekreftelse på oppdraget?</p>
             <div class="chips" role="radiogroup" aria-labelledby="qBekreft">
@@ -606,15 +685,11 @@
               <label class="chip"><input type="radio" name="selgerBekreftelse" value="epost"><span>E-post</span></label>
               <label class="chip"><input type="radio" name="selgerBekreftelse" value="begge"><span>Begge</span></label>
             </div>
-            <div class="grid2" id="selgerFields" hidden>
-              <div class="field full"><label for="f_snavn">Selgers navn</label><input id="f_snavn" autocomplete="off"></div>
-              <div class="field" id="fieldStlf"><label for="f_stlf">Selgers mobil</label><input id="f_stlf" type="tel" autocomplete="off"></div>
-              <div class="field" id="fieldSepost"><label for="f_sepost">Selgers e-post</label><input id="f_sepost" type="email" autocomplete="off"></div>
-            </div>
-          </div>
+            <p class="hint">Kunden får en bekreftelse på e-post når forespørselen er registrert.</p>
+                      </section>
 
-          <div class="subgroup">
-            <div class="glabel">Oppdraget</div>
+          <section class="blk subgroup">
+            <h3 class="blk-h">Oppdraget <span class="o">(valgfritt)</span></h3>
             <div class="chips">
               <label class="chip check"><input type="checkbox" id="f_nokkel"><span>Nøkkeloppdrag</span></label>
             </div>
@@ -622,25 +697,28 @@
               <div class="field"><label for="f_etasje">Etasje <span class="o">(valgfritt)</span></label><input id="f_etasje" autocomplete="off"></div>
               <div class="field"><label for="f_leil">Leilighetsnummer <span class="o">(valgfritt)</span></label><input id="f_leil" autocomplete="off" placeholder="F.eks. H0301"></div>
             </div>
-          </div>
+          </section>
 
-          <details class="more" id="moreFaktura">
-            <summary>Faktura og oppdragsnummer</summary>
-            <div class="inner">
-              <div class="field"><label for="f_faktura">Hvor skal fakturaen? <span class="o">(firma eller navn, adresse eller e-post)</span></label><textarea id="f_faktura"></textarea></div>
-              <div class="field"><label for="f_oppdrag">Oppdragsnummer <span class="o">(valgfritt)</span></label><input id="f_oppdrag"></div>
-            </div>
-          </details>
-          <details class="more last">
-            <summary>Detaljer om eiendommen</summary>
-            <div class="inner grid2">
-              <div class="field"><label for="f_kvm">Størrelse <span class="o">(kvm)</span></label><input id="f_kvm" inputmode="numeric">
+
+          <section class="blk subgroup" id="blkDetaljer">
+            <h3 class="blk-h">Detaljer om eiendommen</h3>
+            <div class="grid2">
+              <div class="field"><label for="f_kvm">Størrelse (kvm) <span class="req" aria-hidden="true">*</span></label><input id="f_kvm" inputmode="numeric">
                 <label class="inline-check"><input type="checkbox" id="f_kvmUsikker"> Usikker på kvm</label></div>
-              <div class="field"><label for="f_ankomst">Ankomst og etasje</label><input id="f_ankomst" placeholder="Kode, etasje, heis"></div>
+              <div class="field"><label for="f_ankomst">Ankomst og etasje <span class="o">(valgfritt)</span></label><input id="f_ankomst" placeholder="Kode, etasje, heis"></div>
             </div>
-          </details>
+            <p class="hint">Over 150 kvm tar ca. 2 timer. Vi sjekker at fotografen er ledig så lenge før forespørselen sendes.</p>
+          </section>
+
           <div class="field"><label for="f_mer">Kommentar <span class="o">(valgfritt)</span></label><textarea id="f_mer" placeholder="Spesielle ønsker, kontaktperson på stedet …"></textarea></div>
           <label class="remember"><input type="checkbox" id="f_husk"> Husk kontaktopplysningene mine på denne enheten</label>
+
+          <div class="terms">
+            <h3 class="blk-h">Vilkår</h3>
+            <p>Følgende vilkår ligger til grunn ved kjøp av Fotostallens fototjenester:</p>
+            <p>Fakturamottaker gis ved betaling av faktura lisens til å benytte fotografiene i salgsannonse på avtalt bolig. All øvrig bruk av fotografiene må klareres med fotografen. Det presiseres at lisensen ikke omfatter retten til å endre eller bearbeide materialet, ei heller noen form for overdragelse til, eller utnyttelse hos, tredjepart. Fotografen skal krediteres ved all bruk, med mindre annet er avtalt.</p>
+            <label class="inline-check accept"><input type="checkbox" id="f_vilkar"> Jeg har lest og godtar vilkårene <span class="req" aria-hidden="true">*</span></label>
+          </div>
           <div class="review"><dl class="sum-list" data-sum></dl></div>
           </div>
           <p class="err-msg" id="err4" hidden></p>
@@ -717,18 +795,19 @@ const IMG = "https://impro.usercontent.one/appid/oneComWsb/domain/fotostallen.no
 // og fotografen skrives i kommentaren). skills: "film" = kan ta video.
 // face = hvor ansiktet er i bildet (x/y i %) og hvor mye avataren zoomer inn.
 const PHOTOGRAPHERS = [
-  { id: "glenn", name: "Glenn Pettersen", role: "Film og video", formOption: "Glenn Pettersen", img: IMG + "Image%202%20(5).jpg", skills: ["film"] },
-  { id: "lars", name: "Lars Petter Skillestad", role: "Interiør og bolig", formOption: "Lars-Petter Skillestad", img: IMG + "Image%202%20(8).jpg", skills: ["film"] },
-  { id: "kevin", name: "Kevin Fauske", role: "Interiør", formOption: "Kevin Fauske", img: IMG + "Kevin,%20Kristine%20Elvemo_2.jpg", face: [61, 22, 2.6], skills: [] },
-  { id: "scott", name: "Scott Kvitberg", role: "Interiør og bolig", formOption: "Scott Kvitberg", img: IMG + "Image%202.jpg", skills: ["film"] },
-  { id: "kristine", name: "Kristine Elvemo", role: "Interiør og bolig", formOption: "Kristine Elvsmo", img: IMG + "Kristine,%20Kevin%20Fauske.jpg", face: [63, 31, 2.4], skills: [] },
-  { id: "henrik", name: "Henrik Eriksen", role: "Fotograf", formOption: "Henrik Eriksen", skills: [] },
-  { id: "bjorn", name: "Bjørn Wad", role: "Fotograf", formOption: null, skills: [] },
+  { id: "glenn", name: "Glenn Pettersen", role: "Interiør, bolig og video", formOption: "Glenn Pettersen", img: IMG + "Image%202%20(5).jpg", skills: ["film"] },
+  { id: "lars", name: "Lars Petter Skillestad", role: "Interiør, bolig og video", formOption: "Lars-Petter Skillestad", img: IMG + "Image%202%20(8).jpg", skills: ["film"] },
+  { id: "kevin", name: "Kevin Fauske", role: "Interiør, bolig og video", formOption: "Kevin Fauske", img: IMG + "Kevin,%20Kristine%20Elvemo_2.jpg", face: [61, 22, 2.6], skills: [] },
+  { id: "scott", name: "Scott Kvitberg", role: "Interiør, bolig og video", formOption: "Scott Kvitberg", img: IMG + "Image%202.jpg", skills: ["film"] },
+  { id: "kristine", name: "Kristine Elvemo", role: "Interiør, bolig og video", formOption: "Kristine Elvsmo", img: IMG + "Kristine,%20Kevin%20Fauske.jpg", face: [63, 31, 2.4], skills: [] },
+  { id: "henrik", name: "Henrik Eriksen", role: "Interiør, bolig og video", formOption: "Henrik Eriksen", skills: [] },
+  { id: "bjorn", name: "Bjørn Wad", role: "Interiør, bolig og video", formOption: null, skills: [] },
 ];
 
 // Enkle strektegninger i Fotostallens farger (mørk strek, rød detalj).
 const ICON = {
   dag: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle pathLength="1" class="a-sun" cx="41" cy="12" r="5" stroke="#dc384c"/><path pathLength="1" class="a-rays" d="M41 3v2M41 19v2M32 12h2M48 12h2M35 6l1.4 1.4M45.6 16.6L47 18M35 18l1.4-1.4M45.6 7.4L47 6" stroke="#dc384c"/><path pathLength="1" d="M8 38V22l14-10 14 10v16z"/><path pathLength="1" d="M18 38v-9h8v9"/><path pathLength="1" d="M4 38h48"/></svg>',
+  hytte: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" class="a-smoke" d="M31.5 11.5c-1.4-1.4 1.4-2.8 0-4.2s1.4-2.8 0-4.2" stroke="#dc384c"/><path pathLength="1" d="M30 16.5V13h3v6"/><path pathLength="1" d="M5.5 25L21 12.5 36.5 25"/><path pathLength="1" d="M9.5 25.5L21 16.3l11.5 9.2"/><path pathLength="1" d="M15 21.5h12"/><path pathLength="1" d="M10 25.5V38M32 25.5V38"/><path pathLength="1" d="M10 29.5h7M25 29.5h7M10 33.5h7M25 33.5h7"/><path pathLength="1" d="M17.5 38V28h7v10"/><path pathLength="1" d="M45 38v-4M40.5 34h9L45 24.5z"/><path pathLength="1" d="M4 38h48"/></svg>',
   kveld: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" class="a-moon" d="M46 13.5A7 7 0 1 1 38.5 6a5.5 5.5 0 0 0 7.5 7.5z" stroke="#dc384c"/><path pathLength="1" class="a-house" d="M8 38V22l14-10 14 10v16z"/><rect pathLength="1" class="a-win" x="18" y="25" width="8" height="6" rx="1" fill="#dc384c" fill-opacity=".25"/><path pathLength="1" d="M4 38h48"/></svg>',
   video: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect pathLength="1" x="9" y="12" width="26" height="20" rx="3"/><path pathLength="1" class="a-lens" d="M35 19l11-6v18l-11-6z"/><circle pathLength="1" class="a-rec" cx="16" cy="18" r="2" fill="#dc384c" stroke="#dc384c"/></svg>',
   drone: '<svg width="56" height="44" viewBox="0 0 56 44" fill="none" stroke="#121212" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><g class="a-hover"><rect pathLength="1" x="22" y="18" width="12" height="8" rx="2"/><path pathLength="1" d="M22 20l-8-5M34 20l8-5M22 24l-8 5M34 24l8 5"/><path pathLength="1" class="a-rotor" d="M8 15h12"/><path pathLength="1" class="a-rotor" d="M36 15h12"/><path pathLength="1" class="a-rotor" d="M8 29h12"/><path pathLength="1" class="a-rotor" d="M36 29h12"/><circle pathLength="1" cx="28" cy="29" r="2" stroke="#dc384c"/></g></svg>',
@@ -743,6 +822,8 @@ const MAIN = [
     { id: "hel", label: "Hel bolig", form: "Dagbilder helbolig" }, { id: "ti", label: "Opptil 10 bilder", form: "Dagbilder <10bilder" }] },
   { id: "kveld", label: "Kveldsfotografering", desc: "Fra solnedgang", icon: "kveld", scopes: [
     { id: "hel", label: "Hel bolig", form: "Kveld helbolig" }, { id: "ti", label: "Opptil 10 bilder", form: "Kveld <10bilder" }] },
+  { id: "hytte", label: "Hyttefotografering", desc: "Heldagsoppdrag, 08:00–17:00", icon: "hytte", scopes: [
+    { id: "heldag", label: "Hele dagen", form: null }] },
   { id: "video", label: "Video", desc: "Kort film, ca. 1 minutt", icon: "video", film: true, scopes: [
     { id: "1min", label: "Ca. 1 minutt", form: "Video (1min)" }] },
 ];
@@ -765,7 +846,7 @@ const pad = n => String(n).padStart(2, "0");
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const keyMin = k => Number(k.slice(0, 2)) * 60 + Number(k.slice(3, 5));
 const minKey = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
-const endKey = k => minKey((keyMin(k) + DURATION_MIN) % 1440);   // over midnatt: 22:45–00:15
+const endKey = k => state.main === "hytte" ? "17:00" : minKey((keyMin(k) + DURATION_MIN) % 1440);   // over midnatt: 22:45–00:15
 const hours = () => String(DURATION_MIN / 60).replace(".", ",");
 const MONTHS = ["januar", "februar", "mars", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "desember"];
 const WEEKDAYS = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
@@ -915,16 +996,45 @@ async function loadMonth(d) {
 const monthEntry = date => date ? availCache[date.slice(0, 7)] : null;
 const confirmed = date => (monthEntry(date) || {}).status === "ok";
 
-// Ledige starttider for en fotograf («forste» = minst én som kan tildeles automatisk).
-function freeFor(pid, date) {
+// Ledige luker slik kalenderen melder dem (hver luke er 1,5 t).
+function rawFree(pid, date) {
   const e = monthEntry(date);
   if (!e || e.status !== "ok") return localSlots(date);
-  const of = id => (e.slots[id] || {})[date] || [];
-  if (pid !== "forste") return of(pid);
-  const auto = PHOTOGRAPHERS.filter(p => !AUTO_ASSIGN_EXCLUDE.includes(p.id));
-  return of("forste").filter(k => auto.some(p => of(p.id).includes(k)));
+  return (e.slots[pid] || {})[date] || [];
 }
-const relevantKeys = date => state.main === "kveld" ? [eveningKey(date)].filter(Boolean) : DAY_SLOTS;
+// Varighet og reisevei: hytte er heldag (08:00–17:00), over 150 kvm tar ca. 2 t, ellers 1,5 t.
+// Utenfor Oslo (postnummer fra 1300) trengs ca. 40 min reisevei før og etter.
+const HEL_DAG = 540, STOR_BOLIG = 120, REISE = 40;
+function jobMinutes() {
+  if (state.main === "hytte") return HEL_DAG;
+  const kvm = parseInt(($("#f_kvm") || {}).value, 10);
+  return !($("#f_kvmUsikker") || {}).checked && kvm > 150 ? STOR_BOLIG : DURATION_MIN;
+}
+function outsideOslo(text) {
+  const m = [...String(text || "").matchAll(/(?:^|[\s,])(\d{4})\s+\p{L}/gu)].pop();
+  return !!m && +m[1] >= 1300;
+}
+const travelMinutes = () => outsideOslo(addr.value) ? REISE : 0;
+// Lukene et oppdrag berører: alle luker som overlapper [start − reisevei, slutt + reisevei].
+function windowKeys(date, key, dur, buf) {
+  const a = keyMin(key) - buf, b = keyMin(key) + dur + buf;
+  return [...DAY_SLOTS, eveningKey(date)].filter(Boolean).filter(k => keyMin(k) < b && keyMin(k) + DURATION_MIN > a);
+}
+// Ledige starttider for en fotograf («forste» = minst én som kan tildeles automatisk), når hele
+// oppdraget med eventuell reisevei må få plass. Luker som allerede er passert, regnes som ledige.
+function freeFor(pid, date, dur = jobMinutes(), buf = travelMinutes()) {
+  if (pid === "forste") {
+    const auto = PHOTOGRAPHERS.filter(p => !AUTO_ASSIGN_EXCLUDE.includes(p.id));
+    const any = rawFree("forste", date);
+    return any.filter(k => auto.some(p => freeFor(p.id, date, dur, buf).includes(k)));
+  }
+  const free = rawFree(pid, date);
+  if (dur === DURATION_MIN && !buf) return free;
+  const earliest = Date.now() + MIN_LEAD_HOURS * 3600e3;
+  const past = k => new Date(`${date}T${k}`).getTime() < earliest;
+  return free.filter(k => windowKeys(date, k, dur, buf).every(x => x === k || free.includes(x) || past(x)));
+}
+const relevantKeys = date => state.main === "kveld" ? [eveningKey(date)].filter(Boolean) : state.main === "hytte" ? ["08:00"] : DAY_SLOTS;
 const freeRelevant = (pid, date) => freeFor(pid, date).filter(k => relevantKeys(date).includes(k));
 
 // Jevn fordeling: blant ledige fotografer (med film-kompetanse ved video) velges den med minst
@@ -1190,10 +1300,11 @@ function renderTimes() {
     lastTimesDate = date;
     $("#timeOpts").innerHTML = keys.map((k, i) => {
       const ok = free.includes(k), sun = ok && state.orient && slotSun(date, k) >= .5;
-      return `<button type="button" class="time${k === state.time ? " sel" : ""}" style="--i:${i}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}${sun ? ", sol på balkongen" : ""}">${sun ? lucide("sun", 15) : ""}${k}–${endKey(k)}</button>`;
+      return `<button type="button" class="time${k === state.time ? " sel" : ""}${state.main === "hytte" ? " wide" : ""}" style="--i:${i}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}${sun ? ", sol på balkongen" : ""}">${sun ? lucide("sun", 15) : ""}${state.main === "hytte" ? "Hele dagen 08:00–17:00" : `${k}–${endKey(k)}`}</button>`;
     }).join("");
     $("#timeHint").textContent = state.main === "kveld"
       ? `Solnedgang kl. ${sunsetLocal(date)}. Kveldsbildene starter ved solnedgang og varer ca. ${hours()} t.`
+      : state.main === "hytte" ? "Heldagsoppdrag: fotografen er satt av hele arbeidsdagen."
       : `Varighet ca. ${hours()} t.`;
     $("#timeHint").textContent += " Tiden du velger er en forespørsel, ikke endelig.";
     if (state.orient) $("#timeHint").textContent += " Solmerket viser tider med sol på balkongen.";
@@ -1242,6 +1353,7 @@ $("#timeOpts").addEventListener("click", e => {
   const b = e.target.closest(".time[data-time]");
   if (!b) return;
   state.time = b.dataset.time;
+  state.timeMsg = "";
   hideErr(2);
   renderTimes();
   clearTimeout(advanceTimer);
@@ -1328,28 +1440,35 @@ function summaryRows() {
   const p = state.photographer === "forste"
     ? (state.assigned ? `${PHOTOGRAPHERS.find(x => x.id === state.assigned).name} (første ledige)` : "Første ledige")
     : PHOTOGRAPHERS.find(x => x.id === state.photographer).name;
-  const tid = state.date ? `${fmtDate(state.date)}${state.time ? `, kl. ${state.time}–${endKey(state.time)}` : ""}` : "";
+  const tid = state.date ? `${fmtDate(state.date)}${state.time ? `, kl. ${state.time}–${minKey((keyMin(state.time) + jobMinutes()) % 1440)}` : ""}` : "";
   return [
     ["Tjeneste", serviceText()],
     ["Adresse", addr.value.trim()],
     ["Ønsket tid", tid],
-    ["Varighet", state.main ? `ca. ${hours()} t` : ""],
+    ["Varighet", durationText()],
     ["Fotograf", p],
     ...selgerRows(),
   ];
+}
+// Varighet: hytte er heldag, over 150 kvm tar ca. 2 timer, ellers ca. 1,5 time (også ved «usikker»).
+function durationText() {
+  if (!state.main) return "";
+  if (state.main === "hytte") return "Hele dagen";
+  const kvm = parseInt(($("#f_kvm") || {}).value, 10);
+  return !$("#f_kvmUsikker").checked && kvm > 150 ? "ca. 2 t" : `ca. ${hours()} t`;
 }
 // Bare med når de er valgt (i sammendraget før innsending og på kvitteringen).
 function selgerRows() {
   const k = radioVal("selgerKontakt"), bek = selgerBek(), rows = [];
   if (k) rows.push(["Selger", (k === "ja" ? "Vi avtaler tid med selger" : "Kontaktes ikke")
     + (bek !== "ingen" ? `, bekreftelse på ${{ sms: "SMS", epost: "e-post", begge: "SMS og e-post" }[bek]}` : "")]);
-  if (state.orient) rows.push(["Balkong", `Mot ${ORIENT_NAME[state.orient]}`]);
+  if (state.orient) rows.push(["Retning", `Mot ${ORIENT_NAME[state.orient]}`]);
   if ($("#f_nokkel").checked) rows.push(["Nøkkel", ["Nøkkeloppdrag", $("#f_etasje").value.trim() && `etasje ${$("#f_etasje").value.trim()}`, $("#f_leil").value.trim() && `leil. ${$("#f_leil").value.trim()}`].filter(Boolean).join(", ")]);
   return rows;
 }
 const rowsHtml = rows => rows.map(([k, v]) => `<div><dt>${k}</dt><dd class="${v ? "" : "empty"}">${v ? esc(v) : "–"}</dd></div>`).join("");
 function update() {
-  if (typeof recheck === "function" && tried.size) recheck();
+  if (tried && tried.size) recheck();
   const rows = summaryRows();
   if (state.date) {
     const d = new Date(state.date + "T12:00");
@@ -1374,6 +1493,29 @@ function hideErr(n) { $(`#err${n}`).hidden = true; }
 
 $("#orientOpts").addEventListener("change", e => { state.orient = e.target.value || null; renderTimes(); });
 
+// Reisevei: vises under adressen og gjør at tider uten plass til reisevei blir opptatt.
+function checkTravel() {
+  const out = outsideOslo(addr.value), n = $("#travelNote");
+  if (out === !n.hidden) return;
+  n.hidden = !out;
+  n.innerHTML = out ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Adressen er utenfor Oslo. Vi regner med ca. 40 minutter reisevei før og etter, så noen tider kan være opptatt.</span>' : "";
+  if (!$("#calDays").closest(".step").hidden) { drawDays(true); renderTimes(); }
+}
+addr.addEventListener("input", checkTravel);
+
+// Faktura: til kontoret (firma, org.nr., EHF) eller til kunden. Til kunden kommer selger før megler.
+const fakturaTil = () => radioVal("fakturaTil") || "kontor";
+function updateFaktura() {
+  const kunde = fakturaTil() === "kunde", ehf = $("#f_ehf").checked;
+  $("#fakKontor").hidden = kunde; $("#fakKunde").hidden = !kunde; $("#ehfRow").hidden = kunde;
+  if (kunde) $("#blkSelger").after($("#blkMegler")); else $("#blkSelger").before($("#blkMegler"));
+  $("#orgnrO").hidden = ehf; $("#orgnrR").hidden = !ehf;
+  $("#fakEpostKontor").hidden = ehf;
+}
+$("#booking").addEventListener("change", e => { if (e.target.name === "fakturaTil" || e.target.id === "f_ehf") updateFaktura(); });
+// Kvm avgjør varigheten (over 150 kvm: ca. 2 t), så sammendraget følger med.
+$("#f_kvm").addEventListener("input", () => update());
+
 /* ---------- Steg 4: selger, nøkkel og kvm ---------- */
 
 const radioVal = name => ($("#booking").querySelector(`input[name="${name}"]:checked`) || {}).value || "";
@@ -1381,9 +1523,6 @@ const selgerKontakt = () => radioVal("selgerKontakt") === "ja";
 const selgerBek = () => radioVal("selgerBekreftelse") || "ingen";
 // Selgerfeltene vises når vi skal kontakte selger eller selger skal få bekreftelse; e-post bare når den trengs.
 function updateKontakt() {
-  const bek = selgerBek();
-  $("#selgerFields").hidden = !(selgerKontakt() || bek !== "ingen");
-  $("#fieldSepost").hidden = !(bek === "epost" || bek === "begge");
   $("#nokkelFields").hidden = !$("#f_nokkel").checked;
   $("#f_kvm").disabled = $("#f_kvmUsikker").checked;
 }
@@ -1402,22 +1541,30 @@ function problems(n) {
   if (n === 2) {
     if (!addr.value.trim()) add("Skriv inn adressen for fotograferingen.", addr);
     if (!state.date) add("Velg en dato i kalenderen.", $("#calDays .day:not([disabled]):not(.blank)") || $("#calCard"), $("#calCard"));
-    else if (!state.time) add("Velg et tidspunkt.", $("#timeOpts .time:not([disabled])") || $("#timeOpts"), $("#timeOpts"));
+    else if (!state.time) add(state.timeMsg || "Velg et tidspunkt.", $("#timeOpts .time:not([disabled])") || $("#timeOpts"), $("#timeOpts"));
   }
   if (n === 4) {
-    if (!v("f_navn")) add("Skriv inn fullt navn.", $("#f_navn"));
-    if (digits(v("f_tlf")) < 8) add(v("f_tlf") ? "Telefonnummeret må ha minst 8 sifre." : "Skriv inn telefonnummeret ditt.", $("#f_tlf"));
-    if (!okMail(v("f_epost"))) add(v("f_epost") ? "E-postadressen ser ikke riktig ut." : "Skriv inn e-postadressen din.", $("#f_epost"));
-    const k = $('[name="selgerKontakt"]');
-    if (!radioVal("selgerKontakt")) add("Velg om vi skal kontakte selger.", k, k.closest(".chips"));
-    const bek = selgerBek();
-    if ((selgerKontakt() || bek === "sms" || bek === "begge") && digits(v("f_stlf")) < 8) add("Skriv inn selgers mobilnummer.", $("#f_stlf"));
-    if ((bek === "epost" || bek === "begge") && !okMail(v("f_sepost"))) add("Skriv inn selgers e-postadresse.", $("#f_sepost"));
+    // Rekkefølgen følger skjemaet (selger kommer før megler når fakturaen går til kunden).
+    const kunde = fakturaTil() === "kunde";
+    if (!kunde) {
+      if (!v("f_firma")) add("Skriv inn meglerkontor eller firma.", $("#f_firma"));
+      const org = v("f_orgnr").replace(/\s/g, "");
+      if ($("#f_ehf").checked && !/^\d{9}$/.test(org)) add(org ? "Organisasjonsnummeret må ha 9 siffer." : "Skriv inn organisasjonsnummeret (trengs for EHF).", $("#f_orgnr"));
+      else if (org && !/^\d{9}$/.test(org)) add("Organisasjonsnummeret må ha 9 siffer.", $("#f_orgnr"));
+    }
+    const megler = () => { if (!v("f_navn")) add("Skriv inn meglers fulle navn.", $("#f_navn")); };
+    if (!kunde) megler();
+    if (!v("f_snavn")) add("Skriv inn selgers navn.", $("#f_snavn"));
+    if (digits(v("f_stlf")) < 8) add(v("f_stlf") ? "Selgers mobilnummer må ha minst 8 sifre." : "Skriv inn selgers mobilnummer.", $("#f_stlf"));
+    if (!okMail(v("f_sepost"))) add(v("f_sepost") ? "Selgers e-postadresse ser ikke riktig ut." : "Skriv inn selgers e-postadresse.", $("#f_sepost"));
+    if (kunde) megler();
+    if (!$("#f_kvmUsikker").checked && !(parseInt(v("f_kvm"), 10) > 0)) add("Skriv inn boligens størrelse i kvm, eller kryss av for «Usikker på kvm».", $("#f_kvm"));
+    if (!$("#f_vilkar").checked) add("Les og godta vilkårene.", $("#f_vilkar"), $("#f_vilkar").closest(".accept"));
   }
   return out;
 }
 const ALERT_IC = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>';
-const tried = new Set();
+var tried = new Set();   // var: update() kan kalles før denne linjen har kjørt
 let errSeq = 0;
 // Viser feilene: melding under hvert felt (koblet med aria-describedby) og en oversikt øverst i steget med
 // lenker til feltene. Etter første forsøk oppdateres alt mens kunden fyller ut.
@@ -1520,13 +1667,12 @@ $$("input, textarea").forEach(el => el.addEventListener("input", () => el.classL
 /* ---------- Husk meg ---------- */
 
 const REMEMBER_KEY = "fotostallen-booking-kontakt";
-const REMEMBER_FIELDS = ["f_navn", "f_tlf", "f_epost", "f_faktura"];
+const REMEMBER_FIELDS = ["f_navn", "f_firma", "f_orgnr"];
 try {
   const saved = JSON.parse(localStorage.getItem(REMEMBER_KEY) || "null");
   if (saved) {
     REMEMBER_FIELDS.forEach(id => { if (saved[id]) $("#" + id).value = saved[id]; });
     $("#f_husk").checked = true;
-    if (saved.f_faktura) $("#moreFaktura").open = true;
   }
 } catch (err) { /* lagring ikke tilgjengelig */ }
 function remember() {
@@ -1545,6 +1691,19 @@ form.addEventListener("submit", async e => {
   remember();
 
   const v = id => $("#" + id).value.trim();
+  // Har kvm (over 150 kvm: ca. 2 t) eller reisevei gjort at oppdraget ikke får plass fra valgt tid?
+  const dur = jobMinutes(), buf = travelMinutes();
+  if (state.photographer === "forste") state.assigned = autoAssign();
+  const who = state.photographer === "forste" ? (state.assigned || "forste") : state.photographer;
+  if (confirmed(state.date) && !freeFor(who, state.date, dur, buf).includes(state.time)) {
+    // Meldingen vises ved tidspunktene, og siden hopper dit.
+    state.timeMsg = dur === STOR_BOLIG
+      ? "Boligen er over 150 kvm og tar ca. 2 timer, men det er ikke ledig så lenge fra valgt tid. Velg en annen tid."
+      : "Valgt tid har ikke plass til hele oppdraget med reisevei. Velg en annen tid.";
+    state.time = ""; renderTimes();
+    validStep(2);
+    return;
+  }
   const m = MAIN.find(x => x.id === state.main), scope = m.scopes.find(s => s.id === state.scope);
   const addons = ADDONS.filter(a => state.addons.has(a.id));
   const formProducts = [...new Set([scope.form, ...addons.map(a => a.form)].filter(Boolean))];
@@ -1552,7 +1711,11 @@ form.addEventListener("submit", async e => {
   const p = PHOTOGRAPHERS.find(x => x.id === booked);
   const services = serviceText();
   const tid = `${state.time}–${endKey(state.time)}`;
-  const faktura = v("f_faktura") || `${v("f_navn")}, ${v("f_epost")}`;
+  const kunde = fakturaTil() === "kunde", ehf = !kunde && $("#f_ehf").checked;
+  const faktura = kunde
+    ? `Selger: ${v("f_snavn")}, ${v("f_sepost")}`
+    : [v("f_firma"), v("f_orgnr") && `org.nr. ${v("f_orgnr")}`, ehf ? "EHF" : v("f_faktura")].filter(Boolean).join(", ");
+  const oppdrag = kunde ? "" : v("f_oppdrag");
   const kontakt = selgerKontakt(), bek = selgerBek(), nokkel = $("#f_nokkel").checked, kvmUsikker = $("#f_kvmUsikker").checked;
   const nokkelTekst = nokkel ? ["Nøkkeloppdrag", v("f_etasje") && `etasje ${v("f_etasje")}`, v("f_leil") && `leil. ${v("f_leil")}`].filter(Boolean).join(", ") : "";
   const selgerTekst = [v("f_snavn"), v("f_stlf"), v("f_sepost")].filter(Boolean).join(", ");
@@ -1560,7 +1723,10 @@ form.addEventListener("submit", async e => {
     state.photographer === "forste" && p ? "Kunden valgte første ledige." : "",
     addons.some(a => a.id === "plantegning") ? "Ønsker plantegning." : "",
     addons.some(a => a.id === "some") ? "Ønsker SoMe-video (vertikal, 15–30 sek)." : "",
-    state.orient ? `Balkong/stue mot ${ORIENT_NAME[state.orient]}${slotSun(state.date, state.time) >= .5 ? " (sol på balkongen på valgt tid)" : ""}.` : "",
+    state.main === "hytte" ? "Hyttefotografering: heldagsoppdrag 08:00–17:00." : "",
+    dur === STOR_BOLIG ? "Over 150 kvm: satt av ca. 2 timer." : "",
+    buf ? "Utenfor Oslo: ca. 40 min reisevei før og etter." : "",
+    state.orient ? `Balkong/uteplass/hage mot ${ORIENT_NAME[state.orient]}${slotSun(state.date, state.time) >= .5 ? " (sol der på valgt tid)" : ""}.` : "",
     v("f_mer"),
   ].filter(Boolean).join(" ");
 
@@ -1575,8 +1741,10 @@ form.addEventListener("submit", async e => {
         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "book", photographer: booked || "forste", date: state.date, time: state.time,
-          services, products: formProducts, navn: v("f_navn"), telefon: v("f_tlf"), epost: v("f_epost"),
-          oppdrag: v("f_oppdrag"), faktura, address: addr.value.trim(), kvm: kvmUsikker ? "" : v("f_kvm"), kvmUsikker, ankomst: v("f_ankomst"), note,
+          // navn = megler (fakturaroboten og kalendertittelen bruker det); megler oppgir ikke telefon/e-post.
+          services, products: formProducts, navn: v("f_navn"), telefon: "", epost: "",
+          duration: dur, buffer: buf, fakturaTil: kunde ? "kunde" : "kontor", firma: kunde ? "" : v("f_firma"),
+          orgnr: kunde ? "" : v("f_orgnr"), ehf, oppdrag, faktura, address: addr.value.trim(), kvm: kvmUsikker ? "" : v("f_kvm"), kvmUsikker, ankomst: v("f_ankomst"), note,
           selgerKontakt: kontakt, selgerNavn: v("f_snavn"), selgerTlf: v("f_stlf"), selgerEpost: v("f_sepost"), selgerBekreftelse: bek,
           nokkel, etasje: nokkel ? v("f_etasje") : "", leilighet: nokkel ? v("f_leil") : "",
         }),
@@ -1595,9 +1763,9 @@ form.addEventListener("submit", async e => {
 
     // 2) Kopi til Google-skjemaet som før.
     const data = new URLSearchParams();
-    data.append(ENTRY.megler, `${v("f_navn")}, ${v("f_tlf")}`);
-    data.append(ENTRY.kontor, v("f_oppdrag") ? `Oppdragsnr. ${v("f_oppdrag")}` : "");
-    data.append(ENTRY.epost, v("f_epost"));
+    data.append(ENTRY.megler, v("f_navn"));
+    data.append(ENTRY.kontor, [kunde ? "Faktura til kunden" : v("f_firma"), oppdrag && `Oppdragsnr. ${oppdrag}`].filter(Boolean).join(", "));
+    data.append(ENTRY.epost, v("f_sepost"));
     data.append(ENTRY.adresse, addr.value.trim());
     data.append(ENTRY.faktura, faktura);
     data.append(ENTRY.kvm, kvmUsikker ? "Usikker" : v("f_kvm"));
@@ -1615,7 +1783,8 @@ form.addEventListener("submit", async e => {
       `Tjenester: ${services}`,
       p && !p.formOption ? `Fotograf: ${p.name}` : "",
       state.photographer === "forste" && p ? `Første ledige – tildelt ${p.name}` : "",
-      v("f_oppdrag") ? `Oppdragsnr.: ${v("f_oppdrag")}` : "",
+      oppdrag ? `Oppdragsnr.: ${oppdrag}` : "",
+      `Faktura: ${faktura}`,
       `Kontakt selger for å avtale tid: ${kontakt ? "Ja" : "Nei"}`,
       selgerTekst ? `Selger: ${selgerTekst}` : "",
       bek !== "ingen" ? `Bekreftelse til selger: ${{ sms: "SMS", epost: "e-post", begge: "SMS og e-post" }[bek]}` : "",
@@ -1627,7 +1796,7 @@ form.addEventListener("submit", async e => {
     // 3) Kvittering
     $("#rcTitle").textContent = "Forespørsel mottatt";
     $("#rcText").innerHTML = reserved
-      ? `Referanse <span class="ref">${esc(res.ref)}</span>. Vi har holdt av ønsket tid, men den er ikke endelig. Du får en bekreftelse på SMS og e-post, og vi gir beskjed hvis tiden må endres. ${kontakt ? "Vi tar kontakt med selger i løpet av dagen for å avtale tidspunkt." : ""}`
+      ? `Referanse <span class="ref">${esc(res.ref)}</span>. Vi har holdt av ønsket tid, men den er ikke endelig. Vi gir beskjed hvis tiden må endres. ${kontakt ? "Vi tar kontakt med selger i løpet av dagen for å avtale tidspunkt." : ""}`
       : "Vi fikk ikke reservert tiden automatisk, men forespørselen er sendt. Vi tar kontakt for å bekrefte tid og fotograf.";
     $("#rcSum").innerHTML = rowsHtml(summaryRows());
     form.hidden = true;
@@ -1657,8 +1826,9 @@ $("#again").addEventListener("click", () => {
   Object.assign(state, { step: 1, maxStep: 1, main: null, scope: null, date: "", time: "", photographer: "forste", assigned: null });
   state.addons.clear();
   Object.keys(availCache).forEach(k => delete availCache[k]);
-  ["f_adresse", "f_mer", "f_kvm", "f_ankomst", "f_oppdrag", "f_snavn", "f_stlf", "f_sepost", "f_etasje", "f_leil"].forEach(id => { $("#" + id).value = ""; });
-  $$('[name="selgerKontakt"]').forEach(i => { i.checked = false; });
+  ["f_adresse", "f_mer", "f_kvm", "f_ankomst", "f_oppdrag", "f_snavn", "f_stlf", "f_sepost", "f_etasje", "f_leil", "f_faktura"].forEach(id => { $("#" + id).value = ""; });
+  $('[name="selgerKontakt"][value="nei"]').checked = true;
+  $("#f_vilkar").checked = false; checkTravel();
   $('[name="selgerBekreftelse"][value="ingen"]').checked = true;
   $("#f_nokkel").checked = false; $("#f_kvmUsikker").checked = false; geo = null;
   state.orient = null; $('[name="orient"][value=""]').checked = true;
@@ -1775,6 +1945,7 @@ $("#stampYear").textContent = today.getFullYear();
 }
 $("#stampMonth").textContent = MONTHS[today.getMonth()].toUpperCase();
 
+updateFaktura();
 goStep(1, false);
 // Hent ledighet i bakgrunnen, så kalenderen er klar når kunden kommer til steg 2.
 loadMonth(view);
@@ -1792,5 +1963,6 @@ if (window.self !== window.top) {
   window.addEventListener("load", report);
 }
 </script>
+
 </body>
 </html>

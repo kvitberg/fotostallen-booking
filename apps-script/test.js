@@ -205,7 +205,7 @@ test("bookingfilen til iCloud kan leses tilbake og merkes med fotograf", () => {
   assert.deepStrictEqual(busyFromIcs(text, FROM, TO), [{ start: oslo("2026-10-26", 8), end: oslo("2026-10-26", 9, 30) }], "riktig tid og varighet etter sommertid");
   const flat = text.replace(/\r\n /g, "");
   assert.ok(flat.includes("SUMMARY:Nettbooking fotografering – Kari Nordmann – Torggata 1\\, 0181 Oslo\\; 3. etg"), "tittel med escaping");
-  assert.ok(flat.includes("Kunde: Kari Nordmann") && flat.includes("Oppdragsnr.: 1234") && flat.includes("Faktura til: Krogsveen AS"), "kundefelt i beskrivelsen");
+  assert.ok(flat.includes("Megler: Kari Nordmann") && flat.includes("Oppdragsnr.: 1234") && flat.includes("Faktura til: Krogsveen AS"), "kundefelt i beskrivelsen");
   assert.ok(flat.includes("Tjenester: Dagfotografering\\, hel bolig + drone"), "tjenester i beskrivelsen");
   assert.ok(!/STATUS:TENTATIVE|FORELØPIG/.test(flat), "vanlig avtale, ikke foreløpig");
 });
@@ -265,4 +265,41 @@ test("kalendernotatet tar med selger, nøkkel og usikker kvm", () => {
   const text = bookingIcs(q, NOW, "scott").replace(/\r\n /g, "").replace(/\\n/g, "\n").replace(/\\,/g, ",");
   for (const s of ["Størrelse: usikker", "Nøkkeloppdrag, etasje 3, leil. H0301", "Kontakt selger for å avtale tidspunkt.", "Selger: Ola, 91234567", "Bekreftelse til selger: SMS"])
     assert.ok(text.includes(s), s);
+});
+
+const { outsideOslo, windowKeys } = mod.exports;
+test("utenfor Oslo avgjøres av postnummeret i adressen", () => {
+  assert.strictEqual(outsideOslo("Karl Johans gate 1, 0154 Oslo"), false);
+  assert.strictEqual(outsideOslo("Strandveien 12, 1440 Drøbak"), true);
+  assert.strictEqual(outsideOslo("Skårersletta 1, 1473 Lørenskog"), true);
+  assert.strictEqual(outsideOslo("Gata 1250, 1251 Oslo"), false, "husnummer med fire sifre forveksles ikke med postnummer");
+  assert.strictEqual(outsideOslo(""), false);
+});
+
+test("tidsvindu: 2 timer tar med neste luke, reisevei tar med naboene, heldag tar hele dagen", () => {
+  const d = ymd("2026-10-27"), all = slotsOfDay(d);
+  assert.deepStrictEqual(windowKeys(d, "09:30", 90, 0), ["09:30"]);
+  assert.deepStrictEqual(windowKeys(d, "09:30", 120, 0), ["09:30", "11:00"]);
+  assert.deepStrictEqual(windowKeys(d, "09:30", 90, 40), ["08:00", "09:30", "11:00"]);
+  assert.deepStrictEqual(windowKeys(d, "08:00", 540, 0), all.filter(k => k < "17:00"), "alle luker som starter før 17:00");
+});
+
+test("reisevei rundt avtaler utenfor Oslo blokkerer nabolukene", () => {
+  const cal = ics(`
+    BEGIN:VEVENT
+    UID:reise
+    DTSTART;TZID=Europe/Oslo:20261027T093000
+    DTEND;TZID=Europe/Oslo:20261027T110000
+    LOCATION:Strandveien 12\\, 1440 Drøbak
+    END:VEVENT`);
+  const free = slotsFor(cal, "2026-10-27", "2026-10-27")["2026-10-27"];
+  for (const k of ["08:00", "09:30", "11:00"]) assert.ok(!free.includes(k), `${k} skal være opptatt`);
+  assert.ok(free.includes("12:30"));
+});
+
+test("en booking i køen blokkerer hele vinduet sitt", () => {
+  const q = [{ photographer: "glenn", date: "2026-10-27", time: "09:30", duration: 120, buffer: 40 }];
+  const free = computeSlots("glenn", "2026-10-27", "2026-10-27", storeFrom({ glenn: [] }), q, NOW)["2026-10-27"];
+  for (const k of ["08:00", "09:30", "11:00"]) assert.ok(!free.includes(k), `${k} skal være opptatt`);
+  assert.ok(free.includes("12:30") && free.includes("14:00"));
 });

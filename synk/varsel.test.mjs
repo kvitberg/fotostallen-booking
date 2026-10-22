@@ -15,7 +15,7 @@ const q = {
 
 test("SMS er kort og har det fotografen trenger", () => {
   const { sms } = lagTekster(q, "Kristine Elvemo", "FS-9225D5A2", 90);
-  assert.strictEqual(sms, "Ny booking (første ledige): tirsdag 20.10 kl. 09:30–11:00, Torggata 1, 0181 Oslo. Dagfotografering, hel bolig + drone. Kunde: Kari Nordmann, 99 99 99 99. Ref. FS-9225D5A2");
+  assert.strictEqual(sms, "Ny booking (første ledige): tirsdag 20.10 kl. 09:30–11:00, Torggata 1, 0181 Oslo. Dagfotografering, hel bolig + drone. Megler: Kari Nordmann, 99 99 99 99. Ref. FS-9225D5A2");
   assert.ok(sms.length < 300, "passer i to SMS-er");
 });
 
@@ -69,4 +69,14 @@ test("selger: dato og «kommer tilbake med tidspunkt» når tiden skal avtales, 
   const uten = lagBekreftelser({ ...base, selgerKontakt: false }, "FS-1", 90).innsender.sms;
   assert.ok(!uten.includes("selger"));
   assert.ok(uten.includes("Tidspunktet er ikke endelig"), "innsender får vite at tiden ikke er endelig");
+});
+
+test("fotografen får megler og selger hver for seg, hytte som heldag og reisevei", () => {
+  const nye = { ...q, telefon: "", epost: "", selgerNavn: "Ola Hansen", selgerTlf: "91234567", selgerKontakt: false, duration: 540, buffer: 40, note: "" };
+  const { sms, epost } = lagTekster(nye, "Scott Kvitberg", "FS-2", 90);
+  assert.ok(sms.includes("hele dagen (08:00–17:00)"));
+  assert.ok(sms.includes("Megler: Kari Nordmann.") && sms.includes("Selger: Ola Hansen, 91234567."));
+  assert.ok(sms.includes("Utenfor Oslo (reisevei)."));
+  assert.ok(!epost.includes("Telefon:") && epost.includes("Megler: Kari Nordmann"));
+  assert.ok(epost.includes("Utenfor Oslo: ca. 40 min reisevei før og etter."));
 });

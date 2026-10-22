@@ -54,6 +54,10 @@ const CONFIG = {
   AUTO_ASSIGN_EXCLUDE: ["glenn"],
   // Bekreftelse til kunden sendes fra denne adressen når den er lagt inn som alias i Gmail.
   CONFIRM_FROM: "booking@fotostallen.no",
+  // Varigheter (min): vanlig, over 150 kvm og heldag (hytte, 08:00–17:00). Reisevei utenfor Oslo kommune
+  // (postnummer fra 1300) blokkerer 40 min før og etter.
+  DURATIONS: [90, 120, 540],
+  TRAVEL_MIN: 40,
   // Værvarsel fra MET Norway (Yr). Vilkårene krever at appen identifiserer seg; svaret mellomlagres i 30 min.
   MET_USER_AGENT: "fotostallen-booking/1.0 https://fotostallen.no",
 };
@@ -101,16 +105,26 @@ function book(b) {
     if (id !== ANY && !CONFIG.PHOTOGRAPHERS[id]) return json({ ok: false, error: "unknown_photographer" });
     if (!isDate(b.date) || slotsOfDay(ymd(b.date)).indexOf(b.time) < 0) return json({ ok: false, error: "bad_slot" });
     if (!clean(b.address, 200) || !clean(b.navn, 200)) return json({ ok: false, error: "missing_fields" });
+    const dur = CONFIG.DURATIONS.indexOf(Number(b.duration)) >= 0 ? Number(b.duration) : CONFIG.DURATION_MIN;
+    if (dur === 540 && b.time !== "08:00") return json({ ok: false, error: "bad_slot" });
+    // Reisevei avgjøres av adressen her også, så den ikke kan skrus av fra siden.
+    const buf = outsideOslo(b.address) ? CONFIG.TRAVEL_MIN : 0;
 
     lock.waitLock(20000);
     if (tooManyBookings()) return json({ ok: false, error: "rate_limited" });
     const queue = readQueue();
     // Sjekk på nytt at tiden er ledig (noen kan ha booket i mellomtiden).
-    const free = computeSlots(id, b.date, b.date, readStore(), queue, Date.now())[b.date] || [];
-    if (free.indexOf(b.time) < 0) return json({ ok: false, error: "taken" });
+    // Hele vinduet (varighet + reisevei) må være ledig; luker som allerede er passert, teller ikke.
+    const d = ymd(b.date), earliest = Date.now() + CONFIG.MIN_LEAD_HOURS * 3600e3;
+    const freeOf = pid => computeSlots(pid, b.date, b.date, readStore(), queue, Date.now())[b.date] || [];
+    const fits = pid => { const free = freeOf(pid); return free.indexOf(b.time) >= 0 &&
+      windowKeys(d, b.time, dur, buf).every(k => free.indexOf(k) >= 0 || slotStart(d, k) < earliest); };
+    const ok = id === ANY ? Object.keys(CONFIG.PHOTOGRAPHERS).some(fits) : fits(id);
+    if (!ok) return json({ ok: false, error: "taken" });
 
     const q = {
-      id: Utilities.getUuid(), created: Date.now(), photographer: id, date: b.date, time: b.time, duration: CONFIG.DURATION_MIN,
+      id: Utilities.getUuid(), created: Date.now(), photographer: id, date: b.date, time: b.time, duration: dur, buffer: buf,
+      fakturaTil: b.fakturaTil === "kunde" ? "kunde" : "kontor", firma: clean(b.firma, 200), orgnr: clean(b.orgnr, 20), ehf: !!b.ehf,
       services: clean(b.services, 300),
       navn: clean(b.navn, 200), telefon: clean(b.telefon, 40), epost: clean(b.epost, 200),
       oppdrag: clean(b.oppdrag, 60), faktura: clean(b.faktura, 500),
@@ -207,7 +221,9 @@ function maskFree(store, pid, date, i) {
 function computeSlots(id, from, to, store, queue, nowMs) {
   const out = {};
   const earliest = nowMs + CONFIG.MIN_LEAD_HOURS * 3600e3;
-  const queued = (pid, date, key) => queue.some(q => q.photographer === pid && q.date === date && q.time === key);
+  // En booking i køen blokkerer alle luker den overlapper, med varighet og eventuell reisevei.
+  const queued = (pid, date, key) => queue.some(q => q.photographer === pid && q.date === date &&
+    windowKeys(ymd(date), q.time, q.duration || CONFIG.DURATION_MIN, q.buffer || 0).indexOf(key) >= 0);
   const personFree = (pid, date, i, key) => maskFree(store, pid, date, i) && !queued(pid, date, key);
   const people = Object.keys(CONFIG.PHOTOGRAPHERS);
   for (let d = ymd(from); fmtYmd(d) <= to; d = addDays(d, 1)) {
@@ -224,6 +240,19 @@ function computeSlots(id, from, to, store, queue, nowMs) {
     if (free.length) out[date] = free;
   }
   return out;
+}
+
+/** Utenfor Oslo kommune: siste postnummer i adressen (fire sifre fulgt av stedsnavn) er 1300 eller høyere. */
+function outsideOslo(text) {
+  const all = String(text || "").match(/(?:^|[\s,])(\d{4})\s+[A-Za-zÆØÅæøåÉé]/g);
+  if (!all) return false;
+  return +all[all.length - 1].match(/\d{4}/)[0] >= 1300;
+}
+
+/** Lukene et oppdrag berører: alle luker som overlapper [start − reisevei, slutt + reisevei]. */
+function windowKeys(d, key, durMin, bufMin) {
+  const a = slotStart(d, key) - bufMin * 60e3, b = slotStart(d, key) + (durMin + bufMin) * 60e3;
+  return slotsOfDay(d).filter(k => slotStart(d, k) < b && slotStart(d, k) + CONFIG.DURATION_MIN * 60e3 > a);
 }
 
 /** Brukes av synkjobben: lager masker (v2) fra opptatte perioder per fotograf. */
@@ -296,11 +325,13 @@ function bookingIcs(q, nowMs, assigned) {
     "Bestilt via fotostallen.no – tidspunktet må bekreftes med kunden.",
     "",
     `Fotograf: ${who}${q.photographer === ANY ? " (tildelt som første ledige)" : ""}`,
-    `Kunde: ${q.navn}`,
-    `Telefon: ${q.telefon}`,
-    `E-post: ${q.epost}`,
+    `Megler: ${q.navn}`,
+    q.telefon ? `Telefon: ${q.telefon}` : null,
+    q.epost ? `E-post: ${q.epost}` : null,
     q.oppdrag ? `Oppdragsnr.: ${q.oppdrag}` : null,
     `Faktura til: ${q.faktura}`,
+    q.duration === 540 ? "Heldagsoppdrag (hytte), 08:00–17:00." : q.duration === 120 ? "Over 150 kvm: satt av ca. 2 timer." : null,
+    q.buffer ? `Utenfor Oslo: ca. ${q.buffer} min reisevei før og etter.` : null,
     `Adresse: ${q.address}`,
     q.kvmUsikker ? "Størrelse: usikker" : q.kvm ? `Størrelse: ${q.kvm} kvm` : null,
     q.ankomst ? `Ankomst: ${q.ankomst}` : null,
@@ -452,8 +483,10 @@ function busyFromIcs(text, fromMs, toMs, keep) {
     if (!ev.dtstart) return;
     if (ev.status === "CANCELLED" || ev.transp === "TRANSPARENT") return;
     const skip = ev.recurrenceId ? {} : (overridden[ev.uid] || {});
+    // Avtaler med adresse utenfor Oslo: fotografen trenger reisevei før og etter.
+    const pad = outsideOslo(ev.location) ? CONFIG.TRAVEL_MIN * 60e3 : 0;
     expandEvent(ev, fromMs, toMs).forEach(iv => {
-      if (!skip[iv.start]) out.push(iv);
+      if (!skip[iv.start]) out.push(pad ? { start: iv.start - pad, end: iv.end + pad } : iv);
     });
   });
   return out;
@@ -488,6 +521,7 @@ function parseIcs(text) {
     else if (name === "TRANSP") cur.transp = value.trim().toUpperCase();
     else if (name === "EXDATE") value.split(",").forEach(v => cur.exdates.push(dt(v)));
     else if (name === "X-FOTOSTALLEN-FOTOGRAF") cur.fotograf = value.trim();
+    else if (name === "LOCATION") cur.location = value.replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ").trim();
   });
   return events;
 }
@@ -667,4 +701,4 @@ function json(obj) {
 }
 
 // Gjør funksjonene tilgjengelige for testene i node (ignoreres i Apps Script).
-if (typeof module !== "undefined") module.exports = { summarizeForecast, busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, slotsOfDay, eveningKey, sunsetUtc, slotStart, bookingRef, zonedToUtc, fmtYmd, addDays, ymd, CONFIG, ANY };
+if (typeof module !== "undefined") module.exports = { outsideOslo, windowKeys, summarizeForecast, busyFromIcs, parseIcs, computeSlots, buildMasks, bookingIcs, bookingTitle, pickFree, slotsOfDay, eveningKey, sunsetUtc, slotStart, bookingRef, zonedToUtc, fmtYmd, addDays, ymd, CONFIG, ANY };
