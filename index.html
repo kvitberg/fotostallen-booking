@@ -277,14 +277,15 @@
   .wk, .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .wk span { text-align: center; font-size: 11px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
   .wk span.today { color: var(--accent); }
-  .day { aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; background: var(--dot); font-size: 11px; color: rgba(18,18,18,.5); display: grid; place-items: center; transition: transform .12s, background .15s; font-variant-numeric: tabular-nums; }
-  .day:hover { transform: scale(1.08); background: #b4b3af; color: var(--ink); }
-  .day.past { background: var(--ink); color: rgba(255,255,255,.3); pointer-events: none; }
-  .day.full { background: rgba(18,18,18,.05); color: var(--faint); text-decoration: line-through; pointer-events: none; }
-  .day.today { box-shadow: inset 0 0 0 2px var(--accent); }
-  .day.today:not(.sel):not(.past) { background: transparent; color: var(--accent); }
+  /* Ledige dager er hvite og tydelige knapper; passerte og fulle dager er dempet tekst uten flate. */
+  .day { aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; background: var(--surface, #fff); box-shadow: inset 0 0 0 1px rgba(18,18,18,.16); font-size: 13px; font-weight: 600; color: var(--ink); display: grid; place-items: center; cursor: pointer; transition: transform .12s, background .15s, box-shadow .15s; font-variant-numeric: tabular-nums; }
+  .day:hover { transform: scale(1.08); background: var(--accent-soft, #f8e3de); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .day.past { background: transparent; box-shadow: none; color: rgba(18,18,18,.28); font-weight: 400; pointer-events: none; }
+  .day.full { background: transparent; box-shadow: none; color: rgba(18,18,18,.38); font-weight: 400; text-decoration: line-through; pointer-events: none; }
+  .day.today { box-shadow: inset 0 0 0 2px var(--accent); color: var(--accent); }
+  .day.today.past, .day.today.full { box-shadow: inset 0 0 0 1.5px rgba(196,80,75,.45); }
   .day.sel { background: var(--accent); color: #fff; box-shadow: none; }
-  .day.blank { background: transparent; box-shadow: inset 0 0 0 1px rgba(18,18,18,.12); pointer-events: none; }
+  .day.blank { background: transparent; box-shadow: none; pointer-events: none; }
   .day:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   .days.loading .day:not(.past):not(.blank) { animation: pulse 1s ease-in-out infinite alternate; }
   @keyframes pulse { to { opacity: .45; } }
@@ -511,6 +512,52 @@
   .ill svg .a-star.s2 { animation-delay: .8s; }
   @keyframes smoke { 0% { opacity: 1; transform: none; } 55% { opacity: 0; transform: translateY(-5px) scaleY(1.15); } 56% { opacity: 0; transform: translateY(3px); } 100% { opacity: 1; transform: none; } }
   @keyframes twinkle { 50% { opacity: .25; transform: scale(.6); } }
+
+  /* ---- Solplanlegger ---- */
+  .orient .floor { margin-top: 14px; }
+.sunplan { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: center; margin-bottom: 18px; }
+  .sunplan h3 { margin: 0 0 4px; font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+  .sunplan .sp-sub { margin: 0 0 14px; font-size: 13.5px; color: var(--muted); }
+  .sunplan svg.sp-dia { width: 100%; max-width: 320px; height: auto; display: block; margin: 0 auto; }
+  .sp-list { display: grid; gap: 10px; }
+  .sp-row { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.35; }
+  .sp-row .ic { flex: 0 0 auto; color: #e8952b; margin-top: 1px; }
+  .sp-row .ic.shade { color: var(--ink); }
+  .sp-row b { font-weight: 600; }
+  .sp-row small { display: block; font-size: 12.5px; color: var(--muted); }
+  .sp-now { padding: 12px 14px; border-radius: 14px; background: var(--bg); }
+  .sp-note { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
+  .sp-scrub { display: flex; align-items: center; gap: 16px; margin: 18px 0 0; padding-bottom: 20px; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .sp-scrub span { flex: 0 0 auto; min-width: 76px; }
+  .sp-scrub input { flex: 1; -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px; background: linear-gradient(to right, var(--accent) var(--p, 50%), #dedbd6 var(--p, 50%)); outline-offset: 6px; }
+  .sp-scrub input::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); cursor: grab; }
+  .sp-scrub input::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  .sunplan { grid-template-columns: minmax(0, 1fr) !important; gap: 6px; }
+  .sunplan h3 { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
+  .sunplan .sp-sub { font-size: 16px; margin-bottom: 4px; }
+  .sunplan svg.sp-dia { max-width: 560px; }
+  .sunplan .sp-row { font-size: 15px; }
+  .sunplan .sp-row b { font-weight: 500; }
+  .sunplan .sp-row small { font-size: 13.5px; margin-top: 2px; }
+  .sunplan .sp-now { margin: 0 -12px; padding: 16px 12px; border-radius: 16px; background: #f8ece4; }
+  .sunplan .sp-now b { font-weight: 600; }
+  .sunplan .sp-list { gap: 14px; }
+  .sunplan .sp-list > .sp-row { padding-bottom: 14px; border-bottom: 1px solid var(--line); align-items: center; }
+  .sunplan .sp-row { gap: 14px; }
+  .sunplan .sp-row > .ic { padding: 11px; border-radius: 50%; background: #fbeadd; color: #e8812b; box-sizing: content-box; margin-top: 0; }
+  .sunplan .sp-row > .ic.shade { background: #efebe6; color: var(--ink); }
+  .sunplan .sp-now .sp-row { align-items: center; }
+  .sunplan .sp-note { display: flex; gap: 12px; align-items: center; padding-top: 14px; border-top: 1px solid var(--line); }
+  .sunplan .sp-note .ic { flex: 0 0 auto; color: #8a867f; width: 26px; height: 26px; margin: 0 8px 0 9px; }
+  .sunplan .sp-note { font-size: 12.5px; line-height: 1.5; }
+  @media (max-width: 600px) { .sunplan { grid-template-columns: minmax(0, 1fr); } }
+  /* Forhold på tidene: sol, skygge, regn */
+  .time .ic.sun { color: #e8952b; }
+  .time .ic.shade { color: var(--muted); }
+  .time .ic.wet { color: #3b7fb6; }
+  .time.sel .ic { color: #fff; }
+  .slot-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+  .slot-legend span { display: inline-flex; align-items: center; gap: 5px; }
 </style>
 </head>
 <body>
@@ -584,10 +631,24 @@
                     <label class="chip"><input type="radio" name="orient" value="NV"><span>NV</span></label>
                     <label class="chip"><input type="radio" name="orient" value="" checked><span>Vet ikke</span></label>
                   </div>
-                  <p class="hint">Da viser vi når det er sol på balkongen, så du kan velge tid med best lys.</p>
+                  <div class="floor" id="floorRow" hidden>
+                    <span class="lab" id="qFloor">Hvilken etasje er balkongen i?</span>
+                    <div class="chips compact" id="floorOpts" role="radiogroup" aria-labelledby="qFloor">
+                      <label class="chip"><input type="radio" name="floor" value="1"><span>1</span></label>
+                      <label class="chip"><input type="radio" name="floor" value="2" checked><span>2</span></label>
+                      <label class="chip"><input type="radio" name="floor" value="3"><span>3</span></label>
+                      <label class="chip"><input type="radio" name="floor" value="4"><span>4</span></label>
+                      <label class="chip"><input type="radio" name="floor" value="5"><span>5</span></label>
+                      <label class="chip"><input type="radio" name="floor" value="6"><span>6</span></label>
+                      <label class="chip"><input type="radio" name="floor" value="7"><span>7</span></label>
+                      <label class="chip"><input type="radio" name="floor" value="8"><span>8+</span></label>
+                    </div>
+                  </div>
+                  <p class="hint">Da viser vi når det er sol på akkurat denne balkongen – med nabobygg, trær og terreng – så du kan velge tid med best lys.</p>
                 </div>
               </div>
             </div>
+            <div class="card sunplan" id="sunPlan" hidden></div>
             <p class="notice" id="availNotice" hidden></p>
             <div class="card cal" id="calCard">
               <div class="cal-info">
@@ -608,6 +669,7 @@
                 <div class="times-wrap" id="timeGroup" hidden>
                   <span class="label" id="timeLabel">Tidspunkt</span>
                   <div class="times" id="timeOpts"></div>
+                  <div class="slot-legend" id="slotLegend"></div>
                   <p class="hint" id="timeHint"></p>
                   <p class="advance" id="advanceMsg" hidden>Går videre til fotograf …</p>
                 </div>
@@ -934,11 +996,13 @@ function renderAddons() {
   }).join("");
 }
 $("#mainOpts").addEventListener("change", e => {
-  const before = state.main;
   state.main = e.target.value;
-  // Bytte mellom dag og kveld endrer hvilke tider som gjelder.
-  if (before && (before === "kveld") !== (state.main === "kveld")) state.time = "";
-  renderScopes(); renderAddons(); hideErr(1); update();
+  // Typen bestemmer tidene (dag: faste luker, kveld: fra solnedgang, hytte: hele dagen).
+  // Valgt tid beholdes bare hvis den fortsatt finnes og er ledig for den nye typen.
+  if (state.time && !(state.date && freeRelevant(state.photographer, state.date).includes(state.time))) state.time = "";
+  renderScopes(); renderAddons(); hideErr(1);
+  if (availCache[ymKey(view)]) drawDays(true);   // fulle dager kan endre seg, f.eks. hytte trenger hele dagen
+  renderTimes(); update();
 });
 $("#scopeOpts").addEventListener("change", e => { state.scope = e.target.value; hideErr(1); update(); });
 $("#addonOpts").addEventListener("change", e => {
@@ -1118,6 +1182,7 @@ function drawDays(ready, build = false) {
 function renderDateInfo() {
   const { date, time } = state;
   if (!date) {
+    $("#sunPlan").hidden = true;
     $("#calDay").textContent = "00"; $("#calDay").classList.add("none");
     $("#calMon").textContent = MONTHS[view.getMonth()]; $("#calYr").textContent = view.getFullYear(); $("#calWd").textContent = "";
     $("#calHint").textContent = "Velg dato, så kommer tidene. Overstrekte dager er ikke ledige.";
@@ -1129,6 +1194,7 @@ function renderDateInfo() {
   $("#calWd").textContent = time ? `${time}–${endKey(time)}` : WEEKDAYS[d.getDay()].slice(0, 3).replace(/^./, c => c.toUpperCase());
   $("#calHint").textContent = time ? "" : "Velg tidspunkt.";
   renderWeather();
+  renderSunPlan();
 }
 
 /* ---------- Værvarsel (Yr) og sol på balkongen ---------- */
@@ -1175,6 +1241,13 @@ const LUCIDE = {
   "cloud": '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />',
   "compass": '<path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /><circle cx="12" cy="12" r="10" />',
   "moon": '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />',
+  "building": '<rect x="4" y="2" width="16" height="20" rx="2" /><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01" />',
+  "loader": '<path d="M21 12a9 9 0 1 1-6.219-8.56" />',
+  "info": '<circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />',
+  "sun-off": '<circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41M3 3l18 18" />',
+  "eclipse": '<circle cx="12" cy="12" r="10" /><path d="M13 6.5h3.5M13 9.5h5.5M13 12.5h6.5M13 15.5h5.5M13 18.5h3.5" />',
+  "sunrise": '<path d="M12 2v8" /><path d="m4.93 10.93 1.41 1.41" /><path d="M2 18h2" /><path d="M20 18h2" /><path d="m19.07 10.93-1.41 1.41" /><path d="M22 22H2" /><path d="m8 6 4-4 4 4" /><path d="M16 18a4 4 0 0 0-8 0" />',
+  "sunset-ic": '<path d="M12 10V2" /><path d="m4.93 10.93 1.41 1.41" /><path d="M2 18h2" /><path d="M20 18h2" /><path d="m19.07 10.93-1.41 1.41" /><path d="M22 22H2" /><path d="m16 6-4 4-4-4" /><path d="M16 18a4 4 0 0 0-8 0" />',
   "sun": '<circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />',
   "sunset": '<path d="M12 10V2" /><path d="m4.93 10.93 1.41 1.41" /><path d="M2 18h2" /><path d="M20 18h2" /><path d="m19.07 10.93-1.41 1.41" /><path d="M22 22H2" /><path d="m16 6-4 4-4-4" /><path d="M16 18a4 4 0 0 0-8 0" />',
 };
@@ -1208,11 +1281,66 @@ function sunPos(ms, lat, lon) {
 const ORIENT = { N: 0, "NØ": 45, "Ø": 90, "SØ": 135, S: 180, SV: 225, V: 270, NV: 315 };
 const ORIENT_NAME = { N: "nord", "NØ": "nordøst", "Ø": "øst", "SØ": "sørøst", S: "sør", SV: "sørvest", V: "vest", NV: "nordvest" };
 // Sol på balkongen: solen er over horisonten (litt margin for terreng) og står foran fasaden (innenfor ±75°).
-function sunOnFacade(date, hm, g = geo || OSLO) {
+function sunOnFacade(date, hm, g = geo || OSLO, useHorizon = true) {
   if (!state.orient) return false;
   const p = sunPos(new Date(`${date}T${hm}`).getTime(), g.lat, g.lon);
   const diff = Math.abs(((p.az - ORIENT[state.orient]) % 360 + 540) % 360 - 180);
-  return p.el > 3 && diff < 75;
+  const hz = useHorizon && horizonNow();
+  return diff < 75 && (hz ? p.el > horizonAt(hz, p.az) : p.el > 3);
+}
+
+// Horisont fra balkongen: Kartverkets overflatemodell (dom1, 1 m, med bygg og trær) langs stråler fra fasaden.
+let horizonCache = {}, horizonStatus = "";
+const floorNow = () => +(document.querySelector("[name=floor]:checked")?.value || 2);
+const horizonKey = () => geo && state.orient ? `${geo.lat.toFixed(5)},${geo.lon.toFixed(5)},${state.orient}` : null;
+function horizonNow() {
+  const raw = horizonCache[horizonKey()];
+  if (!raw || raw.pending || raw.error) return null;
+  const eye = raw.ground + (floorNow() - 1) * 3 + 1.5;
+  return { az: raw.az, h: raw.az.map((_, i) => Math.max(0, ...raw.D.map((d, j) => Math.atan2(raw.z[i * raw.D.length + j] - eye, d) * 180 / Math.PI))) };
+}
+function horizonAt(hz, az) {
+  const d = ((az - hz.az[0]) % 360 + 360) % 360, i = d / 10;
+  if (i > hz.az.length - 1) return 90;   // bak fasaden
+  const a = Math.floor(i), b = Math.min(a + 1, hz.az.length - 1);
+  return hz.h[a] + (hz.h[b] - hz.h[a]) * (i - a);
+}
+async function loadHorizon() {
+  const key = horizonKey();
+  if (!key || horizonCache[key]) return;
+  horizonCache[key] = { pending: true };
+  const ori = ORIENT[state.orient], { lat, lon } = geo, BASE = "https://ws.geonorge.no/hoydedata/v1/";
+  const off = (la, lo, az, d) => { const r = az * Math.PI / 180; return [+(lo + d * Math.sin(r) / (111320 * Math.cos(la * Math.PI / 180))).toFixed(6), +(la + d * Math.cos(r) / 111320).toFixed(6)]; };
+  const q = async (src, pts) => {
+    for (let i = 0; ; i++) {
+      const r = await fetch(`${BASE}${src}?koordsys=4258&geojson=false&punkter=${encodeURIComponent(JSON.stringify(pts))}`).catch(() => null);
+      const j = r && await r.json().catch(() => null);
+      if (j && j.punkter) return j.punkter.map(p => p.z);
+      if (i >= 3) throw new Error("hoydedata");
+      await new Promise(res => setTimeout(res, 400 * (i + 1)));
+    }
+  };
+  try {
+    // 1) linje gjennom adressepunktet: finn bygget og ytterveggen mot balkongretningen
+    const steps = [...Array(31)].map((_, i) => (i - 15) * 2), ray = steps.map(d => off(lat, lon, ori, d));
+    const [dom, dtm] = await Promise.all([q("datakilder/dom1/punkt", ray), q("punkt", ray)]);
+    const hgt = dom.map((v, i) => v - dtm[i]);
+    let b = -1;
+    for (let k = 0; k < steps.length; k++) if (hgt[k] > 6 && (b < 0 || Math.abs(steps[k]) <= Math.abs(steps[b]) + 4)) b = k;
+    if (b < 0) b = 15;
+    while (b + 1 < steps.length && hgt[b + 1] > 6) b++;
+    const exit = Math.min(b + 1, steps.length - 1);
+    const [flon, flat] = off(lat, lon, ori, steps[exit]);
+    // 2) stråler hvert 10. grad, ±90° fra balkongretningen
+    const D = [5, 8, 12, 17, 23, 30, 40, 52, 68, 88, 115, 150, 200, 270, 360, 480, 650, 900, 1250, 1700, 2300];
+    const az = []; for (let a = -90; a <= 90; a += 10) az.push((ori + a + 360) % 360);
+    const pts = az.flatMap(a => D.map(d => off(flat, flon, a, d)));
+    const jobs = []; for (let i = 0; i < pts.length; i += 50) jobs.push(pts.slice(i, i + 50));
+    const res = []; let n = 0;
+    await Promise.all([0, 1, 2].map(async () => { while (n < jobs.length) { const k = n++; res[k] = await q("datakilder/dom1/punkt", jobs[k]); } }));
+    horizonCache[key] = { az, D, z: res.flat(), ground: dtm[exit], roof: Math.round(hgt[b]) };
+  } catch (e) { horizonCache[key] = { error: true }; }
+  if (horizonKey() === key) renderTimes();
 }
 const minutes = t => +t.slice(0, 2) * 60 + +t.slice(3, 5);
 const hhmm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
@@ -1223,11 +1351,11 @@ function slotSun(date, start) {
   return hits / n;
 }
 // Tidsrom med sol på balkongen en dag, f.eks. ["14:10–17:40"].
-function sunWindows(date) {
+function sunWindows(date, useHorizon = true) {
   const out = [];
   let from = null;
   for (let m = 0; m <= 1440; m += 10) {
-    const on = m < 1440 && sunOnFacade(date, hhmm(m));
+    const on = m < 1440 && sunOnFacade(date, hhmm(m), geo || OSLO, useHorizon);
     if (on && from === null) from = m;
     if (!on && from !== null) { out.push(`${hhmm(from)}–${hhmm(Math.min(m, 1430))}`); from = null; }
   }
@@ -1282,6 +1410,199 @@ function sunLine(date, info) {
   const sky = info && !info.sunny ? ` (men det er meldt ${info.label.toLowerCase()})` : "";
   return `<p class="wx-sun">${lucide("sun", 18, "warm")}Sol på balkongen mot ${retning} ca. ${w.join(" og ")}${sky}.</p>`;
 }
+// ---- Solplanlegger: solbane over dagen, solretning på valgt tid (skravert) og skyggen fra bygget ----
+const SUN = "#e8952b";
+const compass8 = az => ["nord", "nordøst", "øst", "sørøst", "sør", "sørvest", "vest", "nordvest"][Math.round(az / 45) % 8];
+function sunDay(date, g) {
+  let rise = null, set = null, noon = 0, maxEl = -90;
+  for (let m = 0; m < 1440; m += 2) {
+    const p = sunPos(new Date(`${date}T${hhmm(m)}`).getTime(), g.lat, g.lon);
+    if (p.el > 0) { if (rise === null) rise = m; set = m; }
+    if (p.el > maxEl) { maxEl = p.el; noon = m; }
+  }
+  return { rise, set, noon, maxEl };
+}
+function hull(pts) {
+  pts = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const p of pts) { while (lo.length > 1 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of pts.slice().reverse()) { while (up.length > 1 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+// Solkortet: bygget på en rund tomt sett skrått ovenfra, med skyggen det kaster og en stråle fra solen.
+let sunScrub = null;   // valgt øyeblikk i glidebryteren, nullstilles når dato/tid endres
+function sunScene(date, g, day, m) {
+  const C = 160, CY = 200, R = 152, K = .35, rad = Math.PI / 180, RY = R * K;
+  const turn = (x, y, d) => { const t = d * rad; return [x * Math.cos(t) + y * Math.sin(t), -x * Math.sin(t) + y * Math.cos(t)]; };
+  const P = (x, y, z = 0) => [C + x, CY - y * K - z];   // sett fra sør, nord bakerst
+  const f = pts => pts.map(p => p.map(v => v.toFixed(1)).join(",")).join(" ");
+  const n1 = v => v.toFixed(1);
+  const sunAt = mm => sunPos(new Date(`${date}T${hhmm(mm)}`).getTime(), g.lat, g.lon);
+  // solbuen: fotpunktet på tomtekanten etter solens retning, løftet i en høy bue over tomten
+  const D = R;
+  const foot = mm => { const p = sunAt(mm); return P(Math.sin(p.az * rad) * D, Math.cos(p.az * rad) * D); };
+  const lift = mm => day.rise === null ? 0 : RY * 2.2 * Math.sin(Math.PI * Math.min(1, Math.max(0, (mm - day.rise) / Math.max(1, day.set - day.rise))));
+  const S = mm => { const [x, y] = foot(mm); return [x, y - lift(mm)]; };
+  const path = [];
+  for (let mm = day.rise ?? 0; day.rise !== null && mm <= day.set; mm += 5) path.push(S(mm));
+  if (day.rise !== null) path.push(S(day.set));
+  const pathSvg = path.length ? `<polyline points="${f(path)}" fill="none" stroke="#f2a64e" stroke-width="1.3" stroke-dasharray="3.5 3.5" stroke-linecap="round"/>` : "";
+  const ends = day.rise !== null ? (() => { const [rx, ry] = foot(day.rise), [qx, qy] = foot(day.set); return `<ellipse cx="${n1(rx)}" cy="${n1(ry)}" rx="3.6" ry="2.4" fill="#e9b26a"/><ellipse cx="${n1(qx)}" cy="${n1(qy)}" rx="3.6" ry="2.4" fill="#e9b26a"/>`; })() : "";
+  // huset med tomt og trær
+  const BW = 36, BD = 22, HW = 22, RH = 20, H = HW + RH, HR = -18;
+  const T = (x, y) => turn(x, y, HR);
+  const c = [[-BW, -BD], [BW, -BD], [BW, BD], [-BW, BD]].map(([x, y]) => T(x, y)), ridge = [[-BW, 0], [BW, 0]].map(([x, y]) => T(x, y));
+  const now = sunAt(m), up = now.el > 0, sd = [Math.sin(now.az * rad), Math.cos(now.az * rad)];
+  const cot = 1 / Math.tan(Math.max(now.el, 1) * rad);
+  const sh = ([x, y], z) => { const L = Math.min(R * 1.05, z * cot); return [x - sd[0] * L, y - sd[1] * L]; };
+  let shadow = "", light = "", sun = "";
+  if (up) {
+    const hp = hull(c.concat(c.map(p => sh(p, HW)), ridge.map(p => sh(p, H))));
+    const [hx, hy] = P(0, 0), [ex, ey] = P(...sh([0, 0], H));
+    shadow = `<linearGradient id="spShade" gradientUnits="userSpaceOnUse" x1="${n1(hx)}" y1="${n1(hy)}" x2="${n1(ex)}" y2="${n1(ey)}"><stop offset="0" stop-color="#55524c" stop-opacity=".62"/><stop offset=".75" stop-color="#6b6862" stop-opacity=".42"/><stop offset="1" stop-color="#6b6862" stop-opacity=".18"/></linearGradient>`
+      + `<polygon points="${f(hp.map(([x, y]) => P(x, y)))}" fill="url(#spShade)" filter="url(#spEdge)"/>`;
+    const [sx, sy] = S(m), [fx, fy] = foot(m);
+    const [tx, ty] = P(0, 0, H * .55), dx = tx - sx, dy = ty - sy, l = Math.hypot(dx, dy) || 1, px = -dy / l, py = dx / l;
+    light = `<linearGradient id="spBeam" gradientUnits="userSpaceOnUse" x1="${n1(sx)}" y1="${n1(sy)}" x2="${n1(tx)}" y2="${n1(ty)}"><stop offset="0" stop-color="#ffbf5c" stop-opacity=".8"/><stop offset=".7" stop-color="#ffd291" stop-opacity=".4"/><stop offset="1" stop-color="#ffe2b8" stop-opacity="0"/></linearGradient>`
+      + `<polygon points="${f([[sx + px * 7, sy + py * 7], [tx + px * 48, ty + py * 48], [tx - px * 48, ty - py * 48], [sx - px * 7, sy - py * 7]])}" fill="url(#spBeam)" filter="url(#spSoft)"/>`;
+    sun = `<line x1="${n1(sx)}" y1="${n1(sy + 13)}" x2="${n1(fx)}" y2="${n1(fy)}" stroke="#e9b26a" stroke-width=".9" stroke-dasharray="2.5 3"/>`
+      + `<circle cx="${n1(sx)}" cy="${n1(sy)}" r="44" fill="url(#spGlow)"/><circle cx="${n1(sx)}" cy="${n1(sy)}" r="12" fill="#f9b651"/>`;
+  }
+  // tomtegrense: to tynne rektangler rundt huset
+  const lot = (w, d, oy) => f([[-w, -d + oy], [w, -d + oy], [w, d + oy], [-w, d + oy]].map(([x, y]) => P(...T(x, y))));
+  const plot = `<polygon points="${lot(BW * 2.3, BD * 2.6, -6)}" fill="none" stroke="#cfcac2" stroke-width=".7"/><polygon points="${lot(BW * 2.05, BD * 2.25, -8)}" fill="none" stroke="#dcd8d1" stroke-width=".6"/>`;
+  // nakne løvtrær, tegnet som forgreninger
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const tree = (wx, wy, h) => {
+    const [bx, by] = P(wx, wy); let out = "";
+    const br = (x, y, len, ang, w, depth) => {
+      const x2 = x + Math.sin(ang) * len, y2 = y - Math.cos(ang) * len;
+      out += `<line x1="${n1(x)}" y1="${n1(y)}" x2="${n1(x2)}" y2="${n1(y2)}" stroke="#625d56" stroke-width="${w.toFixed(2)}" stroke-linecap="round"/>`;
+      if (depth === 0) return;
+      const k = 2 + (rnd() > .55 ? 1 : 0);
+      for (let i = 0; i < k; i++) br(x2, y2, len * (.62 + rnd() * .16), ang + (i - (k - 1) / 2) * (.5 + rnd() * .25) + (rnd() - .5) * .25, w * .66, depth - 1);
+    };
+    br(bx, by, h * .38, (rnd() - .5) * .12, 1.6, 5);
+    // busk ved foten
+    for (let i = 0; i < 14; i++) out += `<circle cx="${n1(bx + (rnd() - .5) * 16)}" cy="${n1(by - rnd() * 4)}" r="${(0.8 + rnd() * 1.4).toFixed(1)}" fill="#8b867d" opacity=".55"/>`;
+    return out;
+  };
+  const trees = [[-30, 42, 54], [-70, -2, 48], [72, -12, 46]];
+  const back = trees.filter(t => t[1] > 10).map(t => tree(...t)).join(""), front = trees.filter(t => t[1] <= 10).map(t => tree(...t)).join("");
+  const lerp = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+  const quad = (a, b, u0, u1, z0, z1) => { const A = lerp(a, b, u0), B = lerp(a, b, u1); return f([P(...A, z0), P(...B, z0), P(...B, z1), P(...A, z1)]); };
+  const stroke = `stroke="#4a4844" stroke-width=".7" stroke-linejoin="round"`;
+  const win = (a, b, u0, u1, z0, z1, lit) => { const fr = lit ? "#f4f3f0" : "#7a7771", gl = lit ? "#55534f" : "#2e2d2a"; return `<polygon points="${quad(a, b, u0 - .02, u1 + .02, z0 - 1, z1 + 1)}" fill="${fr}" stroke="${lit ? "#8e8a82" : "#4a4844"}" stroke-width=".5"/><polygon points="${quad(a, b, u0, u1, z0, z1)}" fill="${gl}"/><polygon points="${quad(a, b, (u0 + u1) / 2 - .004, (u0 + u1) / 2 + .004, z0, z1)}" fill="${fr}"/>`; };
+  const parts = [`<ellipse cx="${C}" cy="${CY + 2}" rx="${BW * 1.6}" ry="${BW * 1.6 * K}" fill="#3a3734" opacity=".14" filter="url(#spSoft)"/>`];
+  for (let i = 0; i < 4; i++) {
+    const a = c[i], b = c[(i + 1) % 4], mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], len = Math.hypot(...mid), nn = [mid[0] / len, mid[1] / len];
+    if (nn[1] > .02) continue;   // vender bort fra oss
+    const lit = up && nn[0] * sd[0] + nn[1] * sd[1] > 0;
+    const pts = [P(...a), P(...b), P(...b, HW)];
+    if (i % 2 === 1) pts.push(P(...lerp(a, b, .5), H));   // endeveggene har gavl
+    pts.push(P(...a, HW));
+    parts.push(`<polygon points="${f(pts)}" fill="${lit ? "#fbfaf8" : "#5f5c57"}" ${stroke}/>`);   // siden uten sol er mørk
+    if (i % 2 === 0) parts.push(win(a, b, .2, .34, 7, 15, lit) + win(a, b, .62, .76, 7, 15, lit));
+    else parts.push(win(a, b, .4, .6, 8, 16, lit));
+  }
+  // saltaket med utstikk
+  const O = (x, y) => T(x, y), ze = HW - 2.5;
+  const eS = [O(-BW - 3.5, -BD - 3), O(BW + 3.5, -BD - 3)], eN = [O(-BW - 3.5, BD + 3), O(BW + 3.5, BD + 3)], rg = [O(-BW - 3.5, 0), O(BW + 3.5, 0)];
+  parts.push(`<polygon points="${f([P(...eN[0], ze), P(...eN[1], ze), P(...rg[1], H), P(...rg[0], H)])}" fill="#3a3937" ${stroke}/>`);
+  parts.push(`<linearGradient id="spRoof" gradientUnits="userSpaceOnUse" x1="${n1(P(...rg[0], H)[0])}" y1="${n1(P(...rg[0], H)[1])}" x2="${n1(P(...eS[1], ze)[0])}" y2="${n1(P(...eS[1], ze)[1])}"><stop offset="0" stop-color="#5a5855"/><stop offset="1" stop-color="#3b3a38"/></linearGradient>`
+    + `<polygon points="${f([P(...eS[0], ze), P(...eS[1], ze), P(...rg[1], H), P(...rg[0], H)])}" fill="url(#spRoof)" ${stroke}/>`);
+  // tomten: kun en tynn kontur og stiplet kryss
+  const at = (az, r) => P(Math.sin(az * rad) * r, Math.cos(az * rad) * r);
+  const [nx, ny] = at(0, R), [qx, qy] = at(180, R), [ox, oy] = at(90, R), [vx, vy] = at(270, R);
+  const dash = `stroke="#cbc6be" stroke-width=".7" stroke-dasharray="3 4"`;
+  const grid = `<line x1="${n1(nx)}" y1="${n1(ny - 14)}" x2="${n1(qx)}" y2="${n1(qy + 14)}" ${dash}/><line x1="${n1(vx)}" y1="${n1(vy)}" x2="${n1(ox)}" y2="${n1(oy)}" ${dash}/>`;
+  const lab = (x, y, t) => `<text x="${n1(x)}" y="${n1(y)}" text-anchor="middle" font-size="11" fill="#2f2d2a">${t}</text>`;
+  let topY = Math.min(CY - RY - 30, ...path.map(p => p[1] - 28));
+  const labels = lab(nx, Math.min(ny - 20, topY + 24), "N") + lab(qx, qy + 28, "S") + lab(ox + 15, oy + 4, "Ø") + lab(vx - 15, vy + 4, "V");
+  topY = Math.min(topY, ny - 34);
+  return `<svg class="sp-dia" viewBox="-22 ${Math.floor(topY)} 364 ${Math.ceil(CY + RY + 36 - topY)}" aria-hidden="true" font-family="inherit">
+    <defs><filter id="spSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
+      <filter id="spEdge" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".9"/></filter>
+      <radialGradient id="spGlow"><stop offset="0" stop-color="#ffc062" stop-opacity=".5"/><stop offset=".45" stop-color="#ffd08a" stop-opacity=".2"/><stop offset="1" stop-color="#ffd08a" stop-opacity="0"/></radialGradient></defs>
+    <ellipse cx="${C}" cy="${CY}" rx="${R}" ry="${RY}" fill="rgba(255,255,255,.25)" stroke="#c9c4bc" stroke-width=".8"/>
+    ${grid}${labels}${plot}${shadow}${pathSvg}${ends}${light}
+    ${back}${parts.join("")}${front}
+    ${sun}
+  </svg>`;
+}
+function renderSunPlan() {
+  const box = $("#sunPlan"), { date } = state;
+  if (!date) { box.hidden = true; return; }
+  box.hidden = false;
+  const g = geo || OSLO, day = sunDay(date, g);
+  const sk = `${date}|${state.time}|${state.orient}`;
+  // ny dato eller tid: glidebryteren hopper til starttiden for valgt tid (ellers midt på dagen), og solen glir dit
+  let glideFrom = null;
+  if (!sunScrub || sunScrub.key !== sk) {
+    const target = state.time ? keyMin(state.time) : day.noon;
+    if (sunScrub && sunScrub.key.split("|")[0] === date) glideFrom = sunScrub.m;
+    sunScrub = { key: sk, m: target, anim: (sunScrub?.anim || 0) + 1 };
+  }
+  const lo = Math.ceil((day.rise ?? 0) / 5) * 5, hi = Math.floor((day.set ?? 1439) / 5) * 5;
+  const hz = state.orient && horizonNow(), hzRaw = horizonCache[horizonKey()] || {};
+  const win = state.orient ? sunWindows(date) : [], winOpen = state.orient ? sunWindows(date, false) : [];
+  const rows = [
+    day.rise !== null ? `<div class="sp-row">${lucide("sunrise", 20)}<div>Soloppgang <b>${hhmm(day.rise)}</b> · solnedgang <b>${hhmm(day.set)}</b><small>Høyest kl. ${hhmm(day.noon)}, ${Math.round(day.maxEl)}° over horisonten</small></div></div>` : "",
+    state.orient ? (win.length
+      ? `<div class="sp-row">${lucide("sun", 20)}<div>Sol på <b>balkongen mot ${ORIENT_NAME[state.orient]}, ${floorNow()}. etasje</b><small>ca. ${win.join(" og ")}</small></div></div>`
+      : `<div class="sp-row">${lucide("sun-off", 20, "shade")}<div>Ingen direkte sol på <b>balkongen mot ${ORIENT_NAME[state.orient]}, ${floorNow()}. etasje denne dagen</b></div></div>`)
+      + (hzRaw.pending ? `<div class="sp-row">${lucide("loader", 20, "shade")}<div>Henter høydedata for adressen …</div></div>` : "")
+      : `<div class="sp-row">${lucide("eclipse", 20, "shade")}<div>Velg hvilken vei balkongen vender<small>Da ser du når den får sol.</small></div></div>`,
+  ].join("");
+  box.innerHTML = `<div><h3>Solforhold</h3><p class="sp-sub">${fmtDate(date)}, ${esc(g.name)}${geo ? "" : " (velg adresse)"}</p>
+      <div id="spScene"></div>
+      <label class="sp-scrub"><span id="spClock"></span><input type="range" id="spRange" min="${lo}" max="${hi}" step="5" value="${Math.max(lo, Math.min(hi, sunScrub.m))}" aria-label="Tidspunkt"></label></div>
+    <div class="sp-list">${rows}<div class="sp-now" id="spNow"></div>
+      <p class="sp-note">${lucide("info", 20, "shade")}<span>${hz ? "Regnet ut fra Kartverkets høydedata for adressen (bygg og trær). Løvtrær slipper gjennom mer lys om vinteren. Veiledende." + (winOpen.join() !== win.join() ? ` Uten nabobygg og trær ville balkongen hatt sol ${winOpen.length ? "ca. " + winOpen.join(" og ") : "–"}.` : "") : "Veiledende, regnet ut fra solens gang. Velg adresse og retning for å ta med nabobygg og trær."}</span></p></div>`;
+  const draw = () => {
+    const m = sunScrub.m, now = sunPos(new Date(`${date}T${hhmm(m)}`).getTime(), g.lat, g.lon), up = now.el > 0;
+    const sunNow = state.orient && up && sunOnFacade(date, hhmm(m));
+    $("#spScene").innerHTML = sunScene(date, g, day, m);
+    $("#spClock").textContent = `kl. ${hhmm(m)}`;
+    $("#spRange").style.setProperty("--p", `${(m - lo) / Math.max(1, hi - lo) * 100}%`);
+    const inSlot = state.time && m >= keyMin(state.time) && m < keyMin(state.time) + jobMinutes();
+    $("#spNow").innerHTML = `<div class="sp-row">${lucide(up ? (sunNow || !state.orient ? "sun" : "eclipse") : "moon", 20, up && state.orient && !sunNow ? "shade" : "")}<div><b>${state.orient && up ? (sunNow ? "Sol på balkongen" : "Skygge på balkongen") : up ? "Solen er oppe" : "Solen er nede"}</b> kl. ${hhmm(m)}${inSlot ? " (i valgt tid)" : ""}<small>${up ? `Solen står i ${compass8(now.az)}, ${Math.round(now.el)}° over horisonten. Dra i glidebryteren for å se solen og skyggen gjennom dagen.` : "Dra i glidebryteren for å se dagen."}</small></div></div>`;
+  };
+  const setRange = mm => { $("#spRange").value = mm; };
+  if (glideFrom !== null && glideFrom !== sunScrub.m && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const to = sunScrub.m, token = sunScrub.anim, t0 = performance.now(), dur = 600;
+    const step = now => {
+      if (sunScrub.anim !== token || !document.body.contains(box)) return;
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      sunScrub.m = Math.round(glideFrom + (to - glideFrom) * e); setRange(sunScrub.m); draw();
+      if (k < 1) requestAnimationFrame(step); else { sunScrub.m = to; setRange(to); draw(); }
+    };
+    sunScrub.m = glideFrom; setRange(glideFrom); draw(); requestAnimationFrame(step);
+    setTimeout(() => { if (sunScrub.anim === token && sunScrub.m !== to) { sunScrub.m = to; setRange(to); draw(); } }, dur + 80);   // i tilfelle nettleseren pauser animasjonen
+  } else draw();
+  $("#spRange").addEventListener("input", e => { sunScrub.anim++; sunScrub.m = +e.target.value; draw(); });
+}
+
+// Forhold på hver luke: regn/snø fra Yr, ellers sol eller skygge på balkongen (eller bare været).
+function slotCondition(date, k) {
+  const ts = forecastData[placeKey(geo || OSLO)];
+  let info = null;
+  if (ts) {
+    const pts = summarizeDay(ts, date).points.filter(p => p.symbol);
+    const mid = keyMin(k) + 45;
+    if (pts.length) info = wxInfo(pts.reduce((a, b) => Math.abs(minutes(b.t) - mid) < Math.abs(minutes(a.t) - mid) ? b : a).symbol);
+  }
+  if (info && /rain|snow|drizzle|lightning/.test(info.icon)) return { icon: info.icon, cls: "wet", label: info.label.toLowerCase() };
+  if (state.orient) {
+    const sun = slotSun(date, k) >= .5;
+    if (sun && (!info || info.sunny)) return { icon: "sun", cls: "sun", label: "sol på balkongen" };
+    if (sun) return { icon: "cloud", cls: "", label: `${info.label.toLowerCase()} (solen står mot balkongen)` };
+    return { icon: "eclipse", cls: "shade", label: "skygge på balkongen" };
+  }
+  return info ? { icon: info.icon, cls: info.sunny ? "sun" : "", label: info.label.toLowerCase() } : null;
+}
+
 loadForecast(OSLO);   // med en gang siden lastes, så værvarselet er klart når kunden velger dato
 
 let lastTimesDate = null;
@@ -1299,15 +1620,17 @@ function renderTimes() {
     $("#timeOpts").classList.toggle("fresh", date !== lastTimesDate);
     lastTimesDate = date;
     $("#timeOpts").innerHTML = keys.map((k, i) => {
-      const ok = free.includes(k), sun = ok && state.orient && slotSun(date, k) >= .5;
-      return `<button type="button" class="time${k === state.time ? " sel" : ""}${state.main === "hytte" ? " wide" : ""}" style="--i:${i}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}${sun ? ", sol på balkongen" : ""}">${sun ? lucide("sun", 15) : ""}${state.main === "hytte" ? "Hele dagen 08:00–17:00" : `${k}–${endKey(k)}`}</button>`;
+      const ok = free.includes(k), cond = ok ? slotCondition(date, k) : null;
+      return `<button type="button" class="time${k === state.time ? " sel" : ""}${state.main === "hytte" ? " wide" : ""}" style="--i:${i}" data-time="${k}"${ok ? "" : " disabled"} aria-label="Kl. ${k} til ${endKey(k)}${ok ? "" : ", opptatt"}${cond ? `, ${cond.label}` : ""}" title="${cond ? cond.label.replace(/^./, c => c.toUpperCase()) : ""}">${cond ? lucide(cond.icon, 16, cond.cls) : ""}${state.main === "hytte" ? "Hele dagen 08:00–17:00" : `${k}–${endKey(k)}`}</button>`;
     }).join("");
     $("#timeHint").textContent = state.main === "kveld"
       ? `Solnedgang kl. ${sunsetLocal(date)}. Kveldsbildene starter ved solnedgang og varer ca. ${hours()} t.`
       : state.main === "hytte" ? "Heldagsoppdrag: fotografen er satt av hele arbeidsdagen."
       : `Varighet ca. ${hours()} t.`;
     $("#timeHint").textContent += " Tiden du velger er en forespørsel, ikke endelig.";
-    if (state.orient) $("#timeHint").textContent += " Solmerket viser tider med sol på balkongen.";
+    $("#slotLegend").innerHTML = state.orient
+      ? `<span>${lucide("sun", 14, "sun")}Sol på balkongen</span><span>${lucide("eclipse", 14, "shade")}Skygge</span><span>${lucide("cloud-rain", 14, "wet")}Regn</span>`
+      : `<span>Velg retning på balkongen for å se sol og skygge.</span>`;
   }
   renderPhotographers();
   update();
@@ -1419,7 +1742,7 @@ function closeSuggest() { $("#suggest").hidden = true; addr.setAttribute("aria-e
 function pickSuggest(i) {
   const s = sugItems[i];
   geo = isFinite(s.lat) && isFinite(s.lon) ? { lat: s.lat, lon: s.lon, name: s.place } : null;
-  if (geo) loadForecast(geo);
+  if (geo) { loadForecast(geo); loadHorizon(); }
   renderTimes();   // solmerkene regnes ut for stedet
   addr.value = s.text; addr.classList.remove("err"); closeSuggest(); update(); renderWeather();
   if (state.step === 2 && state.date && state.time && !$("#err2").hidden) { hideErr(2); $("#advanceMsg").hidden = false; advanceTimer = setTimeout(() => goStep(3), 650); }
@@ -1491,7 +1814,8 @@ function update() {
 function showErr(n, msg) { const el = $(`#err${n}`); el.textContent = msg; el.hidden = false; }
 function hideErr(n) { $(`#err${n}`).hidden = true; }
 
-$("#orientOpts").addEventListener("change", e => { state.orient = e.target.value || null; renderTimes(); });
+$("#orientOpts").addEventListener("change", e => { state.orient = e.target.value || null; $("#floorRow").hidden = !state.orient; loadHorizon(); renderTimes(); });
+$("#floorOpts").addEventListener("change", () => renderTimes());
 
 // Reisevei: vises under adressen og gjør at tider uten plass til reisevei blir opptatt.
 function checkTravel() {
